@@ -1,7 +1,6 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
-const BRAND_KEY = "montazh_brand";
 const META_THEME = "#0f172a";
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
@@ -586,29 +585,9 @@ async function saveMeters() {
   }
 }
 
-function applyBrand(brand) {
-  document.documentElement.setAttribute("data-brand", brand);
-  localStorage.setItem(BRAND_KEY, brand);
-  document.querySelectorAll("#brand-switch button").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.brand === brand);
-  });
+async function init() {
   const meta = document.getElementById("meta-theme-color");
   if (meta) meta.content = META_THEME;
-}
-
-function initBrand() {
-  let brand = localStorage.getItem(BRAND_KEY);
-  if (brand !== "samolet" && brand !== "vtb") brand = "samolet";
-  applyBrand(brand);
-  document.querySelectorAll("#brand-switch button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (btn.dataset.brand) applyBrand(btn.dataset.brand);
-    });
-  });
-}
-
-async function init() {
-  initBrand();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);

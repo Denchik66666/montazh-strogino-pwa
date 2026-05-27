@@ -8,13 +8,6 @@
     />
     <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <script>
-      (function () {
-        var b = localStorage.getItem("montazh_brand");
-        if (b !== "samolet" && b !== "vtb") b = "samolet";
-        document.documentElement.setAttribute("data-brand", b);
-      })();
-    </script>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Метраж</title>
     <link rel="manifest" href="manifest.json" />
@@ -35,10 +28,6 @@
       <div class="status-bar">
         <span class="pill ok" id="stat-done">—</span>
         <span class="pill" id="stat-net">—</span>
-      </div>
-      <div class="brand-switch" id="brand-switch" role="group" aria-label="Цветовая схема">
-        <button type="button" data-brand="samolet" class="active">Самолёт</button>
-        <button type="button" data-brand="vtb">ВТБ</button>
       </div>
     </header>
 
