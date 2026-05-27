@@ -9,47 +9,62 @@
     <meta name="theme-color" content="#2563eb" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Метраж камер</title>
+    <title>Метраж</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link rel="stylesheet" href="css/app.css" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
-      Таблица не подключена. Бригадиру: вставьте ссылку API в файл
-      <strong>config.js</strong> (см. инструкцию).
+      Таблица не подключена. Бригадиру: <strong>config.js</strong> → API_URL.
     </div>
 
-    <!-- Список камер -->
-    <div id="screen-list">
-      <header class="app-header">
-        <h1 id="project-title">Метраж камер</h1>
-        <p class="subtitle">Нажмите на камеру → введите метры → СОХРАНИТЬ</p>
-        <div class="search-wrap">
-          <input
-            type="search"
-            id="search"
-            placeholder="Поиск: ВК2.1.5 или этаж..."
-            autocomplete="off"
-            enterkeyhint="search"
-          />
-        </div>
-        <div class="status-bar">
-          <span class="pill" id="stat-total">—</span>
-          <span class="pill ok" id="stat-done">—</span>
-          <span class="pill" id="stat-net">—</span>
-        </div>
-      </header>
-      <main id="camera-root"></main>
+    <header class="app-header">
+      <button type="button" class="nav-back" id="nav-back" hidden>←</button>
+      <div class="header-text">
+        <h1 id="screen-title">Метраж</h1>
+        <p class="breadcrumb" id="breadcrumb"></p>
+      </div>
+      <div class="status-bar">
+        <span class="pill ok" id="stat-done">—</span>
+        <span class="pill" id="stat-net">—</span>
+      </div>
+    </header>
+
+    <!-- 1. Системы (СОТ, РФ, …) -->
+    <div id="screen-systems" class="screen active">
+      <p class="screen-hint">Выберите систему</p>
+      <div class="search-wrap">
+        <input
+          type="search"
+          id="global-search"
+          placeholder="Быстрый поиск камеры…"
+          autocomplete="off"
+        />
+      </div>
+      <div id="search-results" class="search-results hidden"></div>
+      <main id="systems-root" class="tile-grid"></main>
     </div>
 
-    <!-- Ввод метража -->
-    <div id="screen-input" class="screen-input">
-      <button type="button" class="back-btn" id="btn-back">← Назад</button>
+    <!-- 2. Секции -->
+    <div id="screen-sections" class="screen">
+      <p class="screen-hint">Выберите секцию</p>
+      <main id="sections-root" class="tile-grid"></main>
+    </div>
+
+    <!-- 3. Камеры в секции -->
+    <div id="screen-cameras" class="screen">
+      <p class="screen-hint">Выберите камеру</p>
+      <main id="cameras-root" class="camera-list"></main>
+    </div>
+
+    <!-- 4. Ввод метража -->
+    <div id="screen-input" class="screen screen-input">
       <div class="input-card">
+        <p class="input-system" id="input-system"></p>
         <h2 class="cam-code" id="input-code">ВК2.1.1</h2>
         <p class="cam-info" id="input-info"></p>
-        <p class="meters-label">Длина кабеля, метры:</p>
+        <p class="meters-label">Метры кабеля:</p>
         <div class="meters-display empty" id="meters-display">—</div>
         <div class="numpad" id="numpad">
           <button type="button" data-digit="1">1</button>

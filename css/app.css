@@ -39,21 +39,45 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
   background: var(--bg);
   padding: 12px 16px 8px;
   border-bottom: 1px solid var(--surface2);
 }
 
-.app-header h1 {
-  margin: 0 0 4px;
-  font-size: 1.15rem;
-  font-weight: 700;
+.nav-back {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
 }
 
-.app-header .subtitle {
+.header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-header h1 {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.breadcrumb {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-wrap {
@@ -77,10 +101,148 @@ body {
 
 .status-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.screen {
+  display: none;
+  padding: 0 16px 100px;
+}
+
+.screen.active {
+  display: block;
+}
+
+.screen-hint {
+  margin: 12px 0 8px;
+  font-size: 1rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 88px;
+  padding: 16px 18px;
+  border: 2px solid var(--surface2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tile:active {
+  border-color: var(--accent);
+  transform: scale(0.99);
+}
+
+.tile-disabled {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.tile-code {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.tile-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tile-title-lg {
+  font-size: 1.15rem;
+}
+
+.tile-meta {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.tile-soon {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.tile-bar {
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: var(--surface2);
+  overflow: hidden;
+}
+
+.tile-bar span {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  border-radius: 3px;
+}
+
+.search-results {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-results.hidden {
+  display: none;
+}
+
+.search-hit {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-hit strong {
+  font-size: 1.2rem;
+  grid-column: 1;
+}
+
+.search-hit span {
   font-size: 0.8rem;
+  color: var(--muted);
+  grid-column: 1;
+}
+
+.search-hit em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ok);
 }
 
 .pill {
@@ -105,15 +267,15 @@ body {
   background: rgba(239, 68, 68, 0.15);
 }
 
-main {
-  padding: 12px 16px 100px;
+.camera-list {
+  padding: 0;
 }
 
-.section-title {
-  margin: 20px 0 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+.input-system {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
   color: var(--muted);
+  text-align: center;
 }
 
 .camera-list {
@@ -180,32 +342,13 @@ main {
   font-size: 1.1rem;
 }
 
-/* ─── Экран ввода метража ─── */
-.screen-input {
-  display: none;
-  flex-direction: column;
-  min-height: calc(100dvh - 60px);
-  padding: 8px 16px 24px;
-}
-
-.screen-input.active {
+#screen-input.active {
   display: flex;
-}
-
-.back-btn {
-  align-self: flex-start;
-  min-height: 48px;
-  padding: 0 16px;
-  margin-bottom: 8px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
+  flex-direction: column;
 }
 
 .input-card {
+  width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -384,6 +527,3 @@ main {
   display: block;
 }
 
-.screen-list.hidden {
-  display: none;
-}

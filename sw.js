@@ -1,11 +1,11 @@
-const CACHE = "montazh-v1";
+const CACHE = "montazh-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/app.css",
   "./js/app.js",
   "./config.js",
-  "./cameras.json",
+  "./catalog.json",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

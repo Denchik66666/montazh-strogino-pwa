@@ -1,15 +1,25 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
+const NAV_KEY = "montazh_nav_state";
 
-/** @type {{ cameras: object[], project: string }} */
-let catalog = { cameras: [], project: "" };
+let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
 let metrazhMap = {};
+
+const nav = {
+  system: null,
+  section: null,
+};
+
 let selectedCamera = null;
 let inputValue = "";
 
 const $ = (id) => document.getElementById(id);
+
+function metrazhKey(systemId, camera) {
+  return `${systemId}:${camera}`;
+}
 
 function toast(text, type = "success") {
   const el = $("toast");
@@ -17,10 +27,6 @@ function toast(text, type = "success") {
   el.className = `toast show ${type}`;
   clearTimeout(toast._t);
   toast._t = setTimeout(() => el.classList.remove("show"), 2800);
-}
-
-function isOnline() {
-  return navigator.onLine;
 }
 
 function apiConfigured() {
@@ -51,9 +57,12 @@ function loadCachedMetrazh() {
   }
 }
 
-async function apiGet(action) {
+async function apiGet(action, params = {}) {
   const url = new URL(CONFIG.API_URL);
   url.searchParams.set("action", action);
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null) url.searchParams.set(k, v);
+  }
   const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) throw new Error("Сеть");
   return res.json();
@@ -68,10 +77,11 @@ async function apiSave(payload) {
     });
     if (res.ok) return res.json();
   } catch {
-    /* fallback GET — надёжнее с Apps Script */
+    /* GET fallback */
   }
   const url = new URL(CONFIG.API_URL);
   url.searchParams.set("action", "save");
+  url.searchParams.set("system", payload.system);
   url.searchParams.set("camera", payload.camera);
   url.searchParams.set("row", String(payload.row));
   url.searchParams.set("meters", String(payload.meters));
@@ -80,11 +90,120 @@ async function apiSave(payload) {
   return res.json();
 }
 
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function allCamerasFlat() {
+  const list = [];
+  for (const sys of catalog.systems) {
+    if (!sys.ready) continue;
+    for (const sec of sys.sections) {
+      for (const cam of sec.cameras) {
+        list.push({ system: sys, section: sec, camera: cam });
+      }
+    }
+  }
+  return list;
+}
+
+function countDone(system) {
+  if (!system.ready) return { done: 0, total: 0 };
+  let done = 0;
+  let total = 0;
+  for (const sec of system.sections) {
+    for (const cam of sec.cameras) {
+      total++;
+      if (metrazhMap[metrazhKey(system.id, cam.camera)]) done++;
+    }
+  }
+  return { done, total };
+}
+
+function countSectionDone(system, section) {
+  let done = 0;
+  const total = section.cameras.length;
+  for (const cam of section.cameras) {
+    if (metrazhMap[metrazhKey(system.id, cam.camera)]) done++;
+  }
+  return { done, total };
+}
+
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
+  const screen = document.getElementById(`screen-${name}`);
+  if (screen) screen.classList.add("active");
+
+  const back = $("nav-back");
+  back.hidden = name === "systems";
+
+  updateHeader(name);
+}
+
+function updateHeader(screenName) {
+  const site = catalog.site?.name || CONFIG.PROJECT_NAME || "Объект";
+  const titles = {
+    systems: site,
+    sections: nav.system?.code || "Система",
+    cameras: nav.section?.name || "Секция",
+    input: "Метраж",
+  };
+  $("screen-title").textContent = titles[screenName] || "Метраж";
+
+  const crumbs = [];
+  if (screenName !== "systems") crumbs.push(site);
+  if (nav.system && screenName !== "systems") crumbs.push(nav.system.code);
+  if (nav.section && (screenName === "cameras" || screenName === "input")) {
+    crumbs.push(nav.section.name.replace(/секция\s*/i, "Сек. "));
+  }
+  $("breadcrumb").textContent = crumbs.join(" › ");
+}
+
+function goSystems() {
+  nav.system = null;
+  nav.section = null;
+  $("search-results").classList.add("hidden");
+  $("global-search").value = "";
+  showScreen("systems");
+  renderSystems();
+  updateStats();
+}
+
+function goSections(system) {
+  nav.system = system;
+  nav.section = null;
+  showScreen("sections");
+  renderSections();
+  updateStats();
+}
+
+function goCameras(section) {
+  nav.section = section;
+  showScreen("cameras");
+  renderCameras();
+}
+
+function goBack() {
+  const active = document.querySelector(".screen.active")?.id;
+  if (active === "screen-input") {
+    showScreen("cameras");
+    return;
+  }
+  if (active === "screen-cameras") {
+    goSections(nav.system);
+    return;
+  }
+  if (active === "screen-sections") {
+    goSystems();
+  }
+}
+
 async function loadCatalog() {
-  const res = await fetch("cameras.json", { cache: "no-cache" });
-  if (!res.ok) throw new Error("Нет cameras.json");
+  const res = await fetch("catalog.json", { cache: "no-cache" });
+  if (!res.ok) throw new Error("Нет catalog.json");
   catalog = await res.json();
-  $("project-title").textContent = CONFIG.PROJECT_NAME || catalog.project || "Метраж";
 }
 
 async function refreshMetrazh() {
@@ -104,77 +223,123 @@ async function refreshMetrazh() {
 }
 
 async function flushQueue() {
-  if (!apiConfigured() || !isOnline()) return;
-  let q = getQueue();
-  if (!q.length) return;
+  if (!apiConfigured() || !navigator.onLine) return;
   const remain = [];
-  for (const item of q) {
+  for (const item of getQueue()) {
     try {
       const r = await apiSave(item);
       if (r.ok) {
-        metrazhMap[item.camera] = item.meters;
-      } else {
-        remain.push(item);
-      }
+        metrazhMap[metrazhKey(item.system, item.camera)] = item.meters;
+      } else remain.push(item);
     } catch {
       remain.push(item);
     }
   }
   setQueue(remain);
   cacheMetrazh(metrazhMap);
+  refreshCurrentView();
   updateStats();
-  renderList($("search").value);
+}
+
+function refreshCurrentView() {
+  const active = document.querySelector(".screen.active")?.id;
+  if (active === "screen-systems") renderSystems();
+  else if (active === "screen-sections") renderSections();
+  else if (active === "screen-cameras") renderCameras();
 }
 
 function updateStats() {
-  const total = catalog.cameras.length;
-  const done = catalog.cameras.filter((c) => metrazhMap[c.camera]).length;
-  const q = getQueue().length;
-  $("stat-total").textContent = `Всего: ${total}`;
-  $("stat-done").textContent = `Готово: ${done}`;
-  if (!apiConfigured()) {
-    $("stat-net").textContent = "Демо (без таблицы)";
-    $("stat-net").className = "pill warn";
-  } else if (!isOnline()) {
-    $("stat-net").textContent = "Офлайн";
-    $("stat-net").className = "pill warn";
-  } else if (q > 0) {
-    $("stat-net").textContent = `В очереди: ${q}`;
-    $("stat-net").className = "pill warn";
-  } else {
-    $("stat-net").textContent = "Онлайн";
-    $("stat-net").className = "pill ok";
-  }
-}
-
-function normalizeSearch(s) {
-  return s.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function renderList(filter = "") {
-  const root = $("camera-root");
-  root.innerHTML = "";
-  const q = normalizeSearch(filter);
-  const items = catalog.cameras.filter(
-    (c) => !q || c.search.includes(q) || c.camera.toLowerCase().includes(q)
+  const { done, total } = countDone(
+    catalog.systems.find((s) => s.ready) || { ready: false, sections: [] }
   );
-
-  if (!items.length) {
-    root.innerHTML = '<p class="empty-msg">Ничего не найдено</p>';
-    return;
+  let allDone = 0;
+  let allTotal = 0;
+  for (const s of catalog.systems.filter((x) => x.ready)) {
+    const c = countDone(s);
+    allDone += c.done;
+    allTotal += c.total;
   }
+  $("stat-done").textContent = `Готово ${allDone}/${allTotal}`;
+  const q = getQueue().length;
+  const net = $("stat-net");
+  if (!apiConfigured()) {
+    net.textContent = "Демо";
+    net.className = "pill warn";
+  } else if (!navigator.onLine) {
+    net.textContent = "Офлайн";
+    net.className = "pill warn";
+  } else if (q > 0) {
+    net.textContent = `Очередь ${q}`;
+    net.className = "pill warn";
+  } else {
+    net.textContent = "Онлайн";
+    net.className = "pill ok";
+  }
+}
 
-  let lastSection = "";
-  for (const cam of items) {
-    if (cam.section !== lastSection) {
-      lastSection = cam.section;
-      const h = document.createElement("h2");
-      h.className = "section-title";
-      h.textContent = cam.section || "Камеры";
-      root.appendChild(h);
+function renderSystems() {
+  const root = $("systems-root");
+  root.innerHTML = "";
+  for (const sys of catalog.systems) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tile" + (sys.ready ? "" : " tile-disabled");
+
+    if (sys.ready) {
+      const { done, total } = countDone(sys);
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      btn.innerHTML = `
+        <span class="tile-code">${escapeHtml(sys.code)}</span>
+        <span class="tile-title">${escapeHtml(sys.title.replace(/^СОТ\s*—\s*/i, ""))}</span>
+        <span class="tile-meta">${total} камер · ${done} готово</span>
+        <span class="tile-bar"><span style="width:${pct}%"></span></span>
+      `;
+      btn.addEventListener("click", () => goSections(sys));
+    } else {
+      btn.innerHTML = `
+        <span class="tile-code">${escapeHtml(sys.code)}</span>
+        <span class="tile-title">${escapeHtml(sys.title)}</span>
+        <span class="tile-meta tile-soon">Скоро</span>
+      `;
+      btn.addEventListener("click", () =>
+        toast("Таблица для этой системы ещё не подключена", "queue")
+      );
     }
+    root.appendChild(btn);
+  }
+}
 
-    const m = metrazhMap[cam.camera];
+function renderSections() {
+  const root = $("sections-root");
+  root.innerHTML = "";
+  const sys = nav.system;
+  if (!sys?.ready) return;
+
+  for (const sec of sys.sections) {
+    const { done, total } = countSectionDone(sys, sec);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tile";
+    btn.innerHTML = `
+      <span class="tile-title tile-title-lg">${escapeHtml(sec.name)}</span>
+      <span class="tile-meta">${done} из ${total}</span>
+      <span class="tile-bar"><span style="width:${pct}%"></span></span>
+    `;
+    btn.addEventListener("click", () => goCameras(sec));
+    root.appendChild(btn);
+  }
+}
+
+function renderCameras() {
+  const root = $("cameras-root");
+  root.innerHTML = "";
+  const sys = nav.system;
+  const sec = nav.section;
+  if (!sys || !sec) return;
+
+  for (const cam of sec.cameras) {
+    const m = metrazhMap[metrazhKey(sys.id, cam.camera)];
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "camera-btn";
@@ -185,41 +350,72 @@ function renderList(filter = "") {
       </div>
       <div class="badge ${m ? "done" : ""}">${m ? escapeHtml(String(m)) : "—"}</div>
     `;
-    btn.addEventListener("click", () => openInput(cam));
+    btn.addEventListener("click", () => openInput(sys, sec, cam));
     root.appendChild(btn);
   }
 }
 
-function escapeHtml(s) {
-  const d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
+function renderGlobalSearch(q) {
+  const box = $("search-results");
+  const norm = q.trim().toLowerCase();
+  if (!norm) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  const hits = allCamerasFlat().filter(
+    (x) =>
+      x.camera.search.includes(norm) ||
+      x.camera.camera.toLowerCase().includes(norm)
+  );
+
+  box.classList.remove("hidden");
+  if (!hits.length) {
+    box.innerHTML = '<p class="empty-msg">Не найдено</p>';
+    return;
+  }
+
+  box.innerHTML = "";
+  for (const x of hits.slice(0, 12)) {
+    const m = metrazhMap[metrazhKey(x.system.id, x.camera.camera)];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "search-hit";
+    btn.innerHTML = `
+      <strong>${escapeHtml(x.camera.camera)}</strong>
+      <span>${escapeHtml(x.system.code)} · ${escapeHtml(x.section.name)}</span>
+      <em>${m ? m + " м" : "—"}</em>
+    `;
+    btn.addEventListener("click", () => {
+      nav.system = x.system;
+      nav.section = x.section;
+      openInput(x.system, x.section, x.camera);
+      box.classList.add("hidden");
+      $("global-search").value = "";
+    });
+    box.appendChild(btn);
+  }
 }
 
-function openInput(cam) {
-  selectedCamera = cam;
-  const existing = metrazhMap[cam.camera];
+function openInput(system, section, cam) {
+  selectedCamera = { system, section, cam };
+  const key = metrazhKey(system.id, cam.camera);
+  const existing = metrazhMap[key];
   inputValue = existing ? String(existing).replace(/[^\d]/g, "") : "";
+
+  $("input-system").textContent = `${catalog.site.name} · ${system.code} · ${section.name}`;
   $("input-code").textContent = cam.camera;
   $("input-info").textContent = [cam.floor, cam.place, cam.cable].filter(Boolean).join(" · ");
+
   const hint = $("overwrite-hint");
   if (existing) {
-    hint.textContent = `Уже записано: ${existing} м. Новое число заменит старое.`;
+    hint.textContent = `Было: ${existing} м — новое заменит`;
     hint.classList.add("show");
-  } else {
-    hint.classList.remove("show");
-  }
-  updateMetersDisplay();
-  $("screen-list").classList.add("hidden");
-  $("screen-input").classList.add("active");
-}
+  } else hint.classList.remove("show");
 
-function closeInput() {
-  $("screen-input").classList.remove("active");
-  $("screen-list").classList.remove("hidden");
-  selectedCamera = null;
-  renderList($("search").value);
-  updateStats();
+  updateMetersDisplay();
+  showScreen("input");
 }
 
 function updateMetersDisplay() {
@@ -237,98 +433,95 @@ function updateMetersDisplay() {
   }
 }
 
-function appendDigit(d) {
-  if (inputValue.length >= 3) return;
-  if (inputValue === "0") inputValue = d;
-  else inputValue += d;
-  updateMetersDisplay();
-}
-
 function numpadHandler(e) {
   const btn = e.target.closest("button");
   if (!btn) return;
   const digit = btn.dataset.digit;
   const action = btn.dataset.action;
-  if (digit !== undefined) appendDigit(digit);
-  else if (action === "back") inputValue = inputValue.slice(0, -1);
+  if (digit !== undefined) {
+    if (inputValue.length >= 3) return;
+    inputValue = inputValue === "0" ? digit : inputValue + digit;
+  } else if (action === "back") inputValue = inputValue.slice(0, -1);
   else if (action === "clear") inputValue = "";
   updateMetersDisplay();
 }
 
 async function saveMeters() {
   if (!selectedCamera || !inputValue) return;
+  const { system, cam } = {
+    system: selectedCamera.system,
+    cam: selectedCamera.cam,
+  };
   const meters = parseInt(inputValue, 10);
   if (meters < (CONFIG.MIN_METERS || 1) || meters > (CONFIG.MAX_METERS || 500)) {
-    toast(`Введите от ${CONFIG.MIN_METERS || 1} до ${CONFIG.MAX_METERS || 500}`, "error");
+    toast(`От ${CONFIG.MIN_METERS || 1} до ${CONFIG.MAX_METERS || 500} м`, "error");
     return;
   }
 
+  const key = metrazhKey(system.id, cam.camera);
   const payload = {
-    camera: selectedCamera.camera,
-    row: selectedCamera.row,
+    system: system.id,
+    sheet: system.sheet,
+    camera: cam.camera,
+    row: cam.row,
     meters,
     at: new Date().toISOString(),
   };
 
   if (!apiConfigured()) {
-    metrazhMap[payload.camera] = meters;
+    metrazhMap[key] = meters;
     cacheMetrazh(metrazhMap);
-    toast(`Демо: ${payload.camera} = ${meters} м`, "queue");
-    closeInput();
+    toast(`✓ ${cam.camera}: ${meters} м`, "success");
+    showScreen("cameras");
+    renderCameras();
+    updateStats();
     return;
   }
 
   $("btn-save").disabled = true;
+  const offline = !navigator.onLine;
 
-  if (!isOnline()) {
-    const q = getQueue();
-    q.push(payload);
-    setQueue(q);
-    metrazhMap[payload.camera] = meters;
+  const afterLocal = () => {
+    metrazhMap[key] = meters;
     cacheMetrazh(metrazhMap);
-    toast("Нет сети — сохранено, отправится позже", "queue");
-    closeInput();
+    toast(offline ? "Сохранено — отправится в сеть" : `✓ ${cam.camera}: ${meters} м`, offline ? "queue" : "success");
+    showScreen("cameras");
+    renderCameras();
+    updateStats();
+  };
+
+  if (offline) {
+    setQueue([...getQueue(), payload]);
+    afterLocal();
+    $("btn-save").disabled = false;
     return;
   }
 
   try {
     const r = await apiSave(payload);
-    if (r.ok) {
-      metrazhMap[payload.camera] = meters;
-      cacheMetrazh(metrazhMap);
-      toast(`✓ ${payload.camera}: ${meters} м`, "success");
-      closeInput();
-    } else {
-      toast(r.error || "Ошибка сохранения", "error");
-    }
+    if (r.ok) afterLocal();
+    else toast(r.error || "Ошибка", "error");
   } catch {
-    const q = getQueue();
-    q.push(payload);
-    setQueue(q);
-    metrazhMap[payload.camera] = meters;
-    cacheMetrazh(metrazhMap);
-    toast("Сеть — в очереди, повторим автоматически", "queue");
-    closeInput();
+    setQueue([...getQueue(), payload]);
+    afterLocal();
   } finally {
     $("btn-save").disabled = false;
   }
 }
 
 async function init() {
-  if (!apiConfigured()) {
-    $("setup-banner").classList.add("show");
-  }
+  if (!apiConfigured()) $("setup-banner").classList.add("show");
 
-  $("search").addEventListener("input", (e) => renderList(e.target.value));
-  $("btn-back").addEventListener("click", closeInput);
+  $("nav-back").addEventListener("click", goBack);
   $("numpad").addEventListener("click", numpadHandler);
   $("btn-save").addEventListener("click", saveMeters);
+  $("global-search").addEventListener("input", (e) => renderGlobalSearch(e.target.value));
 
   window.addEventListener("online", () => {
     flushQueue();
     refreshMetrazh().then(() => {
+      refreshCurrentView();
       updateStats();
-      renderList($("search").value);
     });
   });
 
@@ -337,11 +530,9 @@ async function init() {
     metrazhMap = loadCachedMetrazh();
     await refreshMetrazh();
     await flushQueue();
-    renderList();
-    updateStats();
+    goSystems();
   } catch (e) {
-    $("camera-root").innerHTML =
-      '<p class="empty-msg">Не удалось загрузить список камер</p>';
+    $("systems-root").innerHTML = '<p class="empty-msg">Нет catalog.json — запустите npm run export</p>';
     console.error(e);
   }
 
