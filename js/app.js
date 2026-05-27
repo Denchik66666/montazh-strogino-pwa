@@ -102,6 +102,11 @@ function formatCameraCode(code) {
   return String(code || "").replace(/^ВК(?=\d)/i, "ВК ");
 }
 
+function systemDisplayTitle(sys) {
+  if (!sys?.title) return sys?.code || "Система";
+  return String(sys.title).replace(/^СОТ\s*—\s*/i, "").trim() || sys.title;
+}
+
 function parseSectionName(name) {
   const numM = String(name).match(/секция\s*(\d+)/i);
   const camM = String(name).match(/\((\d+)\s*камер/i);
@@ -197,7 +202,7 @@ function updateHeader(screenName) {
   const site = catalog.site?.name || CONFIG.PROJECT_NAME || "Объект";
   const titles = {
     systems: site,
-    sections: nav.system?.code || "Система",
+    sections: systemDisplayTitle(nav.system),
     cameras: nav.section?.name || "Секция",
     input: "Метраж",
   };
@@ -341,7 +346,7 @@ function renderSystems() {
       btn.innerHTML = `
         <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
         <span class="pick-body">
-          <span class="pick-label">${escapeHtml(sys.title.replace(/^СОТ\s*—\s*/i, ""))}</span>
+          <span class="pick-label">${escapeHtml(systemDisplayTitle(sys))}</span>
           <span class="pick-sub">${total} камер</span>
           <span class="pick-bar"><span style="width:${pct}%"></span></span>
         </span>
