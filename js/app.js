@@ -96,6 +96,35 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function parseSectionName(name) {
+  const numM = String(name).match(/секция\s*(\d+)/i);
+  const camM = String(name).match(/\((\d+)\s*камер/i);
+  const num = numM ? parseInt(numM[1], 10) : 0;
+  const cameras = camM ? parseInt(camM[1], 10) : 0;
+  return {
+    num,
+    cameras,
+    short: num ? `Секция ${num}` : name,
+    sub: cameras ? `${cameras} камер` : "",
+  };
+}
+
+function pickTone(index) {
+  return `pick-card--tone-${(index % 6) + 1}`;
+}
+
+function pickStatus(done, total) {
+  if (total && done >= total) return "pick-card--status-done";
+  if (done > 0) return "pick-card--status-progress";
+  return "pick-card--status-empty";
+}
+
+function statusLabel(done, total) {
+  if (total && done >= total) return "Готово ✓";
+  if (done > 0) return `В работе · ${done}/${total}`;
+  return "Не начато";
+}
+
 function allCamerasFlat() {
   const list = [];
   for (const sys of catalog.systems) {
@@ -280,33 +309,42 @@ function updateStats() {
 function renderSystems() {
   const root = $("systems-root");
   root.innerHTML = "";
-  for (const sys of catalog.systems) {
+  catalog.systems.forEach((sys, i) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "tile" + (sys.ready ? "" : " tile-disabled");
 
     if (sys.ready) {
       const { done, total } = countDone(sys);
       const pct = total ? Math.round((done / total) * 100) : 0;
+      btn.className = `pick-card pick-card--system ${pickTone(i)} ${pickStatus(done, total)}`;
       btn.innerHTML = `
-        <span class="tile-code">${escapeHtml(sys.code)}</span>
-        <span class="tile-title">${escapeHtml(sys.title.replace(/^СОТ\s*—\s*/i, ""))}</span>
-        <span class="tile-meta">${total} камер · ${done} готово</span>
-        <span class="tile-bar"><span style="width:${pct}%"></span></span>
+        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+        <span class="pick-body">
+          <span class="pick-label">${escapeHtml(sys.title.replace(/^СОТ\s*—\s*/i, ""))}</span>
+          <span class="pick-sub">${total} камер</span>
+          <span class="pick-bar"><span style="width:${pct}%"></span></span>
+        </span>
+        <span class="pick-side">
+          <span class="pick-fraction">${done}<span>/${total}</span></span>
+          <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
+        </span>
       `;
       btn.addEventListener("click", () => goSections(sys));
     } else {
+      btn.className = `pick-card pick-card--system pick-card--disabled ${pickTone(i)}`;
       btn.innerHTML = `
-        <span class="tile-code">${escapeHtml(sys.code)}</span>
-        <span class="tile-title">${escapeHtml(sys.title)}</span>
-        <span class="tile-meta tile-soon">Скоро</span>
+        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+        <span class="pick-body">
+          <span class="pick-label">${escapeHtml(sys.title)}</span>
+          <span class="pick-sub pick-sub--warn">Скоро</span>
+        </span>
       `;
       btn.addEventListener("click", () =>
         toast("Таблица для этой системы ещё не подключена", "queue")
       );
     }
     root.appendChild(btn);
-  }
+  });
 }
 
 function renderSections() {
@@ -315,20 +353,30 @@ function renderSections() {
   const sys = nav.system;
   if (!sys?.ready) return;
 
-  for (const sec of sys.sections) {
+  sys.sections.forEach((sec, i) => {
     const { done, total } = countSectionDone(sys, sec);
     const pct = total ? Math.round((done / total) * 100) : 0;
+    const info = parseSectionName(sec.name);
+    const numLabel = info.num ? String(info.num).padStart(2, "0") : String(i + 1).padStart(2, "0");
+
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "tile";
+    btn.className = `pick-card pick-card--section ${pickTone(i)} ${pickStatus(done, total)}`;
     btn.innerHTML = `
-      <span class="tile-title tile-title-lg">${escapeHtml(sec.name)}</span>
-      <span class="tile-meta">${done} из ${total}</span>
-      <span class="tile-bar"><span style="width:${pct}%"></span></span>
+      <span class="pick-num">${numLabel}</span>
+      <span class="pick-body">
+        <span class="pick-label">${escapeHtml(info.short)}</span>
+        <span class="pick-sub">${escapeHtml(info.sub || `${total} камер`)}</span>
+        <span class="pick-bar"><span style="width:${pct}%"></span></span>
+      </span>
+      <span class="pick-side">
+        <span class="pick-fraction">${done}<span>/${total}</span></span>
+        <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
+      </span>
     `;
     btn.addEventListener("click", () => goCameras(sec));
     root.appendChild(btn);
-  }
+  });
 }
 
 function renderCameras() {
@@ -338,21 +386,24 @@ function renderCameras() {
   const sec = nav.section;
   if (!sys || !sec) return;
 
-  for (const cam of sec.cameras) {
+  sec.cameras.forEach((cam, i) => {
     const m = metrazhMap[metrazhKey(sys.id, cam.camera)];
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "camera-btn";
+    btn.className = `camera-btn ${m ? "camera-btn--done" : "camera-btn--pending"} ${
+      i % 2 ? "camera-btn--alt" : ""
+    }`;
     btn.innerHTML = `
-      <div>
+      <span class="cam-dot" aria-hidden="true"></span>
+      <div class="cam-main">
         <div class="code">${escapeHtml(cam.camera)}</div>
         <div class="meta">${escapeHtml(cam.floor)} · ${escapeHtml(cam.place)}</div>
       </div>
-      <div class="badge ${m ? "done" : ""}">${m ? escapeHtml(String(m)) : "—"}</div>
+      <div class="badge ${m ? "done" : "pending"}">${m ? escapeHtml(String(m)) + " м" : "ввод"}</div>
     `;
     btn.addEventListener("click", () => openInput(sys, sec, cam));
     root.appendChild(btn);
-  }
+  });
 }
 
 function renderGlobalSearch(q) {
