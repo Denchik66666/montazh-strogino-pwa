@@ -978,21 +978,6 @@ html[data-theme="light"] .theme-icon--moon {
   display: block;
 }
 
-.clear-hint {
-  max-width: 360px;
-  margin: 0 auto 12px;
-  padding: 10px 12px;
-  font-size: 0.88rem;
-  color: var(--muted);
-  text-align: center;
-  border-radius: 10px;
-  background: var(--surface);
-}
-
-.clear-hint strong {
-  color: var(--warn);
-}
-
 .meters-display.meters-display--clear {
   border-color: var(--warn);
   color: var(--warn);
