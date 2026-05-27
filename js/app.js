@@ -597,20 +597,23 @@ function applyTheme(theme) {
   const apple = document.getElementById("meta-apple-status");
   if (apple) apple.content = t === "light" ? "default" : "black-translucent";
 
-  document.querySelectorAll("#theme-switch button").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.theme === t);
-  });
+  const toggle = document.getElementById("theme-toggle");
+  if (toggle) {
+    toggle.setAttribute("aria-label", t === "light" ? "Тёмная тема" : "Светлая тема");
+  }
 }
 
 function initTheme() {
   let theme = localStorage.getItem(THEME_KEY);
   if (theme !== "light" && theme !== "dark") theme = "dark";
   applyTheme(theme);
-  document.querySelectorAll("#theme-switch button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (btn.dataset.theme) applyTheme(btn.dataset.theme);
+  const toggle = document.getElementById("theme-toggle");
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+      applyTheme(cur === "light" ? "dark" : "light");
     });
-  });
+  }
 }
 
 async function init() {

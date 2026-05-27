@@ -102,7 +102,7 @@ body {
   align-items: flex-start;
   gap: 8px;
   background: var(--bg);
-  padding: 12px 16px 8px;
+  padding: 12px 44px 8px 16px;
   padding-top: max(12px, env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--header-border);
 }
@@ -830,44 +830,42 @@ html[data-theme="dark"] .app-header h1 {
   display: none;
 }
 
-.theme-switch {
+.theme-toggle {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top, 0px));
+  right: 10px;
+  z-index: 12;
   display: flex;
-  width: 100%;
-  order: 11;
-  margin-top: 4px;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--surface2);
-  gap: 2px;
-}
-
-.theme-switch button {
-  flex: 1;
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-strong);
+  box-shadow: 0 0 0 1px var(--header-border);
   cursor: pointer;
   touch-action: manipulation;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.theme-switch button.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+.theme-toggle:active {
+  transform: scale(0.94);
 }
 
-html[data-theme="light"] .theme-switch {
-  background: rgba(118, 118, 128, 0.12);
+.theme-icon {
+  width: 18px;
+  height: 18px;
+  display: none;
 }
 
-html[data-theme="light"] .theme-switch button.active {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+html[data-theme="dark"] .theme-icon--sun {
+  display: block;
+}
+
+html[data-theme="light"] .theme-icon--moon {
+  display: block;
 }
 
 .setup-banner.show {
