@@ -5,95 +5,102 @@
 }
 
 :root {
+  /* ГК «Самолёт» — фирменный цифровой синий (ребрендинг ONY) */
+  --samolet-blue: #007bfc;
+  --samolet-blue-dark: #0066d6;
+  --samolet-blue-deep: #0050b8;
+  --samolet-sky: #e8f4ff;
+  --samolet-navy: #0b1628;
+
   --radius: 16px;
   --tap: 56px;
-  --accent: #2563eb;
-  --accent-dark: #1d4ed8;
-  --ok: #15803d;
-  --warn: #b45309;
-  --danger: #b91c1c;
+  --accent: var(--samolet-blue);
+  --accent-dark: var(--samolet-blue-dark);
+  --ok: #0d9f6e;
+  --warn: #d97706;
+  --danger: #dc2626;
 }
 
-/* Светлая — кофейный текст, без чёрного и белого */
+/* Светлая — как на samolet.ru: голубой фон, синий текст */
 html[data-theme="light"] {
-  --bg: #e6e0d4;
-  --surface: #f7f3eb;
-  --surface-alt: #efe9de;
-  --surface2: #d4cdc0;
-  --text: #6b5c4a;
-  --text-strong: #524839;
-  --muted: #8a7b68;
-  --ok-bg: #d1fae5;
-  --warn-bg: #fef3c7;
-  --danger-bg: #fee2e2;
-  --shadow: rgba(82, 72, 57, 0.14);
-  --on-accent: #f0e8d8;
-  --on-ok: #3d6b4a;
-  --on-warn: #7a5a1a;
+  --bg: #eef5fc;
+  --surface: #f8fbff;
+  --surface-alt: var(--samolet-sky);
+  --surface2: #d4e6f7;
+  --text: #4a6d8c;
+  --text-strong: #1e4a7a;
+  --muted: #6b8fad;
+  --ok-bg: #d8f5e9;
+  --warn-bg: #fff4e0;
+  --danger-bg: #fde8e8;
+  --shadow: rgba(0, 91, 200, 0.1);
+  --on-accent: #e8f4ff;
+  --on-ok: #0a7a52;
+  --on-warn: #9a5f0a;
   color-scheme: light;
 }
 
-/* Тёмная — песочный текст, без белого и чёрного */
+/* Тёмная — тёмно-синяя, текст голубой (не белый) */
 html[data-theme="dark"] {
-  --bg: #1c1916;
-  --surface: #28241f;
-  --surface-alt: #322e28;
-  --surface2: #433d34;
-  --text: #d4c4a8;
-  --text-strong: #ece0cc;
-  --muted: #9a8f7a;
-  --ok: #6ee7a0;
-  --ok-bg: rgba(110, 231, 160, 0.14);
-  --warn: #f0c96e;
-  --warn-bg: rgba(240, 201, 110, 0.12);
-  --danger: #f0a8a8;
-  --danger-bg: rgba(240, 168, 168, 0.12);
-  --shadow: rgba(0, 0, 0, 0.35);
-  --on-accent: #ece0cc;
-  --on-ok: #c8f0d4;
-  --on-warn: #f5e6b8;
+  --bg: var(--samolet-navy);
+  --surface: #132238;
+  --surface-alt: #1a2d4a;
+  --surface2: #243a5c;
+  --text: #9ebce0;
+  --text-strong: #cce4ff;
+  --muted: #6d8fb3;
+  --ok: #3dd68c;
+  --ok-bg: rgba(61, 214, 140, 0.14);
+  --warn: #f5b84a;
+  --warn-bg: rgba(245, 184, 74, 0.12);
+  --danger: #f08080;
+  --danger-bg: rgba(240, 128, 128, 0.12);
+  --shadow: rgba(0, 20, 60, 0.45);
+  --on-accent: #cce4ff;
+  --on-ok: #b8f0d4;
+  --on-warn: #ffe8b8;
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not([data-theme]) {
-    --bg: #1c1916;
-    --surface: #28241f;
-    --surface-alt: #322e28;
-    --surface2: #433d34;
-    --text: #d4c4a8;
-    --text-strong: #ece0cc;
-    --muted: #9a8f7a;
-    --ok: #6ee7a0;
-    --ok-bg: rgba(110, 231, 160, 0.14);
-    --warn: #f0c96e;
-    --warn-bg: rgba(240, 201, 110, 0.12);
-    --danger: #f0a8a8;
-    --danger-bg: rgba(240, 168, 168, 0.12);
-    --shadow: rgba(0, 0, 0, 0.35);
-    --on-accent: #ece0cc;
-    --on-ok: #c8f0d4;
-    --on-warn: #f5e6b8;
+    --bg: var(--samolet-navy);
+    --surface: #132238;
+    --surface-alt: #1a2d4a;
+    --surface2: #243a5c;
+    --text: #9ebce0;
+    --text-strong: #cce4ff;
+    --muted: #6d8fb3;
+    --ok: #3dd68c;
+    --ok-bg: rgba(61, 214, 140, 0.14);
+    --warn: #f5b84a;
+    --warn-bg: rgba(245, 184, 74, 0.12);
+    --danger: #f08080;
+    --danger-bg: rgba(240, 128, 128, 0.12);
+    --shadow: rgba(0, 20, 60, 0.45);
+    --on-accent: #cce4ff;
+    --on-ok: #b8f0d4;
+    --on-warn: #ffe8b8;
     color-scheme: dark;
   }
 }
 
 @media (prefers-color-scheme: light) {
   html:not([data-theme]) {
-    --bg: #e6e0d4;
-    --surface: #f7f3eb;
-    --surface-alt: #efe9de;
-    --surface2: #d4cdc0;
-    --text: #6b5c4a;
-    --text-strong: #524839;
-    --muted: #8a7b68;
-    --ok-bg: #d1fae5;
-    --warn-bg: #fef3c7;
-    --danger-bg: #fee2e2;
-    --shadow: rgba(82, 72, 57, 0.14);
-    --on-accent: #f0e8d8;
-    --on-ok: #3d6b4a;
-    --on-warn: #7a5a1a;
+    --bg: #eef5fc;
+    --surface: #f8fbff;
+    --surface-alt: var(--samolet-sky);
+    --surface2: #d4e6f7;
+    --text: #4a6d8c;
+    --text-strong: #1e4a7a;
+    --muted: #6b8fad;
+    --ok-bg: #d8f5e9;
+    --warn-bg: #fff4e0;
+    --danger-bg: #fde8e8;
+    --shadow: rgba(0, 91, 200, 0.1);
+    --on-accent: #e8f4ff;
+    --on-ok: #0a7a52;
+    --on-warn: #9a5f0a;
     color-scheme: light;
   }
 }
@@ -279,23 +286,24 @@ body {
   filter: brightness(1.08);
 }
 
+/* Оттенки фирменного синего Самолёт */
 .pick-card--tone-1 {
-  --tone: #3b82f6;
+  --tone: #007bfc;
 }
 .pick-card--tone-2 {
-  --tone: #8b5cf6;
+  --tone: #3399ff;
 }
 .pick-card--tone-3 {
-  --tone: #06b6d4;
+  --tone: #0066d6;
 }
 .pick-card--tone-4 {
-  --tone: #10b981;
+  --tone: #00a0e8;
 }
 .pick-card--tone-5 {
-  --tone: #f59e0b;
+  --tone: #4d9fff;
 }
 .pick-card--tone-6 {
-  --tone: #f43f5e;
+  --tone: #0050b8;
 }
 
 .pick-card--status-empty {
