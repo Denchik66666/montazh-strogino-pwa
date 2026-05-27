@@ -146,7 +146,15 @@ function allCamerasFlat() {
 
 function cameraSearchHaystack(item) {
   const c = item.camera;
-  return [c.camera, c.floor, c.place, c.cable, item.system.code, item.section.name]
+  return [
+    c.camera,
+    formatCameraCode(c.camera),
+    c.floor,
+    c.place,
+    c.cable,
+    item.system.code,
+    item.section.name,
+  ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
