@@ -694,45 +694,6 @@ body {
   display: block;
 }
 
-/* ??????? / ??? ? ?????? ???????, ?????? ???? ??? ???? */
-html[data-brand="samolet"] {
-  --accent: #007bfc;
-  --accent-dark: #0066d6;
-}
-
-html[data-brand="vtb"] {
-  --accent: #0079c2;
-  --accent-dark: #012168;
-}
-
-.brand-switch {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-  order: 11;
-  margin-top: 4px;
-}
-
-.brand-switch button {
-  flex: 1;
-  min-height: 40px;
-  padding: 0 10px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border: 2px solid var(--surface2);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.brand-switch button.active {
-  border-color: var(--accent);
-  background: rgba(59, 130, 246, 0.15);
-  color: var(--text);
-}
-
 .clear-hint {
   max-width: 360px;
   margin: 0 auto 12px;
