@@ -1,4 +1,4 @@
-const CACHE = "montazh-v12";
+const CACHE = "montazh-v13";
 const ASSETS = [
   "./",
   "./index.html",

@@ -9,8 +9,9 @@ html[data-theme="dark"] {
   --bg: #0f172a;
   --surface: #1e293b;
   --surface2: #334155;
-  --text: #f8fafc;
-  --muted: #94a3b8;
+  --text: #b8bcc6;
+  --text-strong: #d0d4dc;
+  --muted: #8b93a3;
   --accent: #3b82f6;
   --accent-dark: #2563eb;
   --ok: #22c55e;
@@ -29,11 +30,11 @@ html[data-theme="dark"] {
   --bar-track: rgba(0, 0, 0, 0.35);
   --status-empty-bg: rgba(148, 163, 184, 0.2);
   --status-empty-text: #cbd5e1;
-  --status-progress-text: color-mix(in srgb, var(--tone) 90%, #fff);
+  --status-progress-text: color-mix(in srgb, var(--tone) 55%, var(--text-strong));
   --badge-pending-bg: rgba(245, 158, 11, 0.2);
-  --badge-pending-text: #fcd34d;
+  --badge-pending-text: #d4a24a;
   --badge-done-bg: rgba(34, 197, 94, 0.3);
-  --badge-done-text: #bbf7d0;
+  --badge-done-text: #6bc98a;
   --save-text: #052e16;
   --setup-text: #fecaca;
   --header-blur: none;
@@ -43,8 +44,9 @@ html[data-theme="light"] {
   --bg: #e3e4ea;
   --surface: #eeeff3;
   --surface2: #d0d1d9;
-  --text: #36363c;
-  --muted: #5a5a62;
+  --text: #4a4a52;
+  --text-strong: #2f2f35;
+  --muted: #5c5c64;
   --accent: #007aff;
   --accent-dark: #0051d5;
   --ok: #34c759;
@@ -61,12 +63,12 @@ html[data-theme="light"] {
   --bar-track: rgba(54, 54, 60, 0.14);
   --status-empty-bg: #d8d9e0;
   --status-empty-text: #4a4a52;
-  --status-progress-text: color-mix(in srgb, var(--tone) 75%, #36363c);
+  --status-progress-text: var(--text-strong);
   --badge-pending-bg: rgba(255, 149, 0, 0.14);
   --badge-pending-text: #9a4a00;
   --badge-done-bg: rgba(52, 199, 89, 0.16);
   --badge-done-text: #1d6b32;
-  --save-text: #ffffff;
+  --save-text: #1a3d24;
   --setup-text: #c62828;
   --header-blur: saturate(180%) blur(20px);
   --numpad-key: #f2f3f7;
@@ -289,7 +291,7 @@ html[data-theme="light"] .app-header {
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--tone) 35%, var(--pick-num-fill));
-  color: var(--text);
+  color: var(--text-strong);
   border: 2px solid color-mix(in srgb, var(--tone) 55%, var(--surface2));
   flex-shrink: 0;
 }
@@ -312,6 +314,7 @@ html[data-theme="light"] .app-header {
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.2;
+  color: var(--text-strong);
 }
 
 .pick-sub {
@@ -357,7 +360,7 @@ html[data-theme="light"] .app-header {
   font-size: 1.35rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
+  color: var(--text-strong);
   line-height: 1;
 }
 
@@ -394,7 +397,7 @@ html[data-theme="light"] .app-header {
 
 html[data-theme="dark"] .pick-card--status-done .pick-status {
   background: rgba(34, 197, 94, 0.25);
-  color: #86efac;
+  color: var(--badge-done-text);
 }
 
 .search-results {
@@ -709,16 +712,49 @@ html[data-theme="light"] .search-wrap input {
   box-shadow: 0 0 0 0.5px rgba(54, 54, 60, 0.2);
 }
 
-html[data-theme="light"] .pick-num {
-  color: color-mix(in srgb, var(--tone) 70%, var(--text));
-  font-weight: 900;
+html[data-theme="light"] .pick-card {
+  color: var(--text);
+}
+
+html[data-theme="light"] .pick-card .pick-label,
+html[data-theme="light"] .pick-card .pick-num,
+html[data-theme="light"] .pick-card .pick-fraction {
+  color: var(--text-strong);
+}
+
+html[data-theme="light"] .pick-card .pick-status {
+  color: var(--text-strong);
+}
+
+html[data-theme="light"] .pick-card--status-progress .pick-status {
+  background: color-mix(in srgb, var(--tone) 18%, var(--surface2));
+}
+
+html[data-theme="light"] .pick-card--status-done .pick-status {
+  background: color-mix(in srgb, var(--ok) 20%, var(--surface2));
+  color: var(--badge-done-text);
 }
 
 html[data-theme="light"] .screen-hint strong,
-html[data-theme="light"] .pick-label,
 html[data-theme="light"] .camera-btn .code,
-html[data-theme="light"] .input-card .cam-code {
-  color: #2a2a30;
+html[data-theme="light"] .input-card .cam-code,
+html[data-theme="light"] .app-header h1 {
+  color: var(--text-strong);
+}
+
+html[data-theme="dark"] .pick-card .pick-label,
+html[data-theme="dark"] .pick-card .pick-num,
+html[data-theme="dark"] .pick-card .pick-fraction,
+html[data-theme="dark"] .pick-card .pick-status {
+  color: var(--text-strong);
+}
+
+html[data-theme="dark"] .pick-card--status-done .pick-status {
+  color: var(--badge-done-text);
+}
+
+html[data-theme="dark"] .app-header h1 {
+  color: var(--text-strong);
 }
 
 .save-btn:disabled {
@@ -774,7 +810,7 @@ html[data-theme="light"] .input-card .cam-code {
 
 .toast.error {
   background: var(--danger);
-  color: #fff;
+  color: var(--text-strong);
 }
 
 .toast.queue {
