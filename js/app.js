@@ -1,12 +1,8 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
-const THEME_KEY = "montazh_theme";
 const BRAND_KEY = "montazh_brand";
-const THEME_COLORS = {
-  samolet: { light: "#eef5fc", dark: "#0b1628" },
-  vtb: { light: "#e6f2fa", dark: "#012168" },
-};
+const META_THEME = "#0f172a";
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
@@ -590,16 +586,6 @@ async function saveMeters() {
   }
 }
 
-function getTheme() {
-  const t = document.documentElement.getAttribute("data-theme");
-  return t === "dark" ? "dark" : "light";
-}
-
-function getBrand() {
-  const b = document.documentElement.getAttribute("data-brand");
-  return b === "vtb" ? "vtb" : "samolet";
-}
-
 function applyBrand(brand) {
   document.documentElement.setAttribute("data-brand", brand);
   localStorage.setItem(BRAND_KEY, brand);
@@ -607,7 +593,7 @@ function applyBrand(brand) {
     btn.classList.toggle("active", btn.dataset.brand === brand);
   });
   const meta = document.getElementById("meta-theme-color");
-  if (meta) meta.content = THEME_COLORS[brand][getTheme()];
+  if (meta) meta.content = META_THEME;
 }
 
 function initBrand() {
@@ -621,35 +607,8 @@ function initBrand() {
   });
 }
 
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem(THEME_KEY, theme);
-  const meta = document.getElementById("meta-theme-color");
-  if (meta) meta.content = THEME_COLORS[getBrand()][theme];
-  const btn = $("theme-toggle");
-  if (btn) {
-    btn.textContent = theme === "dark" ? "☀️" : "🌙";
-    btn.setAttribute(
-      "aria-label",
-      theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"
-    );
-  }
-}
-
-function initTheme() {
-  let theme = localStorage.getItem(THEME_KEY);
-  if (theme !== "light" && theme !== "dark") {
-    theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  applyTheme(theme);
-  $("theme-toggle")?.addEventListener("click", () => {
-    applyTheme(getTheme() === "dark" ? "light" : "dark");
-  });
-}
-
 async function init() {
   initBrand();
-  initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);

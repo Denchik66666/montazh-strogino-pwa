@@ -5,110 +5,18 @@
 }
 
 :root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-dark: #2563eb;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
   --radius: 16px;
   --tap: 56px;
-  --ok: #0d9f6e;
-  --warn: #d97706;
-  --danger: #dc2626;
-}
-
-/* Палитра: ГК «Самолёт» */
-html[data-brand="samolet"] {
-  --brand-primary: #007bfc;
-  --brand-primary-dark: #0066d6;
-  --brand-sky: #e8f4ff;
-  --brand-navy: #0b1628;
-  --brand-bg-light: #eef5fc;
-  --brand-surface-light: #f8fbff;
-  --brand-surface2-light: #d4e6f7;
-  --brand-text-light: #4a6d8c;
-  --brand-text-strong-light: #1e4a7a;
-  --brand-muted-light: #6b8fad;
-  --brand-surface-dark: #132238;
-  --brand-surface-alt-dark: #1a2d4a;
-  --brand-surface2-dark: #243a5c;
-  --brand-text-dark: #9ebce0;
-  --brand-text-strong-dark: #cce4ff;
-  --brand-muted-dark: #6d8fb3;
-  --shadow-light: rgba(0, 91, 200, 0.1);
-  --shadow-dark: rgba(0, 20, 60, 0.45);
-  --tone-1: #007bfc;
-  --tone-2: #3399ff;
-  --tone-3: #0066d6;
-  --tone-4: #00a0e8;
-  --tone-5: #4d9fff;
-  --tone-6: #0050b8;
-}
-
-/* Палитра: ВТБ (Pantone 300 CV, #0079C2 / #012168) */
-html[data-brand="vtb"] {
-  --brand-primary: #0079c2;
-  --brand-primary-dark: #012168;
-  --brand-sky: #dceef8;
-  --brand-navy: #012168;
-  --brand-bg-light: #e6f2fa;
-  --brand-surface-light: #f5fafd;
-  --brand-surface2-light: #c5dce8;
-  --brand-text-light: #3d5c73;
-  --brand-text-strong-light: #012168;
-  --brand-muted-light: #5a7a94;
-  --brand-surface-dark: #0a1e38;
-  --brand-surface-alt-dark: #122a4a;
-  --brand-surface2-dark: #1c3a5c;
-  --brand-text-dark: #a8c8e0;
-  --brand-text-strong-dark: #d4e8f8;
-  --brand-muted-dark: #6a90ad;
-  --shadow-light: rgba(1, 33, 104, 0.12);
-  --shadow-dark: rgba(0, 10, 40, 0.5);
-  --tone-1: #0079c2;
-  --tone-2: #009fdf;
-  --tone-3: #012168;
-  --tone-4: #00a8e8;
-  --tone-5: #4da3d9;
-  --tone-6: #014f86;
-}
-
-html[data-theme="light"] {
-  --bg: var(--brand-bg-light);
-  --surface: var(--brand-surface-light);
-  --surface-alt: var(--brand-sky);
-  --surface2: var(--brand-surface2-light);
-  --text: var(--brand-text-light);
-  --text-strong: var(--brand-text-strong-light);
-  --muted: var(--brand-muted-light);
-  --accent: var(--brand-primary);
-  --accent-dark: var(--brand-primary-dark);
-  --ok-bg: #d8f5e9;
-  --warn-bg: #fff4e0;
-  --danger-bg: #fde8e8;
-  --shadow: var(--shadow-light);
-  --on-accent: var(--brand-sky);
-  --on-ok: #0a7a52;
-  --on-warn: #9a5f0a;
-  color-scheme: light;
-}
-
-html[data-theme="dark"] {
-  --bg: var(--brand-navy);
-  --surface: var(--brand-surface-dark);
-  --surface-alt: var(--brand-surface-alt-dark);
-  --surface2: var(--brand-surface2-dark);
-  --text: var(--brand-text-dark);
-  --text-strong: var(--brand-text-strong-dark);
-  --muted: var(--brand-muted-dark);
-  --accent: var(--brand-primary);
-  --accent-dark: var(--brand-primary-dark);
-  --ok: #3dd68c;
-  --ok-bg: rgba(61, 214, 140, 0.14);
-  --warn: #f5b84a;
-  --warn-bg: rgba(245, 184, 74, 0.12);
-  --danger: #f08080;
-  --danger-bg: rgba(240, 128, 128, 0.12);
-  --shadow: var(--shadow-dark);
-  --on-accent: var(--brand-text-strong-dark);
-  --on-ok: #b8f0d4;
-  --on-warn: #ffe8b8;
-  color-scheme: dark;
 }
 
 html {
@@ -133,15 +41,14 @@ body {
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   background: var(--bg);
   padding: 12px 16px 8px;
   border-bottom: 1px solid var(--surface2);
 }
 
-.nav-back,
-.theme-toggle {
+.nav-back {
   flex-shrink: 0;
   width: 48px;
   height: 48px;
@@ -149,33 +56,8 @@ body {
   border: none;
   border-radius: 12px;
   background: var(--surface);
-  color: var(--text-strong);
+  color: var(--text);
   cursor: pointer;
-  touch-action: manipulation;
-  box-shadow: 0 1px 3px var(--shadow);
-}
-
-.theme-toggle {
-  order: 3;
-  margin-left: auto;
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.nav-back {
-  order: 1;
-}
-
-.nav-back:not([hidden]) ~ .header-text {
-  order: 2;
-  flex: 1;
-  min-width: 0;
-}
-
-.nav-back[hidden] ~ .header-text {
-  order: 1;
-  flex: 1;
-  min-width: 0;
 }
 
 .header-text {
@@ -183,15 +65,10 @@ body {
   min-width: 0;
 }
 
-.status-bar {
-  order: 10;
-}
-
 .app-header h1 {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--text-strong);
 }
 
 .breadcrumb {
@@ -245,14 +122,13 @@ body {
   font-size: 0.9rem;
   color: var(--muted);
   font-weight: 500;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   border-left: 3px solid var(--accent);
-  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .screen-hint strong {
-  color: var(--text-strong);
+  color: var(--text);
 }
 
 .tile-grid {
@@ -261,7 +137,7 @@ body {
   gap: 10px;
 }
 
-/* ─── Карточки выбора (система / секция) ─── */
+/* ???????????? ?????????????????????????????????????????? ????????????????????????????????? (??????????????????????????????????????? / ?????????????????????????????????) ???????????? */
 .pick-card {
   --tone: #3b82f6;
   display: grid;
@@ -275,12 +151,12 @@ body {
   border-radius: var(--radius);
   background: linear-gradient(
     105deg,
-    color-mix(in srgb, var(--tone) 14%, var(--surface)) 0%,
-    var(--surface) 50%
+    color-mix(in srgb, var(--tone) 22%, #1a2332) 0%,
+    var(--surface) 38%
   );
   box-shadow:
     inset 4px 0 0 var(--tone),
-    0 2px 6px var(--shadow);
+    0 2px 8px rgba(0, 0, 0, 0.25);
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -293,22 +169,22 @@ body {
 }
 
 .pick-card--tone-1 {
-  --tone: var(--tone-1);
+  --tone: #3b82f6;
 }
 .pick-card--tone-2 {
-  --tone: var(--tone-2);
+  --tone: #8b5cf6;
 }
 .pick-card--tone-3 {
-  --tone: var(--tone-3);
+  --tone: #06b6d4;
 }
 .pick-card--tone-4 {
-  --tone: var(--tone-4);
+  --tone: #10b981;
 }
 .pick-card--tone-5 {
-  --tone: var(--tone-5);
+  --tone: #f59e0b;
 }
 .pick-card--tone-6 {
-  --tone: var(--tone-6);
+  --tone: #f43f5e;
 }
 
 .pick-card--status-empty {
@@ -326,12 +202,12 @@ body {
 .pick-card--status-done {
   background: linear-gradient(
     105deg,
-    color-mix(in srgb, var(--ok) 12%, var(--surface)) 0%,
-    var(--surface) 50%
+    color-mix(in srgb, var(--ok) 20%, #1a2332) 0%,
+    var(--surface) 40%
   );
   box-shadow:
     inset 4px 0 0 var(--ok),
-    inset 0 0 0 1px color-mix(in srgb, var(--ok) 40%, var(--surface2));
+    inset 0 0 0 1px rgba(34, 197, 94, 0.35);
 }
 
 .pick-card--disabled {
@@ -349,9 +225,9 @@ body {
   font-size: 1.5rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--tone) 22%, var(--surface));
-  color: color-mix(in srgb, var(--tone) 75%, var(--text-strong));
-  border: 2px solid color-mix(in srgb, var(--tone) 45%, var(--surface2));
+  background: color-mix(in srgb, var(--tone) 35%, #0f172a);
+  color: #fff;
+  border: 2px solid color-mix(in srgb, var(--tone) 70%, #fff);
   flex-shrink: 0;
 }
 
@@ -373,7 +249,6 @@ body {
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.2;
-  color: var(--text-strong);
 }
 
 .pick-sub {
@@ -391,7 +266,7 @@ body {
   height: 5px;
   margin-top: 6px;
   border-radius: 3px;
-  background: var(--surface2);
+  background: rgba(0, 0, 0, 0.35);
   overflow: hidden;
 }
 
@@ -419,7 +294,7 @@ body {
   font-size: 1.35rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  color: var(--text-strong);
+  color: var(--text);
   line-height: 1;
 }
 
@@ -440,18 +315,18 @@ body {
 }
 
 .pick-card--status-empty .pick-status {
-  background: var(--surface2);
-  color: var(--muted);
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
 }
 
 .pick-card--status-progress .pick-status {
-  background: color-mix(in srgb, var(--tone) 18%, var(--surface));
-  color: color-mix(in srgb, var(--tone) 70%, var(--text-strong));
+  background: color-mix(in srgb, var(--tone) 30%, transparent);
+  color: color-mix(in srgb, var(--tone) 90%, #fff);
 }
 
 .pick-card--status-done .pick-status {
-  background: var(--ok-bg);
-  color: var(--ok);
+  background: rgba(34, 197, 94, 0.25);
+  color: #86efac;
 }
 
 .search-results {
@@ -474,17 +349,15 @@ body {
   padding: 12px 14px;
   border: none;
   border-radius: 12px;
-  background: var(--surface-alt);
+  background: var(--surface2);
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .search-hit strong {
   font-size: 1.2rem;
   grid-column: 1;
-  color: var(--text-strong);
 }
 
 .search-hit span {
@@ -551,10 +424,8 @@ body {
   padding: 12px 14px;
   border: none;
   border-radius: 14px;
-  background: var(--surface);
-  box-shadow:
-    inset 3px 0 0 var(--surface2),
-    0 1px 3px var(--shadow);
+  background: #1e293b;
+  box-shadow: inset 3px 0 0 #475569;
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -562,20 +433,16 @@ body {
 }
 
 .camera-btn--alt {
-  background: var(--surface-alt);
+  background: #243044;
 }
 
 .camera-btn--pending {
-  box-shadow:
-    inset 3px 0 0 var(--warn),
-    0 1px 3px var(--shadow);
+  box-shadow: inset 3px 0 0 var(--warn);
 }
 
 .camera-btn--done {
-  box-shadow:
-    inset 3px 0 0 var(--ok),
-    0 1px 3px var(--shadow);
-  background: linear-gradient(90deg, var(--ok-bg) 0%, var(--surface) 35%);
+  box-shadow: inset 3px 0 0 var(--ok);
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.12) 0%, #1e293b 28%);
 }
 
 .camera-btn:active {
@@ -593,7 +460,7 @@ body {
 
 .camera-btn--done .cam-dot {
   background: var(--ok);
-  box-shadow: 0 0 6px rgba(21, 128, 61, 0.45);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
 }
 
 .cam-main {
@@ -605,7 +472,6 @@ body {
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--text-strong);
 }
 
 .camera-btn .meta {
@@ -625,15 +491,15 @@ body {
 }
 
 .camera-btn .badge.pending {
-  background: var(--warn-bg);
-  color: var(--warn);
-  border: 1px dashed color-mix(in srgb, var(--warn) 50%, transparent);
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border: 1px dashed rgba(245, 158, 11, 0.5);
 }
 
 .camera-btn .badge.done {
-  background: var(--ok-bg);
-  color: var(--ok);
-  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+  background: rgba(34, 197, 94, 0.3);
+  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.5);
 }
 
 .empty-msg {
@@ -663,7 +529,6 @@ body {
   font-weight: 900;
   margin: 0;
   line-height: 1.1;
-  color: var(--text-strong);
 }
 
 .input-card .cam-info {
@@ -686,12 +551,11 @@ body {
   border: 3px solid var(--accent);
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--text-strong);
   letter-spacing: 0.05em;
 }
 
 .meters-display.empty {
-  color: var(--muted);
+  color: var(--surface2);
   font-size: 2rem;
   border-color: var(--surface2);
 }
@@ -725,7 +589,6 @@ body {
 
 .numpad button:active {
   background: var(--accent-dark);
-  color: var(--on-accent);
 }
 
 .numpad .key-clear {
@@ -749,7 +612,7 @@ body {
   border: none;
   border-radius: var(--radius);
   background: var(--ok);
-  color: var(--on-ok);
+  color: #052e16;
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -761,57 +624,6 @@ body {
 
 .save-btn:not(:disabled):active {
   filter: brightness(0.92);
-}
-
-.save-btn.save-btn--clear {
-  background: var(--warn-bg);
-  color: var(--warn);
-  border: 2px solid color-mix(in srgb, var(--warn) 55%, transparent);
-}
-
-.meters-display.meters-display--clear {
-  border-color: var(--warn);
-  color: var(--warn);
-  background: var(--warn-bg);
-}
-
-.clear-hint {
-  max-width: 360px;
-  margin: 0 auto 12px;
-  padding: 10px 12px;
-  font-size: 0.88rem;
-  color: var(--muted);
-  text-align: center;
-  border-radius: 10px;
-  background: var(--surface-alt);
-}
-
-.brand-switch {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-  order: 11;
-  margin-top: 4px;
-}
-
-.brand-switch button {
-  flex: 1;
-  min-height: 40px;
-  padding: 0 10px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border: 2px solid var(--surface2);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.brand-switch button.active {
-  border-color: var(--accent);
-  background: var(--surface-alt);
-  color: var(--text-strong);
 }
 
 .overwrite-hint {
@@ -852,21 +664,18 @@ body {
 }
 
 .toast.success {
-  background: var(--ok-bg);
-  color: var(--ok);
-  border: 2px solid color-mix(in srgb, var(--ok) 50%, transparent);
+  background: var(--ok);
+  color: #052e16;
 }
 
 .toast.error {
-  background: var(--danger-bg);
-  color: var(--danger);
-  border: 2px solid color-mix(in srgb, var(--danger) 50%, transparent);
+  background: var(--danger);
+  color: #fff;
 }
 
 .toast.queue {
-  background: var(--warn-bg);
-  color: var(--warn);
-  border: 2px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  background: var(--warn);
+  color: #422006;
 }
 
 /* Setup banner */
@@ -874,9 +683,9 @@ body {
   margin: 12px 16px;
   padding: 16px;
   border-radius: var(--radius);
-  background: var(--danger-bg);
+  background: rgba(239, 68, 68, 0.15);
   border: 1px solid var(--danger);
-  color: var(--danger);
+  color: #fecaca;
   font-size: 0.95rem;
   display: none;
 }
@@ -885,3 +694,67 @@ body {
   display: block;
 }
 
+/* ??????? / ??? ? ?????? ???????, ?????? ???? ??? ???? */
+html[data-brand="samolet"] {
+  --accent: #007bfc;
+  --accent-dark: #0066d6;
+}
+
+html[data-brand="vtb"] {
+  --accent: #0079c2;
+  --accent-dark: #012168;
+}
+
+.brand-switch {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  order: 11;
+  margin-top: 4px;
+}
+
+.brand-switch button {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 2px solid var(--surface2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.brand-switch button.active {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--text);
+}
+
+.clear-hint {
+  max-width: 360px;
+  margin: 0 auto 12px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.clear-hint strong {
+  color: var(--warn);
+}
+
+.meters-display.meters-display--clear {
+  border-color: var(--warn);
+  color: var(--warn);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.save-btn.save-btn--clear {
+  background: var(--warn);
+  color: #1a1206;
+}

@@ -6,15 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#eef5fc" id="meta-theme-color" />
+    <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <script>
       (function () {
-        var t = localStorage.getItem("montazh_theme");
-        if (t !== "light" && t !== "dark") {
-          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-        document.documentElement.setAttribute("data-theme", t);
         var b = localStorage.getItem("montazh_brand");
         if (b !== "samolet" && b !== "vtb") b = "samolet";
         document.documentElement.setAttribute("data-brand", b);
@@ -33,7 +28,6 @@
 
     <header class="app-header">
       <button type="button" class="nav-back" id="nav-back" hidden aria-label="Назад">←</button>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Сменить тему">🌙</button>
       <div class="header-text">
         <h1 id="screen-title">Метраж</h1>
         <p class="breadcrumb" id="breadcrumb"></p>
