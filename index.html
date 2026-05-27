@@ -8,8 +8,15 @@
     />
     <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" id="meta-apple-status" />
     <title>Метраж</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("montazh_theme");
+        if (t !== "light" && t !== "dark") t = "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link rel="stylesheet" href="css/app.css" />
@@ -28,6 +35,10 @@
       <div class="status-bar">
         <span class="pill ok" id="stat-done">—</span>
         <span class="pill" id="stat-net">—</span>
+      </div>
+      <div class="theme-switch" id="theme-switch" role="group" aria-label="Тема оформления">
+        <button type="button" data-theme="dark">Тёмная</button>
+        <button type="button" data-theme="light">Светлая</button>
       </div>
     </header>
 

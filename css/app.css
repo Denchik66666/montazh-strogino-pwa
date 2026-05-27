@@ -4,7 +4,8 @@
   box-sizing: border-box;
 }
 
-:root {
+:root,
+html[data-theme="dark"] {
   --bg: #0f172a;
   --surface: #1e293b;
   --surface2: #334155;
@@ -17,6 +18,58 @@
   --danger: #ef4444;
   --radius: 16px;
   --tap: 56px;
+  --card-base: #1a2332;
+  --header-border: var(--surface2);
+  --hint-bg: rgba(255, 255, 255, 0.04);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --pick-num-fill: #0f172a;
+  --camera-bg: #1e293b;
+  --camera-bg-alt: #243044;
+  --camera-edge: #475569;
+  --bar-track: rgba(0, 0, 0, 0.35);
+  --status-empty-bg: rgba(148, 163, 184, 0.2);
+  --status-empty-text: #cbd5e1;
+  --status-progress-text: color-mix(in srgb, var(--tone) 90%, #fff);
+  --badge-pending-bg: rgba(245, 158, 11, 0.2);
+  --badge-pending-text: #fcd34d;
+  --badge-done-bg: rgba(34, 197, 94, 0.3);
+  --badge-done-text: #bbf7d0;
+  --save-text: #052e16;
+  --setup-text: #fecaca;
+  --header-blur: none;
+}
+
+html[data-theme="light"] {
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface2: #e5e5ea;
+  --text: #1c1c1e;
+  --muted: #8e8e93;
+  --accent: #007aff;
+  --accent-dark: #0051d5;
+  --ok: #34c759;
+  --warn: #ff9500;
+  --danger: #ff3b30;
+  --card-base: #ffffff;
+  --header-border: rgba(60, 60, 67, 0.12);
+  --hint-bg: rgba(0, 122, 255, 0.08);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --pick-num-fill: #ffffff;
+  --camera-bg: #ffffff;
+  --camera-bg-alt: #f9f9fb;
+  --camera-edge: #c7c7cc;
+  --bar-track: rgba(60, 60, 67, 0.12);
+  --status-empty-bg: #e5e5ea;
+  --status-empty-text: #636366;
+  --status-progress-text: var(--tone);
+  --badge-pending-bg: rgba(255, 149, 0, 0.14);
+  --badge-pending-text: #c93400;
+  --badge-done-bg: rgba(52, 199, 89, 0.16);
+  --badge-done-text: #248a3d;
+  --save-text: #ffffff;
+  --setup-text: #ff3b30;
+  --header-blur: saturate(180%) blur(20px);
+  color-scheme: light;
 }
 
 html {
@@ -45,7 +98,14 @@ body {
   gap: 8px;
   background: var(--bg);
   padding: 12px 16px 8px;
-  border-bottom: 1px solid var(--surface2);
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--header-border);
+}
+
+html[data-theme="light"] .app-header {
+  background: rgba(242, 242, 247, 0.82);
+  backdrop-filter: var(--header-blur);
+  -webkit-backdrop-filter: var(--header-blur);
 }
 
 .nav-back {
@@ -122,7 +182,7 @@ body {
   font-size: 0.9rem;
   color: var(--muted);
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hint-bg);
   border-radius: 10px;
   border-left: 3px solid var(--accent);
 }
@@ -151,12 +211,12 @@ body {
   border-radius: var(--radius);
   background: linear-gradient(
     105deg,
-    color-mix(in srgb, var(--tone) 22%, #1a2332) 0%,
+    color-mix(in srgb, var(--tone) 22%, var(--card-base)) 0%,
     var(--surface) 38%
   );
   box-shadow:
     inset 4px 0 0 var(--tone),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+    var(--shadow-card);
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -202,7 +262,7 @@ body {
 .pick-card--status-done {
   background: linear-gradient(
     105deg,
-    color-mix(in srgb, var(--ok) 20%, #1a2332) 0%,
+    color-mix(in srgb, var(--ok) 20%, var(--card-base)) 0%,
     var(--surface) 40%
   );
   box-shadow:
@@ -225,9 +285,9 @@ body {
   font-size: 1.5rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--tone) 35%, #0f172a);
-  color: #fff;
-  border: 2px solid color-mix(in srgb, var(--tone) 70%, #fff);
+  background: color-mix(in srgb, var(--tone) 35%, var(--pick-num-fill));
+  color: var(--text);
+  border: 2px solid color-mix(in srgb, var(--tone) 55%, var(--surface2));
   flex-shrink: 0;
 }
 
@@ -266,7 +326,7 @@ body {
   height: 5px;
   margin-top: 6px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--bar-track);
   overflow: hidden;
 }
 
@@ -315,16 +375,21 @@ body {
 }
 
 .pick-card--status-empty .pick-status {
-  background: rgba(148, 163, 184, 0.2);
-  color: #cbd5e1;
+  background: var(--status-empty-bg);
+  color: var(--status-empty-text);
 }
 
 .pick-card--status-progress .pick-status {
   background: color-mix(in srgb, var(--tone) 30%, transparent);
-  color: color-mix(in srgb, var(--tone) 90%, #fff);
+  color: var(--status-progress-text);
 }
 
 .pick-card--status-done .pick-status {
+  background: rgba(52, 199, 89, 0.2);
+  color: var(--ok);
+}
+
+html[data-theme="dark"] .pick-card--status-done .pick-status {
   background: rgba(34, 197, 94, 0.25);
   color: #86efac;
 }
@@ -424,8 +489,8 @@ body {
   padding: 12px 14px;
   border: none;
   border-radius: 14px;
-  background: #1e293b;
-  box-shadow: inset 3px 0 0 #475569;
+  background: var(--camera-bg);
+  box-shadow: inset 3px 0 0 var(--camera-edge), var(--shadow-card);
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -433,7 +498,7 @@ body {
 }
 
 .camera-btn--alt {
-  background: #243044;
+  background: var(--camera-bg-alt);
 }
 
 .camera-btn--pending {
@@ -442,7 +507,7 @@ body {
 
 .camera-btn--done {
   box-shadow: inset 3px 0 0 var(--ok);
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.12) 0%, #1e293b 28%);
+  background: linear-gradient(90deg, rgba(52, 199, 89, 0.14) 0%, var(--camera-bg) 28%);
 }
 
 .camera-btn:active {
@@ -491,15 +556,15 @@ body {
 }
 
 .camera-btn .badge.pending {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-  border: 1px dashed rgba(245, 158, 11, 0.5);
+  background: var(--badge-pending-bg);
+  color: var(--badge-pending-text);
+  border: 1px dashed color-mix(in srgb, var(--warn) 45%, transparent);
 }
 
 .camera-btn .badge.done {
-  background: rgba(34, 197, 94, 0.3);
-  color: #bbf7d0;
-  border: 1px solid rgba(34, 197, 94, 0.5);
+  background: var(--badge-done-bg);
+  color: var(--badge-done-text);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
 }
 
 .empty-msg {
@@ -612,9 +677,38 @@ body {
   border: none;
   border-radius: var(--radius);
   background: var(--ok);
-  color: #052e16;
+  color: var(--save-text);
   cursor: pointer;
   touch-action: manipulation;
+}
+
+html[data-theme="light"] .save-btn {
+  box-shadow: 0 1px 4px rgba(52, 199, 89, 0.35);
+}
+
+html[data-theme="light"] .numpad button {
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  color: #1c1c1e;
+}
+
+html[data-theme="light"] .numpad button:active {
+  background: #d1d1d6;
+}
+
+html[data-theme="light"] .numpad .key-clear {
+  background: #e5e5ea;
+  color: #ff3b30;
+}
+
+html[data-theme="light"] .search-wrap input {
+  border-color: transparent;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.18);
+}
+
+html[data-theme="light"] .pick-num {
+  color: var(--tone);
+  font-weight: 900;
 }
 
 .save-btn:disabled {
@@ -665,7 +759,7 @@ body {
 
 .toast.success {
   background: var(--ok);
-  color: #052e16;
+  color: var(--save-text);
 }
 
 .toast.error {
@@ -685,9 +779,49 @@ body {
   border-radius: var(--radius);
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid var(--danger);
-  color: #fecaca;
+  color: var(--setup-text);
   font-size: 0.95rem;
   display: none;
+}
+
+.theme-switch {
+  display: flex;
+  width: 100%;
+  order: 11;
+  margin-top: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface2);
+  gap: 2px;
+}
+
+.theme-switch button {
+  flex: 1;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-switch button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme="light"] .theme-switch {
+  background: rgba(118, 118, 128, 0.12);
+}
+
+html[data-theme="light"] .theme-switch button.active {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .setup-banner.show {

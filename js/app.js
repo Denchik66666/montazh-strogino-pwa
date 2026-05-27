@@ -1,7 +1,8 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
-const META_THEME = "#0f172a";
+const THEME_KEY = "montazh_theme";
+const THEME_COLORS = { dark: "#0f172a", light: "#f2f2f7" };
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
@@ -585,9 +586,35 @@ async function saveMeters() {
   }
 }
 
-async function init() {
+function applyTheme(theme) {
+  const t = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem(THEME_KEY, t);
+
   const meta = document.getElementById("meta-theme-color");
-  if (meta) meta.content = META_THEME;
+  if (meta) meta.content = THEME_COLORS[t];
+
+  const apple = document.getElementById("meta-apple-status");
+  if (apple) apple.content = t === "light" ? "default" : "black-translucent";
+
+  document.querySelectorAll("#theme-switch button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.theme === t);
+  });
+}
+
+function initTheme() {
+  let theme = localStorage.getItem(THEME_KEY);
+  if (theme !== "light" && theme !== "dark") theme = "dark";
+  applyTheme(theme);
+  document.querySelectorAll("#theme-switch button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.theme) applyTheme(btn.dataset.theme);
+    });
+  });
+}
+
+async function init() {
+  initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);
