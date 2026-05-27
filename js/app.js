@@ -97,6 +97,11 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+/** На экране: ВК2.1.1 → ВК 2.1.1 (в таблице код без пробела) */
+function formatCameraCode(code) {
+  return String(code || "").replace(/^ВК(?=\d)/i, "ВК ");
+}
+
 function parseSectionName(name) {
   const numM = String(name).match(/секция\s*(\d+)/i);
   const camM = String(name).match(/\((\d+)\s*камер/i);
@@ -404,7 +409,7 @@ function renderCameras() {
     btn.innerHTML = `
       <span class="cam-dot" aria-hidden="true"></span>
       <div class="cam-main">
-        <div class="code">${escapeHtml(cam.camera)}</div>
+        <div class="code">${escapeHtml(formatCameraCode(cam.camera))}</div>
         <div class="meta">${escapeHtml(cam.floor)} · ${escapeHtml(cam.place)}</div>
       </div>
       <div class="badge ${m ? "done" : "pending"}">${m ? escapeHtml(String(m)) + " м" : "ввод"}</div>
@@ -438,7 +443,7 @@ function renderGlobalSearch(q) {
     btn.type = "button";
     btn.className = "search-hit";
     btn.innerHTML = `
-      <strong>${escapeHtml(x.camera.camera)}</strong>
+      <strong>${escapeHtml(formatCameraCode(x.camera.camera))}</strong>
       <span>${escapeHtml(x.system.code)} · ${escapeHtml(x.section.name)}</span>
       <em>${m ? m + " м" : "—"}</em>
     `;
@@ -460,7 +465,7 @@ function openInput(system, section, cam) {
   inputValue = existing ? String(existing).replace(/[^\d]/g, "") : "";
 
   $("input-system").textContent = `${catalog.site.name} · ${system.code} · ${section.name}`;
-  $("input-code").textContent = cam.camera;
+  $("input-code").textContent = formatCameraCode(cam.camera);
   $("input-info").textContent = [cam.floor, cam.place, cam.cable].filter(Boolean).join(" · ");
 
   const hint = $("overwrite-hint");
@@ -541,7 +546,10 @@ async function saveMeters() {
     if (clearing) delete metrazhMap[key];
     else metrazhMap[key] = meters;
     cacheMetrazh(metrazhMap);
-    toast(clearing ? `Стерто: ${cam.camera}` : `✓ ${cam.camera}: ${meters} м`, clearing ? "queue" : "success");
+    toast(
+      clearing ? `Стерто: ${formatCameraCode(cam.camera)}` : `✓ ${formatCameraCode(cam.camera)}: ${meters} м`,
+      clearing ? "queue" : "success"
+    );
     showScreen("cameras");
     renderCameras();
     updateStats();
@@ -558,10 +566,10 @@ async function saveMeters() {
     const msg = clearing
       ? offline
         ? "Стереть — отправится в сеть"
-        : `Стерто: ${cam.camera}`
+        : `Стерто: ${formatCameraCode(cam.camera)}`
       : offline
         ? "Сохранено — отправится в сеть"
-        : `✓ ${cam.camera}: ${meters} м`;
+        : `✓ ${formatCameraCode(cam.camera)}: ${meters} м`;
     toast(msg, offline || clearing ? "queue" : "success");
     showScreen("cameras");
     renderCameras();
