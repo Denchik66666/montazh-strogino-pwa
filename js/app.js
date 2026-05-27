@@ -2,7 +2,11 @@ const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
 const THEME_KEY = "montazh_theme";
-const THEME_COLORS = { light: "#eef5fc", dark: "#0b1628" };
+const BRAND_KEY = "montazh_brand";
+const THEME_COLORS = {
+  samolet: { light: "#eef5fc", dark: "#0b1628" },
+  vtb: { light: "#e6f2fa", dark: "#012168" },
+};
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
@@ -462,12 +466,17 @@ function openInput(system, section, cam) {
 
   const hint = $("overwrite-hint");
   if (existing) {
-    hint.textContent = `Было: ${existing} м — новое заменит`;
+    hint.textContent = `Было: ${existing} м. Введите 0 — стерётся.`;
     hint.classList.add("show");
   } else hint.classList.remove("show");
 
   updateMetersDisplay();
   showScreen("input");
+}
+
+function isMetersValid(n) {
+  if (n === 0) return true;
+  return n >= 1 && n <= (CONFIG.MAX_METERS || 500);
 }
 
 function updateMetersDisplay() {
@@ -476,12 +485,19 @@ function updateMetersDisplay() {
   if (!inputValue) {
     el.textContent = "—";
     el.classList.add("empty");
+    el.classList.remove("meters-display--clear");
     btn.disabled = true;
+    btn.textContent = "СОХРАНИТЬ";
+    btn.classList.remove("save-btn--clear");
   } else {
     el.textContent = inputValue;
     el.classList.remove("empty");
     const n = parseInt(inputValue, 10);
-    btn.disabled = !(n >= (CONFIG.MIN_METERS || 1) && n <= (CONFIG.MAX_METERS || 500));
+    const isClear = n === 0;
+    el.classList.toggle("meters-display--clear", isClear);
+    btn.disabled = !isMetersValid(n);
+    btn.textContent = isClear ? "СТЕРЕТЬ МЕТРАЖ" : "СОХРАНИТЬ";
+    btn.classList.toggle("save-btn--clear", isClear);
   }
 }
 
@@ -505,25 +521,28 @@ async function saveMeters() {
     cam: selectedCamera.cam,
   };
   const meters = parseInt(inputValue, 10);
-  if (meters < (CONFIG.MIN_METERS || 1) || meters > (CONFIG.MAX_METERS || 500)) {
-    toast(`От ${CONFIG.MIN_METERS || 1} до ${CONFIG.MAX_METERS || 500} м`, "error");
+  if (!isMetersValid(meters)) {
+    toast(`Введите 0 (стереть) или от 1 до ${CONFIG.MAX_METERS || 500} м`, "error");
     return;
   }
 
   const key = metrazhKey(system.id, cam.camera);
+  const clearing = meters === 0;
   const payload = {
     system: system.id,
     sheet: system.sheet,
     camera: cam.camera,
     row: cam.row,
     meters,
+    clear: clearing,
     at: new Date().toISOString(),
   };
 
   if (!apiConfigured()) {
-    metrazhMap[key] = meters;
+    if (clearing) delete metrazhMap[key];
+    else metrazhMap[key] = meters;
     cacheMetrazh(metrazhMap);
-    toast(`✓ ${cam.camera}: ${meters} м`, "success");
+    toast(clearing ? `Стерто: ${cam.camera}` : `✓ ${cam.camera}: ${meters} м`, clearing ? "queue" : "success");
     showScreen("cameras");
     renderCameras();
     updateStats();
@@ -534,9 +553,17 @@ async function saveMeters() {
   const offline = !navigator.onLine;
 
   const afterLocal = () => {
-    metrazhMap[key] = meters;
+    if (clearing) delete metrazhMap[key];
+    else metrazhMap[key] = meters;
     cacheMetrazh(metrazhMap);
-    toast(offline ? "Сохранено — отправится в сеть" : `✓ ${cam.camera}: ${meters} м`, offline ? "queue" : "success");
+    const msg = clearing
+      ? offline
+        ? "Стереть — отправится в сеть"
+        : `Стерто: ${cam.camera}`
+      : offline
+        ? "Сохранено — отправится в сеть"
+        : `✓ ${cam.camera}: ${meters} м`;
+    toast(msg, offline || clearing ? "queue" : "success");
     showScreen("cameras");
     renderCameras();
     updateStats();
@@ -566,11 +593,37 @@ function getTheme() {
   return t === "dark" ? "dark" : "light";
 }
 
+function getBrand() {
+  const b = document.documentElement.getAttribute("data-brand");
+  return b === "vtb" ? "vtb" : "samolet";
+}
+
+function applyBrand(brand) {
+  document.documentElement.setAttribute("data-brand", brand);
+  localStorage.setItem(BRAND_KEY, brand);
+  document.querySelectorAll("#brand-switch button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.brand === brand);
+  });
+  const meta = document.getElementById("meta-theme-color");
+  if (meta) meta.content = THEME_COLORS[brand][getTheme()];
+}
+
+function initBrand() {
+  let brand = localStorage.getItem(BRAND_KEY);
+  if (brand !== "samolet" && brand !== "vtb") brand = "samolet";
+  applyBrand(brand);
+  document.querySelectorAll("#brand-switch button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.brand) applyBrand(btn.dataset.brand);
+    });
+  });
+}
+
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem(THEME_KEY, theme);
   const meta = document.getElementById("meta-theme-color");
-  if (meta) meta.content = THEME_COLORS[theme];
+  if (meta) meta.content = THEME_COLORS[getBrand()][theme];
   const btn = $("theme-toggle");
   if (btn) {
     btn.textContent = theme === "dark" ? "☀️" : "🌙";
@@ -593,6 +646,7 @@ function initTheme() {
 }
 
 async function init() {
+  initBrand();
   initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 

@@ -5,104 +5,110 @@
 }
 
 :root {
-  /* ГК «Самолёт» — фирменный цифровой синий (ребрендинг ONY) */
-  --samolet-blue: #007bfc;
-  --samolet-blue-dark: #0066d6;
-  --samolet-blue-deep: #0050b8;
-  --samolet-sky: #e8f4ff;
-  --samolet-navy: #0b1628;
-
   --radius: 16px;
   --tap: 56px;
-  --accent: var(--samolet-blue);
-  --accent-dark: var(--samolet-blue-dark);
   --ok: #0d9f6e;
   --warn: #d97706;
   --danger: #dc2626;
 }
 
-/* Светлая — как на samolet.ru: голубой фон, синий текст */
+/* Палитра: ГК «Самолёт» */
+html[data-brand="samolet"] {
+  --brand-primary: #007bfc;
+  --brand-primary-dark: #0066d6;
+  --brand-sky: #e8f4ff;
+  --brand-navy: #0b1628;
+  --brand-bg-light: #eef5fc;
+  --brand-surface-light: #f8fbff;
+  --brand-surface2-light: #d4e6f7;
+  --brand-text-light: #4a6d8c;
+  --brand-text-strong-light: #1e4a7a;
+  --brand-muted-light: #6b8fad;
+  --brand-surface-dark: #132238;
+  --brand-surface-alt-dark: #1a2d4a;
+  --brand-surface2-dark: #243a5c;
+  --brand-text-dark: #9ebce0;
+  --brand-text-strong-dark: #cce4ff;
+  --brand-muted-dark: #6d8fb3;
+  --shadow-light: rgba(0, 91, 200, 0.1);
+  --shadow-dark: rgba(0, 20, 60, 0.45);
+  --tone-1: #007bfc;
+  --tone-2: #3399ff;
+  --tone-3: #0066d6;
+  --tone-4: #00a0e8;
+  --tone-5: #4d9fff;
+  --tone-6: #0050b8;
+}
+
+/* Палитра: ВТБ (Pantone 300 CV, #0079C2 / #012168) */
+html[data-brand="vtb"] {
+  --brand-primary: #0079c2;
+  --brand-primary-dark: #012168;
+  --brand-sky: #dceef8;
+  --brand-navy: #012168;
+  --brand-bg-light: #e6f2fa;
+  --brand-surface-light: #f5fafd;
+  --brand-surface2-light: #c5dce8;
+  --brand-text-light: #3d5c73;
+  --brand-text-strong-light: #012168;
+  --brand-muted-light: #5a7a94;
+  --brand-surface-dark: #0a1e38;
+  --brand-surface-alt-dark: #122a4a;
+  --brand-surface2-dark: #1c3a5c;
+  --brand-text-dark: #a8c8e0;
+  --brand-text-strong-dark: #d4e8f8;
+  --brand-muted-dark: #6a90ad;
+  --shadow-light: rgba(1, 33, 104, 0.12);
+  --shadow-dark: rgba(0, 10, 40, 0.5);
+  --tone-1: #0079c2;
+  --tone-2: #009fdf;
+  --tone-3: #012168;
+  --tone-4: #00a8e8;
+  --tone-5: #4da3d9;
+  --tone-6: #014f86;
+}
+
 html[data-theme="light"] {
-  --bg: #eef5fc;
-  --surface: #f8fbff;
-  --surface-alt: var(--samolet-sky);
-  --surface2: #d4e6f7;
-  --text: #4a6d8c;
-  --text-strong: #1e4a7a;
-  --muted: #6b8fad;
+  --bg: var(--brand-bg-light);
+  --surface: var(--brand-surface-light);
+  --surface-alt: var(--brand-sky);
+  --surface2: var(--brand-surface2-light);
+  --text: var(--brand-text-light);
+  --text-strong: var(--brand-text-strong-light);
+  --muted: var(--brand-muted-light);
+  --accent: var(--brand-primary);
+  --accent-dark: var(--brand-primary-dark);
   --ok-bg: #d8f5e9;
   --warn-bg: #fff4e0;
   --danger-bg: #fde8e8;
-  --shadow: rgba(0, 91, 200, 0.1);
-  --on-accent: #e8f4ff;
+  --shadow: var(--shadow-light);
+  --on-accent: var(--brand-sky);
   --on-ok: #0a7a52;
   --on-warn: #9a5f0a;
   color-scheme: light;
 }
 
-/* Тёмная — тёмно-синяя, текст голубой (не белый) */
 html[data-theme="dark"] {
-  --bg: var(--samolet-navy);
-  --surface: #132238;
-  --surface-alt: #1a2d4a;
-  --surface2: #243a5c;
-  --text: #9ebce0;
-  --text-strong: #cce4ff;
-  --muted: #6d8fb3;
+  --bg: var(--brand-navy);
+  --surface: var(--brand-surface-dark);
+  --surface-alt: var(--brand-surface-alt-dark);
+  --surface2: var(--brand-surface2-dark);
+  --text: var(--brand-text-dark);
+  --text-strong: var(--brand-text-strong-dark);
+  --muted: var(--brand-muted-dark);
+  --accent: var(--brand-primary);
+  --accent-dark: var(--brand-primary-dark);
   --ok: #3dd68c;
   --ok-bg: rgba(61, 214, 140, 0.14);
   --warn: #f5b84a;
   --warn-bg: rgba(245, 184, 74, 0.12);
   --danger: #f08080;
   --danger-bg: rgba(240, 128, 128, 0.12);
-  --shadow: rgba(0, 20, 60, 0.45);
-  --on-accent: #cce4ff;
+  --shadow: var(--shadow-dark);
+  --on-accent: var(--brand-text-strong-dark);
   --on-ok: #b8f0d4;
   --on-warn: #ffe8b8;
   color-scheme: dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme]) {
-    --bg: var(--samolet-navy);
-    --surface: #132238;
-    --surface-alt: #1a2d4a;
-    --surface2: #243a5c;
-    --text: #9ebce0;
-    --text-strong: #cce4ff;
-    --muted: #6d8fb3;
-    --ok: #3dd68c;
-    --ok-bg: rgba(61, 214, 140, 0.14);
-    --warn: #f5b84a;
-    --warn-bg: rgba(245, 184, 74, 0.12);
-    --danger: #f08080;
-    --danger-bg: rgba(240, 128, 128, 0.12);
-    --shadow: rgba(0, 20, 60, 0.45);
-    --on-accent: #cce4ff;
-    --on-ok: #b8f0d4;
-    --on-warn: #ffe8b8;
-    color-scheme: dark;
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  html:not([data-theme]) {
-    --bg: #eef5fc;
-    --surface: #f8fbff;
-    --surface-alt: var(--samolet-sky);
-    --surface2: #d4e6f7;
-    --text: #4a6d8c;
-    --text-strong: #1e4a7a;
-    --muted: #6b8fad;
-    --ok-bg: #d8f5e9;
-    --warn-bg: #fff4e0;
-    --danger-bg: #fde8e8;
-    --shadow: rgba(0, 91, 200, 0.1);
-    --on-accent: #e8f4ff;
-    --on-ok: #0a7a52;
-    --on-warn: #9a5f0a;
-    color-scheme: light;
-  }
 }
 
 html {
@@ -286,24 +292,23 @@ body {
   filter: brightness(1.08);
 }
 
-/* Оттенки фирменного синего Самолёт */
 .pick-card--tone-1 {
-  --tone: #007bfc;
+  --tone: var(--tone-1);
 }
 .pick-card--tone-2 {
-  --tone: #3399ff;
+  --tone: var(--tone-2);
 }
 .pick-card--tone-3 {
-  --tone: #0066d6;
+  --tone: var(--tone-3);
 }
 .pick-card--tone-4 {
-  --tone: #00a0e8;
+  --tone: var(--tone-4);
 }
 .pick-card--tone-5 {
-  --tone: #4d9fff;
+  --tone: var(--tone-5);
 }
 .pick-card--tone-6 {
-  --tone: #0050b8;
+  --tone: var(--tone-6);
 }
 
 .pick-card--status-empty {
@@ -756,6 +761,57 @@ body {
 
 .save-btn:not(:disabled):active {
   filter: brightness(0.92);
+}
+
+.save-btn.save-btn--clear {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 2px solid color-mix(in srgb, var(--warn) 55%, transparent);
+}
+
+.meters-display.meters-display--clear {
+  border-color: var(--warn);
+  color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.clear-hint {
+  max-width: 360px;
+  margin: 0 auto 12px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.brand-switch {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  order: 11;
+  margin-top: 4px;
+}
+
+.brand-switch button {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 2px solid var(--surface2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.brand-switch button.active {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+  color: var(--text-strong);
 }
 
 .overwrite-hint {

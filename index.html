@@ -15,6 +15,9 @@
           t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         document.documentElement.setAttribute("data-theme", t);
+        var b = localStorage.getItem("montazh_brand");
+        if (b !== "samolet" && b !== "vtb") b = "samolet";
+        document.documentElement.setAttribute("data-brand", b);
       })();
     </script>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -38,6 +41,10 @@
       <div class="status-bar">
         <span class="pill ok" id="stat-done">—</span>
         <span class="pill" id="stat-net">—</span>
+      </div>
+      <div class="brand-switch" id="brand-switch" role="group" aria-label="Цветовая схема">
+        <button type="button" data-brand="samolet" class="active">Самолёт</button>
+        <button type="button" data-brand="vtb">ВТБ</button>
       </div>
     </header>
 
@@ -75,6 +82,7 @@
         <h2 class="cam-code" id="input-code">ВК2.1.1</h2>
         <p class="cam-info" id="input-info"></p>
         <p class="meters-label">Метры кабеля:</p>
+        <p class="clear-hint">Число <strong>0</strong> и «СОХРАНИТЬ» — стереть метраж (для проверки)</p>
         <div class="meters-display empty" id="meters-display">—</div>
         <div class="numpad" id="numpad">
           <button type="button" data-digit="1">1</button>
