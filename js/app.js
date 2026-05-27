@@ -139,6 +139,14 @@ function allCamerasFlat() {
   return list;
 }
 
+function cameraSearchHaystack(item) {
+  const c = item.camera;
+  return [c.camera, c.floor, c.place, c.cable, item.system.code, item.section.name]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
 function countDone(system) {
   if (!system.ready) return { done: 0, total: 0 };
   let done = 0;
@@ -281,9 +289,6 @@ function refreshCurrentView() {
 }
 
 function updateStats() {
-  const { done, total } = countDone(
-    catalog.systems.find((s) => s.ready) || { ready: false, sections: [] }
-  );
   let allDone = 0;
   let allTotal = 0;
   for (const s of catalog.systems.filter((x) => x.ready)) {
@@ -418,11 +423,7 @@ function renderGlobalSearch(q) {
     return;
   }
 
-  const hits = allCamerasFlat().filter(
-    (x) =>
-      x.camera.search.includes(norm) ||
-      x.camera.camera.toLowerCase().includes(norm)
-  );
+  const hits = allCamerasFlat().filter((x) => cameraSearchHaystack(x).includes(norm));
 
   box.classList.remove("hidden");
   if (!hits.length) {
@@ -639,9 +640,9 @@ async function init() {
     await refreshMetrazh();
     await flushQueue();
     goSystems();
-  } catch (e) {
-    $("systems-root").innerHTML = '<p class="empty-msg">Нет catalog.json — запустите npm run export</p>';
-    console.error(e);
+  } catch {
+    $("systems-root").innerHTML =
+      '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
   }
 
   if ("serviceWorker" in navigator) {
