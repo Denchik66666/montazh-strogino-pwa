@@ -263,7 +263,9 @@ async function flushQueue() {
     try {
       const r = await apiSave(item);
       if (r.ok) {
-        metrazhMap[metrazhKey(item.system, item.camera)] = item.meters;
+        const k = metrazhKey(item.system, item.camera);
+        if (item.meters === 0) delete metrazhMap[k];
+        else metrazhMap[k] = item.meters;
       } else remain.push(item);
     } catch {
       remain.push(item);
