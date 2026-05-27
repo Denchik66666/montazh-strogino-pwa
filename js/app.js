@@ -15,6 +15,8 @@ const nav = {
 
 let selectedCamera = null;
 let inputValue = "";
+/** @type {{ previewUrl: string, driveUrl?: string }[]} */
+let sessionPhotos = [];
 
 const $ = (id) => document.getElementById(id);
 
@@ -138,6 +140,56 @@ function blobToBase64(blob) {
   });
 }
 
+function clearSessionPhotos() {
+  for (const p of sessionPhotos) {
+    if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+  }
+  sessionPhotos = [];
+}
+
+function renderPhotoSession() {
+  const status = $("photo-status");
+  const preview = $("photo-preview");
+  if (!status || !preview) return;
+
+  const n = sessionPhotos.length;
+  if (!n) {
+    status.textContent = "Можно снять 1–3 фото · проверьте превью";
+    preview.hidden = true;
+    preview.innerHTML = "";
+    return;
+  }
+
+  const last = sessionPhotos[n - 1];
+  status.innerHTML =
+    `На Диске: <strong>${n}</strong> фото. Смотрите превью — размазано? Снимите ещё.`;
+
+  preview.hidden = false;
+  preview.innerHTML = sessionPhotos
+    .map(
+      (p, i) => `
+      <a class="photo-thumb" href="${escapeHtml(p.driveUrl || "#")}" target="_blank" rel="noopener" title="Фото ${i + 1} на Диске">
+        <img src="${p.previewUrl}" alt="фото ${i + 1}" />
+      </a>`
+    )
+    .join("");
+
+  if (last.driveUrl) {
+    const link = document.createElement("a");
+    link.className = "photo-open-last";
+    link.href = last.driveUrl;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "Открыть последнее на Диске";
+    preview.appendChild(link);
+  }
+}
+
+function setPhotoButtonsDisabled(disabled) {
+  $("btn-photo-camera").disabled = disabled;
+  $("btn-photo-gallery").disabled = disabled;
+}
+
 async function uploadPhotoFromFile(file) {
   if (!selectedCamera) return;
   if (!photosEnabled()) {
@@ -150,8 +202,7 @@ async function uploadPhotoFromFile(file) {
   }
 
   const status = $("photo-status");
-  const btn = $("btn-photo");
-  btn.disabled = true;
+  setPhotoButtonsDisabled(true);
   status.textContent = "Отправка фото…";
 
   try {
@@ -168,17 +219,19 @@ async function uploadPhotoFromFile(file) {
       mimeType: "image/jpeg",
     });
     if (r.ok) {
-      status.textContent = "Фото сохранено на Диске";
-      toast(`Фото: ${formatCameraCode(cam.camera)}`, "success");
+      const previewUrl = URL.createObjectURL(blob);
+      sessionPhotos.push({ previewUrl, driveUrl: r.url });
+      renderPhotoSession();
+      toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");
     } else {
-      status.textContent = "";
       toast(r.error || "Ошибка загрузки", "error");
+      renderPhotoSession();
     }
   } catch {
-    status.textContent = "";
     toast("Не удалось отправить фото", "error");
+    renderPhotoSession();
   } finally {
-    btn.disabled = false;
+    setPhotoButtonsDisabled(false);
     $("photo-input-camera").value = "";
     $("photo-input-gallery").value = "";
   }
@@ -588,8 +641,8 @@ function openInput(system, section, cam) {
     hint.classList.add("show");
   } else hint.classList.remove("show");
 
-  const photoStatus = $("photo-status");
-  if (photoStatus) photoStatus.textContent = "";
+  clearSessionPhotos();
+  renderPhotoSession();
   updatePhotoBlockVisibility();
   updateMetersDisplay();
   showScreen("input");
