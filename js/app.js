@@ -179,7 +179,8 @@ async function uploadPhotoFromFile(file) {
     toast("Не удалось отправить фото", "error");
   } finally {
     btn.disabled = false;
-    $("photo-input").value = "";
+    $("photo-input-camera").value = "";
+    $("photo-input-gallery").value = "";
   }
 }
 
@@ -748,11 +749,15 @@ async function init() {
   $("nav-back").addEventListener("click", goBack);
   $("numpad").addEventListener("click", numpadHandler);
   $("btn-save").addEventListener("click", saveMeters);
-  $("btn-photo")?.addEventListener("click", () => $("photo-input")?.click());
-  $("photo-input")?.addEventListener("change", (e) => {
+  const onPhotoPick = (e) => {
     const file = e.target.files?.[0];
     if (file) uploadPhotoFromFile(file);
-  });
+    e.target.value = "";
+  };
+  $("btn-photo-camera")?.addEventListener("click", () => $("photo-input-camera")?.click());
+  $("btn-photo-gallery")?.addEventListener("click", () => $("photo-input-gallery")?.click());
+  $("photo-input-camera")?.addEventListener("change", onPhotoPick);
+  $("photo-input-gallery")?.addEventListener("change", onPhotoPick);
   updatePhotoBlockVisibility();
   $("global-search").addEventListener("input", (e) => renderGlobalSearch(e.target.value));
 

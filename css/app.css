@@ -679,8 +679,13 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   display: none;
 }
 
+.photo-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .photo-btn {
-  width: 100%;
+  flex: 1;
   min-height: 52px;
   font-size: 1.05rem;
   font-weight: 700;
@@ -690,6 +695,12 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--text-strong);
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.photo-btn--secondary {
+  border-style: solid;
+  border-color: var(--surface2);
+  background: var(--surface);
 }
 
 .photo-btn:disabled {
