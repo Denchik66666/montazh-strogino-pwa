@@ -1,7 +1,8 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
-const NAV_KEY = "montazh_nav_state";
+const THEME_KEY = "montazh_theme";
+const THEME_COLORS = { light: "#e6e0d4", dark: "#1c1916" };
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
@@ -560,7 +561,39 @@ async function saveMeters() {
   }
 }
 
+function getTheme() {
+  const t = document.documentElement.getAttribute("data-theme");
+  return t === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const meta = document.getElementById("meta-theme-color");
+  if (meta) meta.content = THEME_COLORS[theme];
+  const btn = $("theme-toggle");
+  if (btn) {
+    btn.textContent = theme === "dark" ? "☀️" : "🌙";
+    btn.setAttribute(
+      "aria-label",
+      theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"
+    );
+  }
+}
+
+function initTheme() {
+  let theme = localStorage.getItem(THEME_KEY);
+  if (theme !== "light" && theme !== "dark") {
+    theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  applyTheme(theme);
+  $("theme-toggle")?.addEventListener("click", () => {
+    applyTheme(getTheme() === "dark" ? "light" : "dark");
+  });
+}
+
 async function init() {
+  initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);

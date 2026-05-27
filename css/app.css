@@ -5,7 +5,17 @@
 }
 
 :root {
-  /* Тёплая светлая тема — без белого текста */
+  --radius: 16px;
+  --tap: 56px;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --ok: #15803d;
+  --warn: #b45309;
+  --danger: #b91c1c;
+}
+
+/* Светлая — тёмный текст, без белых букв */
+html[data-theme="light"] {
   --bg: #e6e0d4;
   --surface: #f7f3eb;
   --surface-alt: #efe9de;
@@ -13,17 +23,71 @@
   --text: #3d3429;
   --text-strong: #1c1814;
   --muted: #6b5f4f;
-  --accent: #2563eb;
-  --accent-dark: #1d4ed8;
-  --ok: #15803d;
   --ok-bg: #d1fae5;
-  --warn: #b45309;
   --warn-bg: #fef3c7;
-  --danger: #b91c1c;
   --danger-bg: #fee2e2;
   --shadow: rgba(45, 38, 28, 0.12);
-  --radius: 16px;
-  --tap: 56px;
+  --on-accent: #f7f3eb;
+  color-scheme: light;
+}
+
+/* Тёмная — тёплый «песочный» текст, не белый */
+html[data-theme="dark"] {
+  --bg: #1c1916;
+  --surface: #28241f;
+  --surface-alt: #322e28;
+  --surface2: #433d34;
+  --text: #d4c4a8;
+  --text-strong: #eae0cc;
+  --muted: #9a8f7a;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.15);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.12);
+  --shadow: rgba(0, 0, 0, 0.35);
+  --on-accent: #eae0cc;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --bg: #1c1916;
+    --surface: #28241f;
+    --surface-alt: #322e28;
+    --surface2: #433d34;
+    --text: #d4c4a8;
+    --text-strong: #eae0cc;
+    --muted: #9a8f7a;
+    --ok: #4ade80;
+    --ok-bg: rgba(74, 222, 128, 0.15);
+    --warn: #fbbf24;
+    --warn-bg: rgba(251, 191, 36, 0.12);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.12);
+    --shadow: rgba(0, 0, 0, 0.35);
+    --on-accent: #eae0cc;
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) {
+    --bg: #e6e0d4;
+    --surface: #f7f3eb;
+    --surface-alt: #efe9de;
+    --surface2: #d4cdc0;
+    --text: #3d3429;
+    --text-strong: #1c1814;
+    --muted: #6b5f4f;
+    --ok-bg: #d1fae5;
+    --warn-bg: #fef3c7;
+    --danger-bg: #fee2e2;
+    --shadow: rgba(45, 38, 28, 0.12);
+    --on-accent: #f7f3eb;
+    color-scheme: light;
+  }
 }
 
 html {
@@ -48,14 +112,15 @@ body {
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   background: var(--bg);
   padding: 12px 16px 8px;
   border-bottom: 1px solid var(--surface2);
 }
 
-.nav-back {
+.nav-back,
+.theme-toggle {
   flex-shrink: 0;
   width: 48px;
   height: 48px;
@@ -63,13 +128,42 @@ body {
   border: none;
   border-radius: 12px;
   background: var(--surface);
-  color: var(--text);
+  color: var(--text-strong);
   cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.theme-toggle {
+  order: 3;
+  margin-left: auto;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.nav-back {
+  order: 1;
+}
+
+.nav-back:not([hidden]) ~ .header-text {
+  order: 2;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-back[hidden] ~ .header-text {
+  order: 1;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-text {
   flex: 1;
   min-width: 0;
+}
+
+.status-bar {
+  order: 10;
 }
 
 .app-header h1 {
@@ -610,7 +704,7 @@ body {
 
 .numpad button:active {
   background: var(--accent-dark);
-  color: var(--surface);
+  color: var(--on-accent);
 }
 
 .numpad .key-clear {
