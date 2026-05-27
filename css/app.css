@@ -40,35 +40,38 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="light"] {
-  --bg: #f2f2f7;
-  --surface: #ffffff;
-  --surface2: #e5e5ea;
-  --text: #1c1c1e;
-  --muted: #8e8e93;
+  --bg: #e3e4ea;
+  --surface: #eeeff3;
+  --surface2: #d0d1d9;
+  --text: #36363c;
+  --muted: #5a5a62;
   --accent: #007aff;
   --accent-dark: #0051d5;
   --ok: #34c759;
   --warn: #ff9500;
   --danger: #ff3b30;
-  --card-base: #ffffff;
-  --header-border: rgba(60, 60, 67, 0.12);
-  --hint-bg: rgba(0, 122, 255, 0.08);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
-  --pick-num-fill: #ffffff;
-  --camera-bg: #ffffff;
-  --camera-bg-alt: #f9f9fb;
-  --camera-edge: #c7c7cc;
-  --bar-track: rgba(60, 60, 67, 0.12);
-  --status-empty-bg: #e5e5ea;
-  --status-empty-text: #636366;
-  --status-progress-text: var(--tone);
+  --card-base: #eeeff3;
+  --header-border: rgba(54, 54, 60, 0.14);
+  --hint-bg: rgba(0, 122, 255, 0.07);
+  --shadow-card: 0 1px 3px rgba(36, 36, 44, 0.08), 0 0 0 0.5px rgba(54, 54, 60, 0.1);
+  --pick-num-fill: #e8e9ef;
+  --camera-bg: #eeeff3;
+  --camera-bg-alt: #e6e7ed;
+  --camera-edge: #b8b9c2;
+  --bar-track: rgba(54, 54, 60, 0.14);
+  --status-empty-bg: #d8d9e0;
+  --status-empty-text: #4a4a52;
+  --status-progress-text: color-mix(in srgb, var(--tone) 75%, #36363c);
   --badge-pending-bg: rgba(255, 149, 0, 0.14);
-  --badge-pending-text: #c93400;
+  --badge-pending-text: #9a4a00;
   --badge-done-bg: rgba(52, 199, 89, 0.16);
-  --badge-done-text: #248a3d;
+  --badge-done-text: #1d6b32;
   --save-text: #ffffff;
-  --setup-text: #ff3b30;
+  --setup-text: #c62828;
   --header-blur: saturate(180%) blur(20px);
+  --numpad-key: #f2f3f7;
+  --numpad-key-active: #c4c5cd;
+  --numpad-clear: #d8d9e0;
   color-scheme: light;
 }
 
@@ -103,7 +106,7 @@ body {
 }
 
 html[data-theme="light"] .app-header {
-  background: rgba(242, 242, 247, 0.82);
+  background: rgba(227, 228, 234, 0.88);
   backdrop-filter: var(--header-blur);
   -webkit-backdrop-filter: var(--header-blur);
 }
@@ -687,28 +690,35 @@ html[data-theme="light"] .save-btn {
 }
 
 html[data-theme="light"] .numpad button {
-  background: #ffffff;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  color: #1c1c1e;
+  background: var(--numpad-key);
+  box-shadow: 0 1px 0 rgba(36, 36, 44, 0.06);
+  color: var(--text);
 }
 
 html[data-theme="light"] .numpad button:active {
-  background: #d1d1d6;
+  background: var(--numpad-key-active);
 }
 
 html[data-theme="light"] .numpad .key-clear {
-  background: #e5e5ea;
-  color: #ff3b30;
+  background: var(--numpad-clear);
+  color: var(--danger);
 }
 
 html[data-theme="light"] .search-wrap input {
   border-color: transparent;
-  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.18);
+  box-shadow: 0 0 0 0.5px rgba(54, 54, 60, 0.2);
 }
 
 html[data-theme="light"] .pick-num {
-  color: var(--tone);
+  color: color-mix(in srgb, var(--tone) 70%, var(--text));
   font-weight: 900;
+}
+
+html[data-theme="light"] .screen-hint strong,
+html[data-theme="light"] .pick-label,
+html[data-theme="light"] .camera-btn .code,
+html[data-theme="light"] .input-card .cam-code {
+  color: #2a2a30;
 }
 
 .save-btn:disabled {

@@ -2,7 +2,7 @@ const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
 const THEME_KEY = "montazh_theme";
-const THEME_COLORS = { dark: "#0f172a", light: "#f2f2f7" };
+const THEME_COLORS = { dark: "#0f172a", light: "#e3e4ea" };
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
 /** @type {Record<string, number|string>} */
