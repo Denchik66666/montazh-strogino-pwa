@@ -90,11 +90,11 @@
     <!-- 4. Ввод метража -->
     <div id="screen-input" class="screen screen-input">
       <div class="input-card">
-        <p class="input-system" id="input-system"></p>
-        <h2 class="cam-code" id="input-code">ВК 2.1.1</h2>
-        <p class="cam-info" id="input-info"></p>
-        <p class="meters-label">Метры кабеля:</p>
-        <p class="clear-hint">Число <strong>0</strong> и «СОХРАНИТЬ» — стереть метраж (для проверки)</p>
+        <div class="input-head">
+          <p class="input-system" id="input-system"></p>
+          <h2 class="cam-code" id="input-code">ВК 2.1.1</h2>
+          <p class="cam-info" id="input-info"></p>
+        </div>
         <div class="meters-display empty" id="meters-display">—</div>
         <div class="numpad" id="numpad">
           <button type="button" data-digit="1">1</button>
@@ -110,19 +110,22 @@
           <button type="button" data-digit="0">0</button>
           <button type="button" class="key-back" data-action="back">⌫</button>
         </div>
-        <p class="overwrite-hint" id="overwrite-hint"></p>
-        <div class="photo-block" id="photo-block">
-          <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
-          <input type="file" id="photo-input-gallery" accept="image/*" hidden />
-          <div class="photo-actions">
-            <button type="button" class="photo-btn" id="btn-photo-camera">Снять фото</button>
-            <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery">
-              Из галереи
-            </button>
+        <div class="input-footer">
+          <p class="overwrite-hint" id="overwrite-hint"></p>
+          <div class="photo-block" id="photo-block">
+            <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
+            <input type="file" id="photo-input-gallery" accept="image/*" hidden />
+            <div class="photo-actions">
+              <button type="button" class="photo-btn" id="btn-photo-camera">Фото</button>
+              <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery">
+                Галерея
+              </button>
+            </div>
+            <p class="photo-status" id="photo-status"></p>
           </div>
-          <p class="photo-status" id="photo-status"></p>
+          <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
+          <p class="input-footnote">0 + сохранить — стереть · макс. 500 м</p>
         </div>
-        <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
       </div>
     </div>
 

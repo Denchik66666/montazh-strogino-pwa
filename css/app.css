@@ -577,82 +577,103 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   font-size: 1.1rem;
 }
 
+.screen-input {
+  padding: 0 12px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
 #screen-input.active {
   display: flex;
   flex-direction: column;
+  height: calc(100dvh - 112px - env(safe-area-inset-top, 0px));
+  max-height: calc(100dvh - 112px - env(safe-area-inset-top, 0px));
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 .input-card {
   width: 100%;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 8px;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 6px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.input-head {
+  text-align: center;
+  padding-top: 2px;
+}
+
+.input-system {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .input-card .cam-code {
-  font-size: 2.4rem;
+  font-size: clamp(1.35rem, 5vw, 1.75rem);
   font-weight: 900;
-  margin: 0;
+  margin: 2px 0 0;
   line-height: 1.1;
 }
 
 .input-card .cam-info {
-  margin: 8px 0 20px;
-  font-size: 1rem;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
   color: var(--muted);
   text-align: center;
+  line-height: 1.25;
 }
 
 .meters-display {
   width: 100%;
-  max-width: 320px;
-  min-height: 88px;
-  margin-bottom: 16px;
+  min-height: 52px;
+  max-height: 64px;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.5rem;
+  font-size: clamp(2rem, 9vw, 2.75rem);
   font-weight: 800;
-  border: 3px solid var(--accent);
-  border-radius: var(--radius);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
   background: var(--surface);
   letter-spacing: 0.05em;
 }
 
 .meters-display.empty {
   color: var(--surface2);
-  font-size: 2rem;
+  font-size: 1.5rem;
   border-color: var(--surface2);
-}
-
-.meters-label {
-  font-size: 1rem;
-  color: var(--muted);
-  margin-bottom: 12px;
 }
 
 .numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 5px;
   width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .numpad button {
-  min-height: 64px;
-  font-size: 1.75rem;
+  min-height: 0;
+  height: 100%;
+  max-height: 52px;
+  font-size: clamp(1.2rem, 4.5vw, 1.5rem);
   font-weight: 700;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 10px;
   background: var(--surface2);
   color: var(--text);
   cursor: pointer;
   touch-action: manipulation;
+  padding: 0;
 }
 
 .numpad button:active {
@@ -660,19 +681,32 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .numpad .key-clear {
-  font-size: 1rem;
+  font-size: 0.8rem;
   background: var(--surface);
   color: var(--warn);
 }
 
 .numpad .key-back {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+}
+
+.input-footer {
+  flex-shrink: 0;
+  width: 100%;
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0));
+}
+
+.input-footnote {
+  margin: 4px 0 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
 }
 
 .photo-block {
   width: 100%;
-  max-width: 360px;
-  margin: 12px auto 0;
+  margin: 4px 0 0;
 }
 
 .photo-block[hidden] {
@@ -686,8 +720,8 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-btn {
   flex: 1;
-  min-height: 52px;
-  font-size: 1.05rem;
+  min-height: 42px;
+  font-size: 0.88rem;
   font-weight: 700;
   border: 2px dashed var(--accent);
   border-radius: var(--radius);
@@ -712,19 +746,18 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .photo-status {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
+  margin: 2px 0 0;
+  font-size: 0.72rem;
   color: var(--muted);
   text-align: center;
-  min-height: 1.2em;
+  min-height: 0;
 }
 
 .save-btn {
   width: 100%;
-  max-width: 360px;
-  min-height: 72px;
-  margin: 20px auto 0;
-  font-size: 1.5rem;
+  min-height: 50px;
+  margin: 6px 0 0;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   border: none;
@@ -814,14 +847,14 @@ html[data-theme="dark"] .app-header h1 {
 }
 
 .overwrite-hint {
-  max-width: 360px;
-  margin: 12px auto 0;
-  padding: 12px;
-  border-radius: 12px;
+  margin: 0 0 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
   background: rgba(245, 158, 11, 0.15);
   color: var(--warn);
-  font-size: 0.95rem;
+  font-size: 0.72rem;
   text-align: center;
+  line-height: 1.2;
   display: none;
 }
 
