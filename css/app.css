@@ -669,6 +669,45 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   font-size: 1.2rem;
 }
 
+.photo-block {
+  width: 100%;
+  max-width: 360px;
+  margin: 12px auto 0;
+}
+
+.photo-block[hidden] {
+  display: none;
+}
+
+.photo-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--text-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.photo-btn:disabled {
+  opacity: 0.5;
+}
+
+.photo-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.photo-status {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  min-height: 1.2em;
+}
+
 .save-btn {
   width: 100%;
   max-width: 360px;

@@ -4,4 +4,5 @@ window.APP_CONFIG = {
   PROJECT_NAME: "Строгино 11 сек",
   MIN_METERS: 0,
   MAX_METERS: 500,
+  PHOTOS_ENABLED: true,
 };

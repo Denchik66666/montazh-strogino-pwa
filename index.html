@@ -111,6 +111,17 @@
           <button type="button" class="key-back" data-action="back">⌫</button>
         </div>
         <p class="overwrite-hint" id="overwrite-hint"></p>
+        <div class="photo-block" id="photo-block">
+          <input
+            type="file"
+            id="photo-input"
+            accept="image/*"
+            capture="environment"
+            hidden
+          />
+          <button type="button" class="photo-btn" id="btn-photo">Сделать фотоотчёт</button>
+          <p class="photo-status" id="photo-status"></p>
+        </div>
         <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
       </div>
     </div>

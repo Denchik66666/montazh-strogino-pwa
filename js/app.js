@@ -91,6 +91,96 @@ async function apiSave(payload) {
   return res.json();
 }
 
+async function apiUploadPhoto(payload) {
+  const res = await fetch(CONFIG.API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "photo", ...payload }),
+  });
+  if (!res.ok) throw new Error("Сеть");
+  return res.json();
+}
+
+function photosEnabled() {
+  return CONFIG.PHOTOS_ENABLED !== false && apiConfigured();
+}
+
+function updatePhotoBlockVisibility() {
+  const block = $("photo-block");
+  if (!block) return;
+  block.hidden = !photosEnabled();
+}
+
+async function compressImageFile(file, maxSide = 1600, quality = 0.82) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Сжатие"))), "image/jpeg", quality);
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const s = String(r.result || "");
+      resolve(s.includes(",") ? s.split(",")[1] : s);
+    };
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+async function uploadPhotoFromFile(file) {
+  if (!selectedCamera) return;
+  if (!photosEnabled()) {
+    toast("Фотоотчёты после подключения таблицы", "queue");
+    return;
+  }
+  if (!navigator.onLine) {
+    toast("Нужен интернет для фото", "error");
+    return;
+  }
+
+  const status = $("photo-status");
+  const btn = $("btn-photo");
+  btn.disabled = true;
+  status.textContent = "Отправка фото…";
+
+  try {
+    const blob = await compressImageFile(file);
+    const data = await blobToBase64(blob);
+    const { system, cam } = selectedCamera;
+    const r = await apiUploadPhoto({
+      system: system.id,
+      camera: cam.camera,
+      row: cam.row,
+      data,
+      mimeType: "image/jpeg",
+    });
+    if (r.ok) {
+      status.textContent = "Фото сохранено на Диске";
+      toast(`Фото: ${formatCameraCode(cam.camera)}`, "success");
+    } else {
+      status.textContent = "";
+      toast(r.error || "Ошибка загрузки", "error");
+    }
+  } catch {
+    status.textContent = "";
+    toast("Не удалось отправить фото", "error");
+  } finally {
+    btn.disabled = false;
+    $("photo-input").value = "";
+  }
+}
+
 function escapeHtml(s) {
   const d = document.createElement("div");
   d.textContent = s;
@@ -487,6 +577,9 @@ function openInput(system, section, cam) {
     hint.classList.add("show");
   } else hint.classList.remove("show");
 
+  const photoStatus = $("photo-status");
+  if (photoStatus) photoStatus.textContent = "";
+  updatePhotoBlockVisibility();
   updateMetersDisplay();
   showScreen("input");
 }
@@ -645,6 +738,12 @@ async function init() {
   $("nav-back").addEventListener("click", goBack);
   $("numpad").addEventListener("click", numpadHandler);
   $("btn-save").addEventListener("click", saveMeters);
+  $("btn-photo")?.addEventListener("click", () => $("photo-input")?.click());
+  $("photo-input")?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (file) uploadPhotoFromFile(file);
+  });
+  updatePhotoBlockVisibility();
   $("global-search").addEventListener("input", (e) => renderGlobalSearch(e.target.value));
 
   window.addEventListener("online", () => {
