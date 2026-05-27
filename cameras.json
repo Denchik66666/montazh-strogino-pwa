@@ -1,0 +1,1195 @@
+{
+  "project": "Строгино 11 сек",
+  "updated": "2026-05-27",
+  "count": 132,
+  "cameras": [
+    {
+      "row": 3,
+      "section": "",
+      "camera": "ВК2.1.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.1 подвал вход "
+    },
+    {
+      "row": 4,
+      "section": "",
+      "camera": "ВК2.1.2",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.2 1 этаж вход "
+    },
+    {
+      "row": 5,
+      "section": "",
+      "camera": "ВК2.1.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.3 1 этаж вход "
+    },
+    {
+      "row": 6,
+      "section": "",
+      "camera": "ВК2.1.4",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.4 1 этаж холл "
+    },
+    {
+      "row": 7,
+      "section": "",
+      "camera": "ВК2.1.7",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.7 1 этаж колясочная "
+    },
+    {
+      "row": 8,
+      "section": "",
+      "camera": "ВК2.1.5",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.5 24 этаж лифт "
+    },
+    {
+      "row": 9,
+      "section": "",
+      "camera": "ВК2.1.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.1.6 24 этаж лифт "
+    },
+    {
+      "row": 10,
+      "section": "",
+      "camera": "ВК2.1.8",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.1.8 24 этаж кровля "
+    },
+    {
+      "row": 12,
+      "section": "",
+      "camera": "ВК2.2.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.1 подвал вход "
+    },
+    {
+      "row": 13,
+      "section": "",
+      "camera": "ВК2.2.2",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.2 подвал сс "
+    },
+    {
+      "row": 14,
+      "section": "",
+      "camera": "ВК2.2.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.3 1 этаж вход "
+    },
+    {
+      "row": 15,
+      "section": "",
+      "camera": "ВК2.2.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.4 1 этаж вход "
+    },
+    {
+      "row": 16,
+      "section": "",
+      "camera": "ВК2.2.5",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.5 1 этаж холл "
+    },
+    {
+      "row": 17,
+      "section": "",
+      "camera": "ВК2.2.8",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.8 1 этаж колясочная "
+    },
+    {
+      "row": 18,
+      "section": "",
+      "camera": "ВК2.2.9",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.2.9 1 этаж территория "
+    },
+    {
+      "row": 19,
+      "section": "",
+      "camera": "ВК2.2.10",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.2.10 1 этаж территория "
+    },
+    {
+      "row": 20,
+      "section": "",
+      "camera": "ВК2.2.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.6 24 этаж лифт "
+    },
+    {
+      "row": 21,
+      "section": "",
+      "camera": "ВК2.2.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.2.7 24 этаж лифт "
+    },
+    {
+      "row": 22,
+      "section": "",
+      "camera": "ВК2.2.12",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.2.12 24 этаж кровля "
+    },
+    {
+      "row": 24,
+      "section": "",
+      "camera": "ВК2.3.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.1 подвал вход "
+    },
+    {
+      "row": 25,
+      "section": "",
+      "camera": "ВК2.3.2",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.2 1 этаж вход "
+    },
+    {
+      "row": 26,
+      "section": "",
+      "camera": "ВК2.3.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.3 1 этаж вход "
+    },
+    {
+      "row": 27,
+      "section": "",
+      "camera": "ВК2.3.4",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.4 1 этаж холл "
+    },
+    {
+      "row": 28,
+      "section": "",
+      "camera": "ВК2.3.7",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.7 1 этаж колясочная "
+    },
+    {
+      "row": 29,
+      "section": "",
+      "camera": "ВК2.3.5",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.5 24 этаж лифт "
+    },
+    {
+      "row": 30,
+      "section": "",
+      "camera": "ВК2.3.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.3.6 24 этаж лифт "
+    },
+    {
+      "row": 31,
+      "section": "",
+      "camera": "ВК2.3.8",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.3.8 24 этаж кровля "
+    },
+    {
+      "row": 33,
+      "section": "",
+      "camera": "ВК2.4.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.1 подвал вход "
+    },
+    {
+      "row": 34,
+      "section": "",
+      "camera": "ВК2.4.2",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.2 подвал сс "
+    },
+    {
+      "row": 35,
+      "section": "",
+      "camera": "ВК2.4.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.3 1 этаж вход "
+    },
+    {
+      "row": 36,
+      "section": "",
+      "camera": "ВК2.4.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.4 1 этаж вход "
+    },
+    {
+      "row": 37,
+      "section": "",
+      "camera": "ВК2.4.5",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.5 1 этаж холл "
+    },
+    {
+      "row": 38,
+      "section": "",
+      "camera": "ВК2.4.9",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.9 1 этаж колясочная "
+    },
+    {
+      "row": 39,
+      "section": "",
+      "camera": "ВК2.4.10",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.4.10 1 этаж территория "
+    },
+    {
+      "row": 40,
+      "section": "",
+      "camera": "ВК2.4.11",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.4.11 1 этаж территория "
+    },
+    {
+      "row": 41,
+      "section": "",
+      "camera": "ВК2.4.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.6 24 этаж лифт "
+    },
+    {
+      "row": 42,
+      "section": "",
+      "camera": "ВК2.4.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.7 24 этаж лифт "
+    },
+    {
+      "row": 43,
+      "section": "",
+      "camera": "ВК2.4.8",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.4.8 24 этаж лифт "
+    },
+    {
+      "row": 44,
+      "section": "",
+      "camera": "ВК2.4.12",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.4.12 24 этаж кровля "
+    },
+    {
+      "row": 46,
+      "section": "",
+      "camera": "ВК2.5.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.1 подвал вход "
+    },
+    {
+      "row": 47,
+      "section": "",
+      "camera": "ВК2.5.2",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.2 подвал вход "
+    },
+    {
+      "row": 48,
+      "section": "",
+      "camera": "ВК2.5.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.3 1 этаж вход "
+    },
+    {
+      "row": 49,
+      "section": "",
+      "camera": "ВК2.5.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.4 1 этаж вход "
+    },
+    {
+      "row": 50,
+      "section": "",
+      "camera": "ВК2.5.5",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.5 1 этаж холл "
+    },
+    {
+      "row": 51,
+      "section": "",
+      "camera": "ВК2.5.8",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.8 1 этаж колясочная "
+    },
+    {
+      "row": 52,
+      "section": "",
+      "camera": "ВК2.5.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.6 24 этаж лифт "
+    },
+    {
+      "row": 53,
+      "section": "",
+      "camera": "ВК2.5.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.5.7 24 этаж лифт "
+    },
+    {
+      "row": 54,
+      "section": "",
+      "camera": "ВК2.5.9",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.5.9 24 этаж кровля "
+    },
+    {
+      "row": 56,
+      "section": "",
+      "camera": "ВК2.6.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.1 подвал вход "
+    },
+    {
+      "row": 57,
+      "section": "",
+      "camera": "ВК2.6.2",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.2 подвал вход "
+    },
+    {
+      "row": 58,
+      "section": "",
+      "camera": "ВК2.6.3",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.3 подвал сс "
+    },
+    {
+      "row": 59,
+      "section": "",
+      "camera": "ВК2.П.1",
+      "floor": "Подвал",
+      "place": "Въезд",
+      "cable": "FTP cat5e",
+      "search": "вк2.п.1 подвал въезд "
+    },
+    {
+      "row": 60,
+      "section": "",
+      "camera": "ВК2.П.2",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.2 подвал паркинг "
+    },
+    {
+      "row": 61,
+      "section": "",
+      "camera": "ВК2.П.3",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.3 подвал паркинг "
+    },
+    {
+      "row": 62,
+      "section": "",
+      "camera": "ВК2.П.4",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.4 подвал паркинг "
+    },
+    {
+      "row": 63,
+      "section": "",
+      "camera": "ВК2.П.5",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.5 подвал паркинг "
+    },
+    {
+      "row": 64,
+      "section": "",
+      "camera": "ВК2.П.6",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.6 подвал паркинг "
+    },
+    {
+      "row": 65,
+      "section": "",
+      "camera": "ВК2.П.7",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.7 подвал паркинг "
+    },
+    {
+      "row": 66,
+      "section": "",
+      "camera": "ВК2.П.8",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.8 подвал паркинг "
+    },
+    {
+      "row": 67,
+      "section": "",
+      "camera": "ВК2.П.9",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.9 подвал паркинг "
+    },
+    {
+      "row": 68,
+      "section": "",
+      "camera": "ВК2.П.10",
+      "floor": "Подвал",
+      "place": "Паркинг",
+      "cable": "UTP cat5e",
+      "search": "вк2.п.10 подвал паркинг "
+    },
+    {
+      "row": 69,
+      "section": "",
+      "camera": "ВК2.П.11",
+      "floor": "Подвал",
+      "place": "Выезд",
+      "cable": "FTP cat5e",
+      "search": "вк2.п.11 подвал выезд "
+    },
+    {
+      "row": 70,
+      "section": "",
+      "camera": "ВК2.6.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.4 1 этаж вход "
+    },
+    {
+      "row": 71,
+      "section": "",
+      "camera": "ВК2.6.5",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.5 1 этаж вход "
+    },
+    {
+      "row": 72,
+      "section": "",
+      "camera": "ВК2.6.6",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.6 1 этаж холл "
+    },
+    {
+      "row": 73,
+      "section": "",
+      "camera": "ВК2.6.9",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.9 1 этаж колясочная "
+    },
+    {
+      "row": 74,
+      "section": "",
+      "camera": "ВК2.6.10",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.6.10 1 этаж территория "
+    },
+    {
+      "row": 75,
+      "section": "",
+      "camera": "ВК2.6.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.7 24 этаж лифт "
+    },
+    {
+      "row": 76,
+      "section": "",
+      "camera": "ВК2.6.8",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.6.8 24 этаж лифт "
+    },
+    {
+      "row": 77,
+      "section": "",
+      "camera": "ВК2.6.11",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.6.11 24 этаж кровля "
+    },
+    {
+      "row": 79,
+      "section": "",
+      "camera": "ВК2.7.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.1 подвал вход "
+    },
+    {
+      "row": 80,
+      "section": "",
+      "camera": "ВК2.7.2",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.2 подвал вход "
+    },
+    {
+      "row": 81,
+      "section": "",
+      "camera": "ВК2.7.3",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.3 подвал сс "
+    },
+    {
+      "row": 82,
+      "section": "",
+      "camera": "ВК2.7.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.4 1 этаж вход "
+    },
+    {
+      "row": 83,
+      "section": "",
+      "camera": "ВК2.7.5",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.5 1 этаж вход "
+    },
+    {
+      "row": 84,
+      "section": "",
+      "camera": "ВК2.7.6",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.6 1 этаж холл "
+    },
+    {
+      "row": 85,
+      "section": "",
+      "camera": "ВК2.7.9",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.9 1 этаж колясочная "
+    },
+    {
+      "row": 86,
+      "section": "",
+      "camera": "ВК2.7.10",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.7.10 1 этаж территория "
+    },
+    {
+      "row": 87,
+      "section": "",
+      "camera": "ВК2.7.11",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.7.11 1 этаж территория "
+    },
+    {
+      "row": 88,
+      "section": "",
+      "camera": "ВК2.7.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.7 24 этаж лифт "
+    },
+    {
+      "row": 89,
+      "section": "",
+      "camera": "ВК2.7.8",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.7.8 24 этаж лифт "
+    },
+    {
+      "row": 90,
+      "section": "",
+      "camera": "ВК2.7.12",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.7.12 24 этаж кровля "
+    },
+    {
+      "row": 92,
+      "section": "",
+      "camera": "ВК2.8.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.1 подвал вход "
+    },
+    {
+      "row": 93,
+      "section": "",
+      "camera": "ВК2.8.2",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.2 подвал сс "
+    },
+    {
+      "row": 94,
+      "section": "",
+      "camera": "ВК2.8.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.3 1 этаж вход "
+    },
+    {
+      "row": 95,
+      "section": "",
+      "camera": "ВК2.8.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.4 1 этаж вход "
+    },
+    {
+      "row": 96,
+      "section": "",
+      "camera": "ВК2.8.5",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.5 1 этаж холл "
+    },
+    {
+      "row": 97,
+      "section": "",
+      "camera": "ВК2.8.9",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.9 1 этаж колясочная "
+    },
+    {
+      "row": 98,
+      "section": "",
+      "camera": "ВК2.8.10",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.8.10 1 этаж территория "
+    },
+    {
+      "row": 99,
+      "section": "",
+      "camera": "ВК2.8.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.6 24 этаж лифт "
+    },
+    {
+      "row": 100,
+      "section": "",
+      "camera": "ВК2.8.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.7 24 этаж лифт "
+    },
+    {
+      "row": 101,
+      "section": "",
+      "camera": "ВК2.8.8",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.8.8 24 этаж лифт "
+    },
+    {
+      "row": 102,
+      "section": "",
+      "camera": "ВК2.8.11",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.8.11 24 этаж кровля "
+    },
+    {
+      "row": 104,
+      "section": "",
+      "camera": "ВК2.9.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.1 подвал вход "
+    },
+    {
+      "row": 105,
+      "section": "",
+      "camera": "ВК2.9.2",
+      "floor": "Подвал",
+      "place": "ИТП",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.2 подвал итп "
+    },
+    {
+      "row": 106,
+      "section": "",
+      "camera": "ВК2.9.3",
+      "floor": "Подвал",
+      "place": "ИТП",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.3 подвал итп "
+    },
+    {
+      "row": 107,
+      "section": "",
+      "camera": "ВК2.9.4",
+      "floor": "Подвал",
+      "place": "ИТП",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.4 подвал итп "
+    },
+    {
+      "row": 108,
+      "section": "",
+      "camera": "ВК2.9.5",
+      "floor": "Подвал",
+      "place": "ИТП",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.5 подвал итп "
+    },
+    {
+      "row": 109,
+      "section": "",
+      "camera": "ВК2.9.6",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.6 1 этаж вход "
+    },
+    {
+      "row": 110,
+      "section": "",
+      "camera": "ВК2.9.7",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.7 1 этаж вход "
+    },
+    {
+      "row": 111,
+      "section": "",
+      "camera": "ВК2.9.8",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.8 1 этаж холл "
+    },
+    {
+      "row": 112,
+      "section": "",
+      "camera": "ВК2.9.12",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.12 1 этаж колясочная "
+    },
+    {
+      "row": 113,
+      "section": "",
+      "camera": "ВК2.9.13",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.9.13 1 этаж территория "
+    },
+    {
+      "row": 114,
+      "section": "",
+      "camera": "ВК2.9.14",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.9.14 1 этаж территория "
+    },
+    {
+      "row": 115,
+      "section": "",
+      "camera": "ВК2.9.9",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.9 24 этаж лифт "
+    },
+    {
+      "row": 116,
+      "section": "",
+      "camera": "ВК2.9.10",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.10 24 этаж лифт "
+    },
+    {
+      "row": 117,
+      "section": "",
+      "camera": "ВК2.9.11",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.9.11 24 этаж лифт "
+    },
+    {
+      "row": 118,
+      "section": "",
+      "camera": "ВК2.9.15",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.9.15 24 этаж кровля "
+    },
+    {
+      "row": 120,
+      "section": "",
+      "camera": "ВК2.10.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.1 подвал вход "
+    },
+    {
+      "row": 121,
+      "section": "",
+      "camera": "ВК2.10.2",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.2 подвал сс "
+    },
+    {
+      "row": 122,
+      "section": "",
+      "camera": "ВК2.10.3",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.3 1 этаж вход "
+    },
+    {
+      "row": 123,
+      "section": "",
+      "camera": "ВК2.10.4",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.4 1 этаж вход "
+    },
+    {
+      "row": 124,
+      "section": "",
+      "camera": "ВК2.10.5",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.5 1 этаж холл "
+    },
+    {
+      "row": 125,
+      "section": "",
+      "camera": "ВК2.10.8",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.8 1 этаж колясочная "
+    },
+    {
+      "row": 126,
+      "section": "",
+      "camera": "ВК2.10.6",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.6 24 этаж лифт "
+    },
+    {
+      "row": 127,
+      "section": "",
+      "camera": "ВК2.10.7",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.10.7 24 этаж лифт "
+    },
+    {
+      "row": 128,
+      "section": "",
+      "camera": "ВК2.10.9",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.10.9 24 этаж кровля "
+    },
+    {
+      "row": 130,
+      "section": "",
+      "camera": "ВК2.11.1",
+      "floor": "Подвал",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.1 подвал вход "
+    },
+    {
+      "row": 131,
+      "section": "",
+      "camera": "ВК2.11.2",
+      "floor": "Подвал",
+      "place": "Насосная",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.2 подвал насосная "
+    },
+    {
+      "row": 132,
+      "section": "",
+      "camera": "ВК2.11.3",
+      "floor": "Подвал",
+      "place": "Насосная",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.3 подвал насосная "
+    },
+    {
+      "row": 133,
+      "section": "",
+      "camera": "ВК2.11.4",
+      "floor": "Подвал",
+      "place": "Насосная",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.4 подвал насосная "
+    },
+    {
+      "row": 134,
+      "section": "",
+      "camera": "ВК2.11.5",
+      "floor": "Подвал",
+      "place": "СС",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.5 подвал сс "
+    },
+    {
+      "row": 135,
+      "section": "",
+      "camera": "ВК2.11.6",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.6 1 этаж вход "
+    },
+    {
+      "row": 136,
+      "section": "",
+      "camera": "ВК2.11.7",
+      "floor": "1 этаж",
+      "place": "Вход",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.7 1 этаж вход "
+    },
+    {
+      "row": 137,
+      "section": "",
+      "camera": "ВК2.11.8",
+      "floor": "1 этаж",
+      "place": "Холл",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.8 1 этаж холл "
+    },
+    {
+      "row": 138,
+      "section": "",
+      "camera": "ВК2.11.12",
+      "floor": "1 этаж",
+      "place": "Колясочная",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.12 1 этаж колясочная "
+    },
+    {
+      "row": 139,
+      "section": "",
+      "camera": "ВК2.11.13",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.11.13 1 этаж территория "
+    },
+    {
+      "row": 140,
+      "section": "",
+      "camera": "ВК2.11.14",
+      "floor": "1 этаж",
+      "place": "Территория",
+      "cable": "FTP cat5e",
+      "search": "вк2.11.14 1 этаж территория "
+    },
+    {
+      "row": 141,
+      "section": "",
+      "camera": "ВК2.11.9",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.9 24 этаж лифт "
+    },
+    {
+      "row": 142,
+      "section": "",
+      "camera": "ВК2.11.10",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.10 24 этаж лифт "
+    },
+    {
+      "row": 143,
+      "section": "",
+      "camera": "ВК2.11.11",
+      "floor": "24 этаж",
+      "place": "Лифт",
+      "cable": "UTP cat5e",
+      "search": "вк2.11.11 24 этаж лифт "
+    },
+    {
+      "row": 144,
+      "section": "",
+      "camera": "ВК2.11.15",
+      "floor": "24 этаж",
+      "place": "Кровля",
+      "cable": "FTP cat5e",
+      "search": "вк2.11.15 24 этаж кровля "
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Метраж камер</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div id="setup-banner" class="setup-banner">
+      Таблица не подключена. Бригадиру: вставьте ссылку API в файл
+      <strong>config.js</strong> (см. инструкцию).
+    </div>
+
+    <!-- Список камер -->
+    <div id="screen-list">
+      <header class="app-header">
+        <h1 id="project-title">Метраж камер</h1>
+        <p class="subtitle">Нажмите на камеру → введите метры → СОХРАНИТЬ</p>
+        <div class="search-wrap">
+          <input
+            type="search"
+            id="search"
+            placeholder="Поиск: ВК2.1.5 или этаж..."
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </div>
+        <div class="status-bar">
+          <span class="pill" id="stat-total">—</span>
+          <span class="pill ok" id="stat-done">—</span>
+          <span class="pill" id="stat-net">—</span>
+        </div>
+      </header>
+      <main id="camera-root"></main>
+    </div>
+
+    <!-- Ввод метража -->
+    <div id="screen-input" class="screen-input">
+      <button type="button" class="back-btn" id="btn-back">← Назад</button>
+      <div class="input-card">
+        <h2 class="cam-code" id="input-code">ВК2.1.1</h2>
+        <p class="cam-info" id="input-info"></p>
+        <p class="meters-label">Длина кабеля, метры:</p>
+        <div class="meters-display empty" id="meters-display">—</div>
+        <div class="numpad" id="numpad">
+          <button type="button" data-digit="1">1</button>
+          <button type="button" data-digit="2">2</button>
+          <button type="button" data-digit="3">3</button>
+          <button type="button" data-digit="4">4</button>
+          <button type="button" data-digit="5">5</button>
+          <button type="button" data-digit="6">6</button>
+          <button type="button" data-digit="7">7</button>
+          <button type="button" data-digit="8">8</button>
+          <button type="button" data-digit="9">9</button>
+          <button type="button" class="key-clear" data-action="clear">Стереть</button>
+          <button type="button" data-digit="0">0</button>
+          <button type="button" class="key-back" data-action="back">⌫</button>
+        </div>
+        <p class="overwrite-hint" id="overwrite-hint"></p>
+        <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+
+    <script src="config.js"></script>
+    <script src="js/app.js" type="module"></script>
+  </body>
+</html>
