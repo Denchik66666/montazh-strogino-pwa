@@ -157,9 +157,11 @@ async function uploadPhotoFromFile(file) {
   try {
     const blob = await compressImageFile(file);
     const data = await blobToBase64(blob);
-    const { system, cam } = selectedCamera;
+    const { system, section, cam } = selectedCamera;
     const r = await apiUploadPhoto({
       system: system.id,
+      systemCode: system.code,
+      sectionFolder: sectionFolderName(section),
       camera: cam.camera,
       row: cam.row,
       data,
@@ -208,6 +210,14 @@ function parseSectionName(name) {
     short: num ? `Секция ${num}` : name,
     sub: cameras ? `${cameras} камер` : "",
   };
+}
+
+/** Имя папки на Диске: «01 — Секция 1» как в приложении */
+function sectionFolderName(section) {
+  if (!section) return "Без секции";
+  const info = parseSectionName(section.name);
+  if (info.num) return `${String(info.num).padStart(2, "0")} — ${info.short}`;
+  return String(section.name || "Без секции").slice(0, 80);
 }
 
 function pickTone(index) {
