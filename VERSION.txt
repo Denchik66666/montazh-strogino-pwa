@@ -1,0 +1,6 @@
+Den - Монтажник
+Release: 2026-05-28
+PWA cache: montazh-v47
+Assets: v47
+Git: backup-2026-05-28
+Apps Script deploy: @41
