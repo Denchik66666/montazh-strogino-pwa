@@ -13,13 +13,13 @@
     <script>
       (function () {
         var t = localStorage.getItem("montazh_theme");
-        if (t !== "light" && t !== "dark") t = "dark";
+        if (t !== "light" && t !== "dark") t = "light";
         document.documentElement.setAttribute("data-theme", t);
       })();
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=46" />
+    <link rel="stylesheet" href="css/app.css?v=47" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -134,7 +134,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=46"></script>
-    <script src="js/app.js?v=46" defer></script>
+    <script src="config.js?v=47"></script>
+    <script src="js/app.js?v=47" defer></script>
   </body>
 </html>

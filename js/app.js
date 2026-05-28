@@ -441,7 +441,7 @@ function escapeHtml(s) {
 /** На экране всегда кириллица ВК; в таблице и API — BK */
 function formatCameraCode(code) {
   const n = normalizeCameraCode(code);
-  return n.replace(/^BK(?=\d)/i, "ВК ");
+  return n.replace(/^BK\s*(?=\d)/i, "ВК ");
 }
 
 function systemDisplayTitle(sys) {

@@ -9,9 +9,9 @@ html[data-theme="dark"] {
   --bg: #0f172a;
   --surface: #1e293b;
   --surface2: #334155;
-  --text: #b8bcc6;
-  --text-strong: #d0d4dc;
-  --muted: #8b93a3;
+  --text: #9c9588;
+  --text-strong: #e8e2d6;
+  --muted: #7a7368;
   --accent: #3b82f6;
   --accent-dark: #2563eb;
   --ok: #22c55e;
@@ -29,7 +29,7 @@ html[data-theme="dark"] {
   --camera-edge: #475569;
   --bar-track: rgba(0, 0, 0, 0.35);
   --status-empty-bg: rgba(148, 163, 184, 0.2);
-  --status-empty-text: #cbd5e1;
+  --status-empty-text: #9c9588;
   --status-progress-text: color-mix(in srgb, var(--tone) 55%, var(--text-strong));
   --badge-pending-bg: rgba(245, 158, 11, 0.2);
   --badge-pending-text: #d4a24a;
