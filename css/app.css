@@ -306,8 +306,8 @@ html[data-theme="light"] .app-header {
 
 .rd-panel {
   width: 100%;
-  max-width: 420px;
-  margin: 0 auto 10px;
+  max-width: 100%;
+  margin: 0;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--surface2) 80%, transparent);
   border-radius: 12px;
@@ -769,6 +769,14 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 6px 12px 10px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.input-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .input-scroll .input-head,
@@ -962,7 +970,45 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   margin-top: 4px;
 }
 
-body:has(#screen-input.active) .rd-panel {
+#screen-systems .rd-panel,
+#screen-systems .rd-upload-banner {
+  flex-shrink: 0;
+}
+
+#screen-systems .rd-upload-banner {
+  margin-bottom: 6px;
+}
+
+#screen-systems .rd-panel {
+  margin-bottom: 8px;
+}
+
+.rd-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.rd-pick__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rd-pick__select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--surface2);
+  background: var(--bg);
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+body:not(:has(#screen-systems.active)) .rd-upload-banner,
+body:not(:has(#screen-systems.active)) .rd-panel {
   display: none !important;
 }
 

@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=73" />
+    <link rel="stylesheet" href="css/app.css?v=74" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -61,17 +61,6 @@
       </button>
     </header>
 
-    <div id="rd-upload-banner" class="rd-upload-banner" hidden role="status"></div>
-
-    <div class="rd-panel" id="rd-panel" hidden>
-      <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
-      <div class="rd-actions">
-        <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
-        <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
-      </div>
-      <p class="rd-status" id="rd-status">РД не загружена</p>
-    </div>
-
     <div id="pull-refresh" class="pull-refresh" aria-hidden="true">
       <span class="pull-refresh__spinner"></span>
       <span class="pull-refresh__label">Обновить</span>
@@ -80,6 +69,19 @@
     <div id="screens">
     <!-- 1. Системы (СОТ, РФ, …) -->
     <div id="screen-systems" class="screen active">
+      <div id="rd-upload-banner" class="rd-upload-banner" hidden role="status"></div>
+      <div class="rd-panel" id="rd-panel" hidden>
+        <label class="rd-pick" id="rd-pick-wrap" hidden>
+          <span class="rd-pick__label">Система</span>
+          <select id="rd-system-pick" class="rd-pick__select"></select>
+        </label>
+        <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
+        <div class="rd-actions">
+          <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
+          <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
+        </div>
+        <p class="rd-status" id="rd-status">РД не загружена</p>
+      </div>
       <p class="screen-hint">Выберите систему</p>
       <main id="systems-root" class="tile-grid"></main>
     </div>
@@ -212,7 +214,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=73"></script>
-    <script src="js/app.js?v=73" defer></script>
+    <script src="config.js?v=74"></script>
+    <script src="js/app.js?v=74" defer></script>
   </body>
 </html>

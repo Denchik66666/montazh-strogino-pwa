@@ -14,6 +14,9 @@ const nav = {
   section: null,
 };
 
+/** Система для загрузки/просмотра РД (только экран «Системы»). */
+let rdRootSystem = null;
+
 let selectedCamera = null;
 /** @type {"cable"|"gofra"} */
 let inputActiveKind = "cable";
@@ -370,20 +373,22 @@ function rdUploadProgressText(done, total) {
 
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
+  const onSystems = document.querySelector(".screen.active")?.id === "screen-systems";
   const banner = $("rd-upload-banner");
   if (banner) {
-    if (active) {
+    if (active && onSystems) {
       banner.hidden = false;
       banner.classList.add("rd-upload-banner--show");
       banner.textContent = text;
     } else {
       banner.classList.remove("rd-upload-banner--show");
       banner.hidden = true;
-      banner.textContent = "";
+      if (!active) banner.textContent = "";
     }
   }
   const status = $("rd-status");
-  if (status && active && nav.system) status.textContent = text;
+  const rdSys = rdRootSystem || nav.system;
+  if (status && active && rdSys) status.textContent = text;
 }
 
 async function apiUploadRd(payload, opts = {}) {
@@ -487,7 +492,11 @@ async function runRdUploadJob(record) {
     );
     if (r.ok) {
       toast(`РД загружена: ${r.name || record.fileName}`, "success");
-      if (nav.system?.id === record.system) await refreshRdPanel(nav.system);
+      const uploaded = catalog.systems.find((s) => s.id === record.system);
+      if (uploaded?.ready) {
+        rdRootSystem = uploaded;
+        await refreshRdRootPanel();
+      }
     } else {
       toast(rdApiErrorMessage(null, r), "error");
     }
@@ -1004,16 +1013,50 @@ function showScreen(name) {
   syncRdPanelVisibility();
 }
 
-/** Панель РД под шапкой — видна в системе (секции / камеры / ввод). */
+function readySystems() {
+  return catalog.systems.filter((s) => s.ready);
+}
+
+function ensureRdRootSystem() {
+  const list = readySystems();
+  if (!list.length) {
+    rdRootSystem = null;
+    return null;
+  }
+  if (!rdRootSystem || !list.some((s) => s.id === rdRootSystem.id)) {
+    rdRootSystem = list[0];
+  }
+  return rdRootSystem;
+}
+
+function populateRdSystemPick() {
+  const sel = $("rd-system-pick");
+  const wrap = $("rd-pick-wrap");
+  const list = readySystems();
+  if (wrap) wrap.hidden = list.length < 2;
+  if (!sel) return;
+  sel.innerHTML = list
+    .map(
+      (s) =>
+        `<option value="${escapeHtml(s.id)}">${escapeHtml(s.code)} — ${escapeHtml(systemDisplayTitle(s))}</option>`
+    )
+    .join("");
+  if (rdRootSystem) sel.value = rdRootSystem.id;
+}
+
 function syncRdPanelVisibility() {
   const panel = $("rd-panel");
   if (!panel) return;
-  if (!nav.system?.ready) {
-    panel.hidden = true;
-    return;
-  }
   const active = document.querySelector(".screen.active")?.id;
-  panel.hidden = active !== "screen-sections";
+  panel.hidden = active !== "screen-systems" || readySystems().length === 0;
+  populateRdSystemPick();
+}
+
+async function refreshRdRootPanel() {
+  syncRdPanelVisibility();
+  const sys = ensureRdRootSystem();
+  if (!sys) return;
+  await refreshRdPanel(sys);
 }
 
 function findSystemById(systemId) {
@@ -1153,10 +1196,7 @@ async function refreshRdPanel(sys) {
   btnOpen.hidden = true;
   btnOpen.onclick = null;
 
-  if (!sys?.ready) {
-    panel.hidden = true;
-    return;
-  }
+  if (!sys?.ready) return;
   syncRdPanelVisibility();
   if (panel.hidden) return;
 
@@ -1188,8 +1228,11 @@ async function refreshRdPanel(sys) {
 }
 
 async function uploadRdFromFile(file) {
-  const sys = nav.system;
-  if (!sys?.ready) return;
+  const sys = ensureRdRootSystem();
+  if (!sys?.ready) {
+    toast("Сначала откройте список систем", "error");
+    return;
+  }
   if (!apiConfigured()) {
     toast("Подключите таблицу в config.js", "error");
     return;
@@ -1251,17 +1294,16 @@ async function uploadRdFromFile(file) {
   }
 
   $("rd-input").value = "";
-  toast("Загрузка PDF — можно перейти в камеры, не закрывайте вкладку", "queue");
+  toast("Загрузка PDF — можно работать с камерами, не закрывайте вкладку", "queue");
   runRdUploadJob(record);
 }
 
 function goSystems() {
   nav.system = null;
   nav.section = null;
-  const rdPanel = $("rd-panel");
-  if (rdPanel) rdPanel.hidden = true;
   showScreen("systems");
   renderSystems();
+  refreshRdRootPanel();
   updateStats();
 }
 
@@ -1271,7 +1313,6 @@ function goSections(system) {
   showScreen("sections");
   renderSections();
   updateStats();
-  refreshRdPanel(system);
 }
 
 function goCameras(section) {
@@ -2035,6 +2076,13 @@ async function init() {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
   });
+  $("rd-system-pick")?.addEventListener("change", (e) => {
+    const sys = findSystemById(e.target.value);
+    if (sys?.ready) {
+      rdRootSystem = sys;
+      refreshRdPanel(sys);
+    }
+  });
   for (const kind of ["cable", "gofra"]) {
     const inp = meterInputEl(kind);
     inp?.addEventListener("input", () => updateMetersDisplay());
@@ -2098,6 +2146,7 @@ async function init() {
     await refreshMetrazh();
     await flushQueue();
     if (!restoreNavState()) goSystems();
+    else if (document.querySelector("#screen-systems.active")) refreshRdRootPanel();
   } catch {
     $("systems-root").innerHTML =
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
