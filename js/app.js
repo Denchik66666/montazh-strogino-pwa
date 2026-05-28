@@ -45,27 +45,29 @@ function apiErrorMessage(err) {
     return "Нет связи с таблицей. Проверьте интернет и обновите страницу";
   }
   if (/DriveApp|auth\/drive|разрешени/i.test(m)) {
-    return "Фото: бригадиру один раз разрешить Диск (см. razreshit-disk.bat)";
+    return "Фото: таблица → меню «Метраж» → Разрешить фото на Диске";
   }
   return m || "Нет связи с таблицей";
 }
 
 function photoApiErrorMessage(r) {
-  if (r && r.needDriveAuth) {
-    const link = driveAuthUrl();
-    return link
-      ? `Фото: откройте в Chrome (ваш Google):\n${link}`
-      : "Фото: бригадиру разрешить Диск в Apps Script";
+  const err = (r && r.error) || "";
+  if ((r && r.needDriveAuth) || /DriveApp|auth\/drive|разрешени/i.test(err)) {
+    return "Фото: откройте таблицу → меню «Метраж» → Разрешить фото на Диске";
   }
-  return (r && r.error) || "Ошибка загрузки";
+  if (err.length > 120) return "Фото: разрешите Диск (меню Метраж в таблице)";
+  return err || "Ошибка загрузки";
 }
 
 async function parseApiResponse(res) {
   const text = await res.text();
+  if (/DriveApp|auth\/drive|разрешения на вызов/i.test(text)) {
+    return { ok: false, needDriveAuth: true, error: "Нужен доступ к Google Диску" };
+  }
   if (!text || text.trimStart().startsWith("<")) {
-    throw new Error(
-      "Таблица требует настройки доступа. Бригадиру: Apps Script → Развернуть → доступ «Все, в т.ч. анонимные»"
-    );
+    const ex = text.match(/Exception:\s*([^<(]+)/);
+    if (ex) throw new Error(ex[1].trim().slice(0, 120));
+    throw new Error("Ошибка сервера таблицы");
   }
   try {
     return JSON.parse(text);
@@ -79,7 +81,8 @@ function toast(text, type = "success") {
   el.textContent = text;
   el.className = `toast show ${type}`;
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove("show"), 2800);
+  const ms = type === "error" && text.length > 40 ? 6000 : 2800;
+  toast._t = setTimeout(() => el.classList.remove("show"), ms);
 }
 
 function apiConfigured() {
