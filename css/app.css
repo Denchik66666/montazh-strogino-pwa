@@ -122,6 +122,54 @@ body {
   width: 100%;
 }
 
+.pull-refresh {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-120% + var(--pull, 0px)));
+  transition: opacity 0.15s ease;
+}
+
+.pull-refresh--visible {
+  opacity: 1;
+}
+
+.pull-refresh--ready {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--surface2));
+}
+
+.pull-refresh--loading .pull-refresh__spinner {
+  animation: pull-spin 0.7s linear infinite;
+}
+
+.pull-refresh__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+}
+
+@keyframes pull-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 body:has(#screen-input.active) .setup-banner {
   display: none;
 }

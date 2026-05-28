@@ -638,6 +638,95 @@ async function syncProjectNameFromApi() {
   }
 }
 
+async function refreshAppData(showToast = false) {
+  await syncProjectNameFromApi();
+  await refreshMetrazh();
+  await flushQueue(false);
+  refreshCurrentView();
+  updateStats();
+  const active = document.querySelector(".screen.active")?.id;
+  if (active === "screen-input" && selectedCamera) {
+    await loadSessionPhotosFromDrive();
+  }
+  if (showToast) toast("Данные обновлены", "success");
+}
+
+function getActiveScrollEl() {
+  const screen = document.querySelector(".screen.active");
+  if (!screen) return null;
+  return screen.querySelector(".tile-grid, .camera-list") || screen;
+}
+
+function initPullToRefresh() {
+  const indicator = $("pull-refresh");
+  if (!indicator) return;
+
+  const THRESH = 56;
+  let startY = 0;
+  let pulling = false;
+  let refreshing = false;
+
+  const resetPull = () => {
+    indicator.classList.remove("pull-refresh--visible", "pull-refresh--ready", "pull-refresh--loading");
+    indicator.style.setProperty("--pull", "0px");
+    indicator.setAttribute("aria-hidden", "true");
+  };
+
+  const onStart = (e) => {
+    if (refreshing || e.touches.length !== 1) return;
+    const scrollEl = getActiveScrollEl();
+    if (!scrollEl || scrollEl.scrollTop > 4) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  };
+
+  const onMove = (e) => {
+    if (!pulling || refreshing) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) {
+      resetPull();
+      return;
+    }
+    if (dy > 8) e.preventDefault();
+    const h = Math.min(dy * 0.45, 72);
+    indicator.style.setProperty("--pull", `${h}px`);
+    indicator.classList.add("pull-refresh--visible");
+    indicator.classList.toggle("pull-refresh--ready", dy >= THRESH);
+    indicator.setAttribute("aria-hidden", "false");
+    const label = indicator.querySelector(".pull-refresh__label");
+    if (label) label.textContent = dy >= THRESH ? "Отпустите" : "Потяните вниз";
+  };
+
+  const onEnd = async () => {
+    if (!pulling) return;
+    pulling = false;
+    const pull = parseFloat(indicator.style.getPropertyValue("--pull") || "0");
+    const ready = indicator.classList.contains("pull-refresh--ready");
+    if (!ready || pull < 20) {
+      resetPull();
+      return;
+    }
+
+    refreshing = true;
+    indicator.classList.add("pull-refresh--loading");
+    const label = indicator.querySelector(".pull-refresh__label");
+    if (label) label.textContent = "Обновление…";
+    try {
+      await refreshAppData(true);
+    } catch {
+      toast("Не удалось обновить", "error");
+    } finally {
+      refreshing = false;
+      resetPull();
+    }
+  };
+
+  document.addEventListener("touchstart", onStart, { passive: true });
+  document.addEventListener("touchmove", onMove, { passive: false });
+  document.addEventListener("touchend", onEnd);
+  document.addEventListener("touchcancel", onEnd);
+}
+
 async function refreshMetrazh() {
   if (!apiConfigured()) {
     metrazhMap = loadCachedMetrazh();
@@ -1040,7 +1129,9 @@ async function init() {
   $("nav-back").addEventListener("click", goBack);
   $("stat-net").addEventListener("click", () => {
     if (getQueue().length > 0) flushQueue(true);
+    else refreshAppData(true);
   });
+  initPullToRefresh();
   $("numpad").addEventListener("click", numpadHandler);
   $("btn-save").addEventListener("click", saveMeters);
   const onPhotoPick = (e) => {
@@ -1063,14 +1154,10 @@ async function init() {
 
   window.addEventListener("online", () => {
     flushQueue();
-    syncProjectNameFromApi()
-      .then(() => refreshMetrazh())
-      .then(() => {
-        refreshCurrentView();
-        updateStats();
-        const active = document.querySelector(".screen.active")?.id?.replace("screen-", "");
-        if (active) updateHeader(active);
-      });
+    refreshAppData(false).then(() => {
+      const active = document.querySelector(".screen.active")?.id?.replace("screen-", "");
+      if (active) updateHeader(active);
+    });
   });
 
   try {
