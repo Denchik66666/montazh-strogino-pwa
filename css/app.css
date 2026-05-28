@@ -987,20 +987,22 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .photo-preview {
+  --photo-thumb-size: 96px;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 12px;
   margin-top: 6px;
-  padding: 8px;
-  min-height: 76px;
+  padding: 10px;
+  min-height: calc(var(--photo-thumb-size) + 20px);
   border-radius: 10px;
   background: var(--surface);
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .photo-preview--empty {
@@ -1020,16 +1022,16 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 .photo-thumb-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
+  width: var(--photo-thumb-size, 96px);
+  height: var(--photo-thumb-size, 96px);
 }
 
 .photo-thumb {
   display: block;
-  width: 60px;
-  height: 60px;
+  width: 100%;
+  height: 100%;
   padding: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   border: 2px solid var(--ok);
   background: var(--bg);
@@ -1049,11 +1051,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-delete {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -8px;
+  right: -8px;
   z-index: 2;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: none;
   border-radius: 50%;
