@@ -32,12 +32,32 @@ function metrazhKey(systemId, camera) {
   return `${systemId}:${normalizeCameraCode(camera)}`;
 }
 
+function driveAuthUrl() {
+  if (!apiConfigured()) return "";
+  const url = new URL(CONFIG.API_URL);
+  url.searchParams.set("action", "authDrive");
+  return url.toString();
+}
+
 function apiErrorMessage(err) {
   const m = err && err.message ? String(err.message) : "";
   if (/failed to fetch|networkerror|load failed/i.test(m)) {
     return "Нет связи с таблицей. Проверьте интернет и обновите страницу";
   }
+  if (/DriveApp|auth\/drive|разрешени/i.test(m)) {
+    return "Фото: бригадиру один раз разрешить Диск (см. razreshit-disk.bat)";
+  }
   return m || "Нет связи с таблицей";
+}
+
+function photoApiErrorMessage(r) {
+  if (r && r.needDriveAuth) {
+    const link = driveAuthUrl();
+    return link
+      ? `Фото: откройте в Chrome (ваш Google):\n${link}`
+      : "Фото: бригадиру разрешить Диск в Apps Script";
+  }
+  return (r && r.error) || "Ошибка загрузки";
 }
 
 async function parseApiResponse(res) {
@@ -295,7 +315,7 @@ async function uploadPhotoFromFile(file) {
       renderPhotoSession();
       toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");
     } else {
-      toast(r.error || "Ошибка загрузки", "error");
+      toast(photoApiErrorMessage(r), "error");
       renderPhotoSession();
     }
   } catch (err) {
