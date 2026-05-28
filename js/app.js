@@ -362,6 +362,12 @@ async function rdIdbDel(uploadId) {
   });
 }
 
+function rdUploadProgressText(done, total) {
+  if (!total || total <= 1) return "Загрузка PDF…";
+  const pct = Math.min(100, Math.max(0, Math.round((done / total) * 100)));
+  return `Загрузка PDF… ${pct}%`;
+}
+
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
   const banner = $("rd-upload-banner");
@@ -386,16 +392,14 @@ async function apiUploadRd(payload, opts = {}) {
   let uploadId = opts.uploadId || newRdUploadId();
   let startPart = opts.startPart || 0;
 
-  const report = (n, total, label) => {
-    const t =
-      label ||
-      (total > 1 ? `Загрузка PDF… ${n}/${total}` : "Загрузка PDF…");
+  const report = (done, total, label) => {
+    const t = label || rdUploadProgressText(done, total);
     setRdUploadUi(true, t);
-    if (typeof onProgress === "function") onProgress(n, total);
+    if (typeof onProgress === "function") onProgress(done, total);
   };
 
   if (data.length <= RD_SINGLE_MAX_B64) {
-    report(1, 1, "Загрузка PDF…");
+    report(0, 1, "Загрузка PDF… 0%");
     try {
       const one = await apiPostJson({
         action: "rd",
@@ -405,7 +409,10 @@ async function apiUploadRd(payload, opts = {}) {
         fileName,
         data,
       });
-      if (one.ok) return one;
+      if (one.ok) {
+        report(1, 1, "Загрузка PDF… 100%");
+        return one;
+      }
       if (one.error && !/слишком|large|limit/i.test(String(one.error))) return one;
     } catch {
       /* крупными частями через Диск */
@@ -413,6 +420,7 @@ async function apiUploadRd(payload, opts = {}) {
   }
 
   const total = Math.max(1, Math.ceil(data.length / RD_CHUNK_SIZE));
+  if (startPart === 0) report(0, total);
   let last = null;
 
   const idbRecord = {
@@ -452,6 +460,7 @@ async function apiUploadRd(payload, opts = {}) {
   }
 
   await rdIdbDel(uploadId);
+  report(total, total, "Загрузка PDF… 100%");
   return last;
 }
 
