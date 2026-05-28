@@ -1,6 +1,6 @@
 {
-  "name": "Метраж камер",
-  "short_name": "Метраж",
+  "name": "Den - Монтажник",
+  "short_name": "Den",
   "description": "Ввод длины кабеля по камерам",
   "start_url": "./index.html",
   "display": "standalone",

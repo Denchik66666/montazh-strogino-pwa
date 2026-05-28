@@ -416,15 +416,21 @@ function showScreen(name) {
   updateHeader(name);
 }
 
+function appName() {
+  return CONFIG.APP_NAME || "Den - Монтажник";
+}
+
 function updateHeader(screenName) {
   const site = catalog.site?.name || CONFIG.PROJECT_NAME || "Объект";
   const titles = {
-    systems: site,
+    systems: appName(),
     sections: systemDisplayTitle(nav.system),
     cameras: nav.section?.name || "Секция",
     input: "Метраж",
   };
-  $("screen-title").textContent = titles[screenName] || "Метраж";
+  $("screen-title").textContent = titles[screenName] || appName();
+  document.title =
+    screenName === "systems" ? appName() : `${titles[screenName] || appName()} · ${appName()}`;
 
   const crumbs = [];
   if (screenName !== "systems") crumbs.push(site);
