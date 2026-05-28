@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=88" />
+    <link rel="stylesheet" href="css/app.css?v=89" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -183,6 +183,12 @@
     </div>
 
     <div id="photo-lightbox" class="photo-lightbox" hidden>
+      <button
+        type="button"
+        class="photo-lightbox__backdrop"
+        id="photo-lightbox-backdrop"
+        aria-label="Закрыть просмотр"
+      ></button>
       <button type="button" class="photo-lightbox__close" id="photo-lightbox-close" aria-label="Закрыть">
         ×
       </button>
@@ -200,9 +206,10 @@
       <button type="button" class="photo-lightbox__nav photo-lightbox__nav--next" id="photo-lightbox-next" aria-label="Следующее">
         ›
       </button>
-      <div class="photo-lightbox__stage">
-        <img id="photo-lightbox-img" alt="Просмотр фото" />
+      <div class="photo-lightbox__viewport" id="photo-lightbox-viewport">
+        <img id="photo-lightbox-img" alt="Просмотр фото" draggable="false" />
       </div>
+      <p class="photo-lightbox__hint" id="photo-lightbox-hint">Нажмите — закрыть · двойное — увеличить</p>
       <p class="photo-lightbox__counter" id="photo-lightbox-counter"></p>
       <a
         id="photo-lightbox-drive"
@@ -217,7 +224,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=88"></script>
-    <script src="js/app.js?v=88" defer></script>
+    <script src="config.js?v=89"></script>
+    <script src="js/app.js?v=89" defer></script>
   </body>
 </html>

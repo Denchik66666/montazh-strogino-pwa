@@ -773,7 +773,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   position: relative;
   z-index: 1;
   width: min(100%, 400px);
-  max-height: min(90vh, 520px);
+  max-height: min(92vh, 580px);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1125,12 +1125,10 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--ok);
 }
 
-/* Превью фото — на всю ширину экрана телефона */
 .cam-sheet .photo-preview {
   width: 100%;
-  max-width: 100%;
   margin: 0;
-  padding: 8px 0;
+  padding: 0;
 }
 
 .photo-preview {
@@ -1138,80 +1136,125 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  margin-top: 6px;
-  padding: 8px 10px 12px;
-  min-height: 72px;
-  border-radius: 0;
-  background: var(--surface);
-  overflow: visible;
+  margin-top: 8px;
 }
 
 .photo-preview--empty {
   justify-content: center;
   align-items: center;
-  min-height: 56px;
+  min-height: 72px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px dashed var(--surface2);
 }
 
 .photo-preview-empty {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--muted);
+  text-align: center;
 }
 
-.photo-thumb-wrap {
+.photo-hero {
   position: relative;
-  flex-shrink: 0;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  overflow: visible;
-}
-
-.photo-thumb {
   display: block;
   width: 100%;
-  height: 100%;
+  min-height: 200px;
+  max-height: min(42vh, 280px);
+  aspect-ratio: 4 / 3;
   padding: 0;
-  border-radius: 8px;
+  border: 2px solid color-mix(in srgb, var(--ok) 55%, var(--surface2));
+  border-radius: 14px;
   overflow: hidden;
-  border: 2px solid var(--ok);
-  background: var(--bg);
+  background: #0a0a0c;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.photo-thumb:active {
-  transform: scale(0.97);
+.photo-hero:active {
+  opacity: 0.95;
 }
 
-.photo-thumb img {
+.photo-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.photo-hero__hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28px 12px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  pointer-events: none;
+}
+
+.photo-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.photo-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-strip__thumb {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid var(--surface2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+  cursor: pointer;
+  opacity: 0.65;
+  touch-action: manipulation;
+}
+
+.photo-strip__thumb.is-active {
+  opacity: 1;
+  border-color: var(--ok);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ok) 40%, transparent);
+}
+
+.photo-strip__thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
-.photo-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 20;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 2px solid #fff;
-  border-radius: 12px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-  touch-action: manipulation;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+.photo-toolbar {
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
-.photo-delete:active {
-  transform: scale(0.92);
+.photo-toolbar__delete {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--danger) 50%, var(--surface2));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .save-btn {
@@ -1445,36 +1488,77 @@ body.photo-lightbox-open {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
-  background: rgba(0, 0, 0, 0.92);
+  gap: 6px;
+  padding: max(12px, env(safe-area-inset-top)) 8px max(12px, env(safe-area-inset-bottom));
+  pointer-events: none;
 }
 
 .photo-lightbox[hidden] {
   display: none !important;
 }
 
-.photo-lightbox__stage {
+.photo-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.94);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.photo-lightbox__viewport {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 0;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: zoom-in;
 }
 
-.photo-lightbox__stage img {
+.photo-lightbox__viewport.is-zoomed {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  cursor: zoom-out;
+}
+
+.photo-lightbox__viewport img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: min(78vh, 100%);
+  width: auto;
+  height: auto;
   object-fit: contain;
-  border-radius: 4px;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.22s ease;
+  will-change: transform;
+}
+
+.photo-lightbox__viewport.is-zoomed img {
+  max-width: none;
+  max-height: none;
+}
+
+.photo-lightbox__hint {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
 }
 
 .photo-lightbox__close {
   position: absolute;
   top: max(8px, env(safe-area-inset-top));
   right: 12px;
-  z-index: 3;
+  z-index: 4;
+  pointer-events: auto;
   width: 44px;
   height: 44px;
   border: none;
@@ -1490,7 +1574,8 @@ body.photo-lightbox-open {
   position: absolute;
   top: max(8px, env(safe-area-inset-top));
   left: 12px;
-  z-index: 3;
+  z-index: 4;
+  pointer-events: auto;
   width: 48px;
   height: 48px;
   border: 2px solid rgba(255, 255, 255, 0.35);
@@ -1510,7 +1595,8 @@ body.photo-lightbox-open {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
+  z-index: 4;
+  pointer-events: auto;
   width: 48px;
   height: 56px;
   border: none;
@@ -1536,16 +1622,22 @@ body.photo-lightbox-open {
 }
 
 .photo-lightbox__counter {
+  position: relative;
+  z-index: 2;
   margin: 0;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
 }
 
 .photo-lightbox__drive {
+  position: relative;
+  z-index: 4;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--accent);
   text-decoration: none;
   padding-bottom: 4px;
+  pointer-events: auto;
 }
 

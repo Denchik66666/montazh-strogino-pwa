@@ -30,6 +30,11 @@ let inputValues = { cable: "", gofra: "" };
 let inputInitial = { cable: null, gofra: null };
 const MAX_SESSION_PHOTOS = 5;
 let photoLightboxIndex = 0;
+let photoSheetIndex = 0;
+let photoLbZoom = 1;
+const PHOTO_LB_ZOOM = 2.5;
+let photoLbTapTimer = null;
+let photoLbLastTap = 0;
 /** @type {{ previewUrl: string, driveUrl?: string, fileId?: string }[]} */
 let sessionPhotos = [];
 
@@ -112,6 +117,36 @@ function photoPreviewFromItem(p) {
   if (p.previewUrl) return p.previewUrl;
   if (p.fileId) return photoThumbSrc(p.fileId);
   return "";
+}
+
+/** Полноразмерное превью для просмотра (blob/data приоритетнее миниатюры). */
+function photoFullFromItem(p) {
+  if (p.previewUrl && (p.previewUrl.startsWith("blob:") || p.previewUrl.startsWith("data:"))) {
+    return p.previewUrl;
+  }
+  return photoPreviewFromItem(p);
+}
+
+function bindPhotoImg(img, p) {
+  img.alt = "фото";
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.draggable = false;
+  const src = photoPreviewFromItem(p);
+  if (src) img.src = src;
+  img.onerror = async () => {
+    if (img.dataset.retry === "1") return;
+    img.dataset.retry = "1";
+    if (p.thumbDataUrl && img.src !== p.thumbDataUrl) {
+      img.src = p.thumbDataUrl;
+      return;
+    }
+    const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
+    if (blobUrl) {
+      p.previewUrl = blobUrl;
+      img.src = blobUrl;
+    }
+  };
 }
 
 /** Загрузить превью через fetch → blob: (если data URL нет). */
@@ -868,62 +903,75 @@ function renderPhotoSession() {
   setPhotoButtonsDisabled(atMax);
 
   if (!n) {
-    status.textContent = `До ${MAX_SESSION_PHOTOS} фото · превью — просмотр · 🗑 — удалить`;
+    photoSheetIndex = 0;
+    status.textContent = `До ${MAX_SESSION_PHOTOS} фото на камеру`;
     preview.classList.add("photo-preview--empty");
     preview.innerHTML = '<span class="photo-preview-empty">Нет фото — снимите или «Без фото»</span>';
     updatePhotoReportBadge();
     return;
   }
 
+  photoSheetIndex = Math.min(photoSheetIndex, n - 1);
   status.innerHTML = atMax
-    ? `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>🗑</strong> — удалить`
-    : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>🗑</strong> — удалить`;
+    ? `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · нажмите фото — на весь экран`
+    : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · нажмите фото — на весь экран`;
 
   preview.classList.remove("photo-preview--empty");
   preview.innerHTML = "";
-  sessionPhotos.forEach((p, i) => {
-    const wrap = document.createElement("div");
-    wrap.className = "photo-thumb-wrap";
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "photo-thumb";
-    btn.dataset.photoIdx = String(i);
-    btn.setAttribute("aria-label", `Открыть фото ${i + 1}`);
+  const p = sessionPhotos[photoSheetIndex];
+  const hero = document.createElement("button");
+  hero.type = "button";
+  hero.className = "photo-hero";
+  hero.dataset.photoIdx = String(photoSheetIndex);
+  hero.setAttribute("aria-label", `Фото ${photoSheetIndex + 1} — открыть на весь экран`);
 
-    const img = document.createElement("img");
-    img.alt = `фото ${i + 1}`;
-    img.loading = "lazy";
-    img.decoding = "async";
-    const src = photoPreviewFromItem(p);
-    if (src) img.src = src;
-    img.addEventListener("error", async () => {
-      if (img.dataset.retry === "1") return;
-      img.dataset.retry = "1";
-      if (p.thumbDataUrl && img.src !== p.thumbDataUrl) {
-        img.src = p.thumbDataUrl;
-        return;
-      }
-      const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
-      if (blobUrl) {
-        p.previewUrl = blobUrl;
-        img.src = blobUrl;
-      }
+  const heroImg = document.createElement("img");
+  bindPhotoImg(heroImg, p);
+  hero.appendChild(heroImg);
+
+  const heroHint = document.createElement("span");
+  heroHint.className = "photo-hero__hint";
+  heroHint.textContent = "На весь экран";
+  hero.appendChild(heroHint);
+
+  preview.appendChild(hero);
+
+  if (n > 1) {
+    const strip = document.createElement("div");
+    strip.className = "photo-strip";
+    strip.setAttribute("role", "tablist");
+    sessionPhotos.forEach((item, i) => {
+      const t = document.createElement("button");
+      t.type = "button";
+      t.className = `photo-strip__thumb${i === photoSheetIndex ? " is-active" : ""}`;
+      t.setAttribute("role", "tab");
+      t.setAttribute("aria-selected", i === photoSheetIndex ? "true" : "false");
+      t.setAttribute("aria-label", `Фото ${i + 1}`);
+      const simg = document.createElement("img");
+      bindPhotoImg(simg, item);
+      t.appendChild(simg);
+      t.addEventListener("click", (e) => {
+        e.stopPropagation();
+        photoSheetIndex = i;
+        renderPhotoSession();
+      });
+      strip.appendChild(t);
     });
+    preview.appendChild(strip);
+  }
 
-    btn.appendChild(img);
+  const toolbar = document.createElement("div");
+  toolbar.className = "photo-toolbar";
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "photo-toolbar__delete";
+  del.dataset.photoIdx = String(photoSheetIndex);
+  del.setAttribute("aria-label", `Удалить фото ${photoSheetIndex + 1}`);
+  del.textContent = "Удалить фото";
+  toolbar.appendChild(del);
+  preview.appendChild(toolbar);
 
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "photo-delete";
-    del.dataset.photoIdx = String(i);
-    del.setAttribute("aria-label", `Удалить фото ${i + 1}`);
-    del.textContent = "🗑";
-
-    wrap.appendChild(btn);
-    wrap.appendChild(del);
-    preview.appendChild(wrap);
-  });
   updatePhotoReportBadge();
 }
 
@@ -936,17 +984,84 @@ function markPhotoSkipped() {
   toast("Отчёт отмечен: без фото", "queue");
 }
 
+function resetPhotoLightboxZoom() {
+  photoLbZoom = 1;
+  const vp = $("photo-lightbox-viewport");
+  const img = $("photo-lightbox-img");
+  const hint = $("photo-lightbox-hint");
+  if (img) {
+    img.style.transform = "";
+    img.style.transformOrigin = "center center";
+  }
+  vp?.classList.remove("is-zoomed");
+  if (hint) hint.textContent = "Нажмите — закрыть · двойное — увеличить";
+}
+
+function togglePhotoLightboxZoom(clientX, clientY) {
+  const vp = $("photo-lightbox-viewport");
+  const img = $("photo-lightbox-img");
+  const hint = $("photo-lightbox-hint");
+  if (!vp || !img) return;
+
+  if (photoLbZoom > 1) {
+    resetPhotoLightboxZoom();
+    return;
+  }
+
+  photoLbZoom = PHOTO_LB_ZOOM;
+  const rect = img.getBoundingClientRect();
+  const w = rect.width || 1;
+  const h = rect.height || 1;
+  const ox = Math.max(0, Math.min(100, ((clientX - rect.left) / w) * 100));
+  const oy = Math.max(0, Math.min(100, ((clientY - rect.top) / h) * 100));
+  img.style.transformOrigin = `${ox}% ${oy}%`;
+  img.style.transform = `scale(${PHOTO_LB_ZOOM})`;
+  vp.classList.add("is-zoomed");
+  if (hint) hint.textContent = "Двойное — уменьшить";
+}
+
+function handlePhotoLightboxTap(e) {
+  if (
+    e.target.closest(
+      ".photo-lightbox__close, .photo-lightbox__delete, .photo-lightbox__nav, .photo-lightbox__drive, .photo-lightbox__counter"
+    )
+  ) {
+    return;
+  }
+
+  const x = e.clientX ?? e.changedTouches?.[0]?.clientX ?? 0;
+  const y = e.clientY ?? e.changedTouches?.[0]?.clientY ?? 0;
+  const now = Date.now();
+
+  if (now - photoLbLastTap < 320) {
+    clearTimeout(photoLbTapTimer);
+    photoLbTapTimer = null;
+    photoLbLastTap = 0;
+    e.preventDefault();
+    togglePhotoLightboxZoom(x, y);
+    return;
+  }
+
+  photoLbLastTap = now;
+  clearTimeout(photoLbTapTimer);
+  photoLbTapTimer = setTimeout(() => {
+    photoLbTapTimer = null;
+    if (photoLbZoom <= 1) closePhotoLightbox();
+    photoLbLastTap = 0;
+  }, 320);
+}
+
 function updatePhotoLightboxView() {
   const p = sessionPhotos[photoLightboxIndex];
-  const box = $("photo-lightbox");
   const img = $("photo-lightbox-img");
   const counter = $("photo-lightbox-counter");
   const drive = $("photo-lightbox-drive");
   const prev = $("photo-lightbox-prev");
   const next = $("photo-lightbox-next");
-  if (!box || !img || !p) return;
+  if (!img || !p) return;
 
-  img.src = photoPreviewFromItem(p);
+  resetPhotoLightboxZoom();
+  img.src = photoFullFromItem(p);
   if (counter) {
     counter.textContent = `${photoLightboxIndex + 1} / ${sessionPhotos.length}`;
   }
@@ -965,6 +1080,7 @@ function updatePhotoLightboxView() {
 function openPhotoLightbox(index) {
   if (!sessionPhotos[index]) return;
   photoLightboxIndex = index;
+  photoSheetIndex = index;
   updatePhotoLightboxView();
   const box = $("photo-lightbox");
   if (box) {
@@ -974,6 +1090,10 @@ function openPhotoLightbox(index) {
 }
 
 function closePhotoLightbox() {
+  clearTimeout(photoLbTapTimer);
+  photoLbTapTimer = null;
+  photoLbLastTap = 0;
+  resetPhotoLightboxZoom();
   const box = $("photo-lightbox");
   if (box) box.hidden = true;
   document.body.classList.remove("photo-lightbox-open");
@@ -985,14 +1105,18 @@ function stepPhotoLightbox(delta) {
   const next = photoLightboxIndex + delta;
   if (next < 0 || next >= sessionPhotos.length) return;
   photoLightboxIndex = next;
+  photoSheetIndex = next;
   updatePhotoLightboxView();
 }
 
 function initPhotoLightbox() {
-  $("photo-lightbox-close")?.addEventListener("click", closePhotoLightbox);
-  $("photo-lightbox")?.addEventListener("click", (e) => {
-    if (e.target.id === "photo-lightbox") closePhotoLightbox();
+  $("photo-lightbox-close")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closePhotoLightbox();
   });
+  $("photo-lightbox-backdrop")?.addEventListener("click", closePhotoLightbox);
+  const vp = $("photo-lightbox-viewport");
+  vp?.addEventListener("click", handlePhotoLightboxTap);
   $("photo-lightbox-prev")?.addEventListener("click", (e) => {
     e.stopPropagation();
     stepPhotoLightbox(-1);
@@ -1032,6 +1156,7 @@ async function deleteSessionPhoto(index) {
 
     if (p.previewUrl && !p.fromDrive) URL.revokeObjectURL(p.previewUrl);
     sessionPhotos.splice(index, 1);
+    photoSheetIndex = Math.min(photoSheetIndex, Math.max(0, sessionPhotos.length - 1));
     if (!$("photo-lightbox")?.hidden) {
       if (!sessionPhotos.length) closePhotoLightbox();
       else {
@@ -1116,6 +1241,7 @@ async function uploadPhotoFromFile(file) {
         fileId: r.fileId,
         fromDrive: false,
       });
+      photoSheetIndex = sessionPhotos.length - 1;
       setPhotoStatus(system.id, cam.camera, "done", sessionPhotos.length);
       renderPhotoSession();
       renderCameras();
@@ -2284,7 +2410,12 @@ async function init() {
   $("cam-sheet-backdrop")?.addEventListener("click", () => closeCamSheet());
   $("cam-sheet-close")?.addEventListener("click", () => closeCamSheet());
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && camSheetOpen) closeCamSheet();
+    if (e.key !== "Escape") return;
+    if (!$("photo-lightbox")?.hidden) {
+      closePhotoLightbox();
+      return;
+    }
+    if (camSheetOpen) closeCamSheet();
   });
   $("btn-save")?.addEventListener("click", saveMeters);
   $("btn-next-cam")?.addEventListener("click", goNextCamera);
@@ -2300,17 +2431,17 @@ async function init() {
   $("photo-input-gallery")?.addEventListener("change", onPhotoPick);
   initPhotoLightbox();
   $("photo-preview")?.addEventListener("click", (e) => {
-    const del = e.target.closest(".photo-delete");
+    const del = e.target.closest(".photo-toolbar__delete, .photo-delete");
     if (del) {
       e.preventDefault();
       e.stopPropagation();
       deleteSessionPhoto(parseInt(del.getAttribute("data-photo-idx"), 10));
       return;
     }
-    const thumb = e.target.closest(".photo-thumb");
-    if (thumb) {
+    const hero = e.target.closest(".photo-hero");
+    if (hero) {
       e.preventDefault();
-      openPhotoLightbox(parseInt(thumb.getAttribute("data-photo-idx"), 10));
+      openPhotoLightbox(parseInt(hero.getAttribute("data-photo-idx"), 10));
     }
   });
   updatePhotoBlockVisibility();
