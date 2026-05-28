@@ -662,7 +662,7 @@ async function uploadRdFromFile(file) {
     toast("Нужен интернет для загрузки РД", "error");
     return;
   }
-  const maxMb = CONFIG.RD_MAX_MB || 12;
+  const maxMb = CONFIG.RD_MAX_MB || 30;
   if (file.size > maxMb * 1024 * 1024) {
     toast(`PDF больше ${maxMb} МБ — сожмите или разбейте`, "error");
     return;
