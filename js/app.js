@@ -661,8 +661,8 @@ function renderPhotoSession() {
   }
 
   status.innerHTML = atMax
-    ? `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · нажмите превью — просмотр · <strong>×</strong> — удалить`
-    : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>×</strong> — удалить`;
+    ? `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>🗑</strong> — удалить`
+    : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>🗑</strong> — удалить`;
 
   preview.classList.remove("photo-preview--empty");
   preview.innerHTML = "";
@@ -703,7 +703,7 @@ function renderPhotoSession() {
     del.className = "photo-delete";
     del.dataset.photoIdx = String(i);
     del.setAttribute("aria-label", `Удалить фото ${i + 1}`);
-    del.textContent = "×";
+    del.textContent = "🗑";
 
     wrap.appendChild(btn);
     wrap.appendChild(del);
@@ -775,6 +775,10 @@ function initPhotoLightbox() {
   $("photo-lightbox-next")?.addEventListener("click", (e) => {
     e.stopPropagation();
     stepPhotoLightbox(1);
+  });
+  $("photo-lightbox-delete")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    deleteSessionPhoto(photoLightboxIndex);
   });
 }
 
@@ -1212,7 +1216,7 @@ async function uploadRdFromFile(file) {
   const btnOpen = $("btn-rd-open");
   btnUpload.disabled = true;
   btnOpen.hidden = true;
-  setRdUploadUi(true, "Подготовка PDF…");
+  setRdUploadUi(true, "Подготовка PDF… 0%");
 
   const uploadId = newRdUploadId();
   let data;

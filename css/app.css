@@ -746,21 +746,24 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   min-height: 0;
   width: 100%;
   padding: 0 12px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
-  overflow: hidden;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .input-card {
   width: 100%;
   max-width: var(--input-col-max);
-  flex: 1;
-  min-height: 0;
+  flex: none;
+  min-height: min-content;
   margin: 0 auto;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto auto;
   align-content: start;
   gap: 10px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .input-head,
@@ -969,7 +972,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   margin: 10px 0 0;
   padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .photo-block[hidden] {
@@ -1037,22 +1040,17 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   align-items: stretch;
   gap: 10px;
   margin-top: 6px;
-  padding: 8px 10px 10px;
+  padding: 8px 10px 12px;
   min-height: 72px;
   border-radius: 0;
   background: var(--surface);
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: min(46vh, 380px);
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .photo-preview--empty {
   justify-content: center;
   align-items: center;
   min-height: 56px;
-  max-height: none;
 }
 
 .photo-preview-empty {
@@ -1065,6 +1063,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-shrink: 0;
   width: 100%;
   aspect-ratio: 4 / 3;
+  overflow: visible;
 }
 
 .photo-thumb {
@@ -1092,22 +1091,24 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-delete {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 2;
-  width: 32px;
-  height: 32px;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: none;
-  border-radius: 50%;
+  border: 2px solid #fff;
+  border-radius: 12px;
   background: var(--danger);
   color: #fff;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .photo-delete:active {
@@ -1396,6 +1397,26 @@ body.photo-lightbox-open {
   font-size: 1.75rem;
   line-height: 1;
   cursor: pointer;
+}
+
+.photo-lightbox__delete {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: 12px;
+  z-index: 3;
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .photo-lightbox__nav {
