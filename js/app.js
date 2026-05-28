@@ -166,7 +166,7 @@ async function apiSave(payload) {
   return parseApiResponse(res);
 }
 
-const PHOTO_CHUNK_SIZE = 500;
+const PHOTO_CHUNK_SIZE = 50000;
 const RD_CHUNK_SIZE = 50000;
 
 async function apiUploadPhoto(payload) {
@@ -259,19 +259,13 @@ function updatePhotoBlockVisibility() {
   block.hidden = !photosEnabled();
 }
 
-async function compressImageFile(file, maxSide = 1024, quality = 0.75) {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
-  bitmap.close();
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Сжатие"))), "image/jpeg", quality);
-  });
+function photoMimeType(file) {
+  const t = String(file.type || "").toLowerCase();
+  if (t.includes("png")) return "image/png";
+  if (t.includes("webp")) return "image/webp";
+  if (t.includes("heic") || t.includes("heif")) return "image/heic";
+  if (t.startsWith("image/")) return t;
+  return "image/jpeg";
 }
 
 function blobToBase64(blob) {
@@ -437,6 +431,15 @@ async function uploadPhotoFromFile(file) {
     toast("Нужен интернет для фото", "error");
     return;
   }
+  const maxMb = CONFIG.PHOTO_MAX_MB || 10;
+  if (file.size > maxMb * 1024 * 1024) {
+    toast(`Фото больше ${maxMb} МБ — выберите другое`, "error");
+    return;
+  }
+  if (!String(file.type || "").toLowerCase().startsWith("image/")) {
+    toast("Нужен файл изображения", "error");
+    return;
+  }
 
   const status = $("photo-status");
   setPhotoButtonsDisabled(true);
@@ -447,8 +450,8 @@ async function uploadPhotoFromFile(file) {
   };
 
   try {
-    const blob = await compressImageFile(file);
-    const data = await blobToBase64(blob);
+    const mimeType = photoMimeType(file);
+    const data = await blobToBase64(file);
     const { system, section, cam } = selectedCamera;
     const r = await apiUploadPhoto({
       system: system.id,
@@ -458,10 +461,10 @@ async function uploadPhotoFromFile(file) {
       camera: normalizeCameraCode(cam.camera),
       row: cam.row,
       data,
-      mimeType: "image/jpeg",
+      mimeType,
     });
     if (r.ok) {
-      const previewUrl = URL.createObjectURL(blob);
+      const previewUrl = URL.createObjectURL(file);
       sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId, fromDrive: false });
       renderPhotoSession();
       toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");

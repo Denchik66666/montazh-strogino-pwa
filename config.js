@@ -7,6 +7,8 @@ window.APP_CONFIG = {
   MIN_METERS: 0,
   MAX_METERS: 500,
   PHOTOS_ENABLED: true,
+  /** Макс. размер фото с телефона (МБ), без сжатия */
+  PHOTO_MAX_MB: 10,
   /** Макс. размер PDF РД при загрузке с телефона (МБ) */
   RD_MAX_MB: 30,
 };
