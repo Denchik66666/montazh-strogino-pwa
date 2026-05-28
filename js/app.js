@@ -1363,7 +1363,7 @@ function currentNavSnap() {
     screen: active,
     systemId: nav.system?.id ?? null,
     sectionId: nav.section?.id ?? null,
-    sheet: camSheetOpen && selectedCamera ? selectedCamera.cam.camera : null,
+    sheet: camSheetOpen && selectedCamera?.cam ? selectedCamera.cam.camera : null,
   };
 }
 
@@ -1448,7 +1448,7 @@ function navGoBack() {
 }
 
 function navGoForward() {
-  if (camSheetOpen || ptrGestureBlocked()) return false;
+  if (camSheetOpen) return false;
   if (navHistory.index < navHistory.stack.length - 1) {
     navHistory.index += 1;
     applyNavSnap(navHistory.stack[navHistory.index]);
@@ -1464,12 +1464,11 @@ function showScreen(name) {
   if (screen) screen.classList.add("active");
 
   const back = $("nav-back");
-  back.hidden = name === "systems";
+  if (back) back.hidden = name === "systems";
 
   updateHeader(name);
   persistNavState(name);
   syncRdPanelVisibility();
-  pushNavHistory();
 }
 
 function syncRdPanelVisibility() {
@@ -1503,7 +1502,10 @@ function rebindNavFromCatalog() {
   if (!nav.system) return;
   const sys = findSystemById(nav.system.id);
   if (!sys?.ready) {
+    suppressHistoryPush = true;
     goSystems();
+    suppressHistoryPush = false;
+    resetNavHistoryFromCurrent();
     return;
   }
   nav.system = sys;
@@ -1511,7 +1513,10 @@ function rebindNavFromCatalog() {
   const sec = findSectionById(sys, nav.section.id);
   if (!sec) {
     nav.section = null;
+    suppressHistoryPush = true;
     goSections(sys);
+    suppressHistoryPush = false;
+    resetNavHistoryFromCurrent();
     return;
   }
   nav.section = sec;
@@ -1562,14 +1567,10 @@ function restoreNavState() {
     }
     if (state.screen === "cameras") {
       goCameras(sec);
-      return true;
-    }
-    if (state.screen === "cameras" && state.camera && state.sheet) {
-      const cam = findCameraInSection(sec, state.camera);
-      nav.system = sys;
-      nav.section = sec;
-      goCameras(sec);
-      if (cam) openCamSheet(sys, sec, cam);
+      if (state.camera && state.sheet) {
+        const cam = findCameraInSection(sec, state.camera);
+        if (cam) openCamSheet(sys, sec, cam);
+      }
       return true;
     }
     if (state.screen === "input" && state.camera) {
@@ -1733,6 +1734,7 @@ function goSystems() {
   showScreen("systems");
   renderSystems();
   updateStats();
+  pushNavHistory();
 }
 
 function goSections(system) {
@@ -1742,6 +1744,7 @@ function goSections(system) {
   renderSections();
   updateStats();
   refreshRdPanel(system);
+  pushNavHistory();
 }
 
 function goCameras(section) {
@@ -1750,6 +1753,7 @@ function goCameras(section) {
   renderCameras();
   probeSectionPhotos(nav.system, section);
   if (nav.system?.ready) refreshRdPanel(nav.system);
+  pushNavHistory();
 }
 
 function goBack() {
@@ -1764,7 +1768,7 @@ async function loadCatalog(bustCache = false) {
   const url = bustCache ? `catalog.json?t=${Date.now()}` : "catalog.json";
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("Нет catalog.json");
-    catalog = await res.json();
+  catalog = await res.json();
   rebindNavFromCatalog();
 }
 
@@ -1980,13 +1984,11 @@ function initScreenGestures() {
     resetGesture(true);
     if (Math.abs(dx) < SWIPE_TRIGGER) return;
     if (dx > 0) {
-      if (navGoBack()) return;
-      suppressHistoryPush = true;
-      const active = document.querySelector(".screen.active")?.id;
-      if (active === "screen-cameras" && nav.system) goSections(nav.system);
-      else if (active === "screen-sections") goSystems();
-      suppressHistoryPush = false;
-      resetNavHistoryFromCurrent();
+      if (!navGoBack()) {
+        const active = document.querySelector(".screen.active")?.id;
+        if (active === "screen-cameras" && nav.system) goSections(nav.system);
+        else if (active === "screen-sections") goSystems();
+      }
     } else if (!navGoForward()) {
       /* некуда вперёд — без сообщения */
     }
@@ -2072,9 +2074,6 @@ function initScreenGestures() {
 
   screens.addEventListener("pointerup", onPtrUp);
   screens.addEventListener("pointercancel", onPtrUp);
-  screens.addEventListener("lostpointercapture", (e) => {
-    if (e.pointerId === activePointerId && axis) onPtrUp(e);
-  });
 }
 
 async function refreshMetrazh() {
@@ -2234,8 +2233,10 @@ function updateStats() {
 
 function renderSystems() {
   const root = $("systems-root");
+  if (!root) return;
   root.innerHTML = "";
-  catalog.systems.forEach((sys, i) => {
+  const list = catalog.systems || [];
+  list.forEach((sys, i) => {
     const btn = document.createElement("button");
     btn.type = "button";
 
@@ -2425,6 +2426,7 @@ function openCamSheet(system, section, cam) {
 
   loadSessionPhotosFromDrive();
   requestAnimationFrame(() => meterInputEl("cable")?.focus());
+  pushNavHistory();
 }
 
 function closeCamSheet(rerender = true) {
@@ -2660,6 +2662,7 @@ function initTheme() {
 
 async function init() {
   document.title = "Монтажник";
+  sessionStorage.removeItem("montazh_sw_reloading");
   if (sessionStorage.getItem("montazh_ptr_done")) {
     sessionStorage.removeItem("montazh_ptr_done");
     setTimeout(() => toast("Приложение обновлено", "success"), 400);
@@ -2765,6 +2768,7 @@ async function init() {
     await refreshMetrazh();
     await flushQueue();
     if (!restoreNavState()) goSystems();
+    resetNavHistoryFromCurrent();
   } catch {
     $("systems-root").innerHTML =
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
@@ -2787,4 +2791,15 @@ async function init() {
   }, 30000);
 }
 
-init();
+init().catch((err) => {
+  console.error("init failed", err);
+  const root = $("systems-root");
+  if (root) {
+    root.innerHTML =
+      '<p class="empty-msg">Ошибка запуска. Обновите страницу (Ctrl+Shift+R).</p>';
+  }
+});
+
+window.addEventListener("error", (e) => {
+  console.error("app error", e.error || e.message);
+});
