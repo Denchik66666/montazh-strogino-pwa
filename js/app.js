@@ -306,17 +306,21 @@ function setPhotoStatus(systemId, camera, status, count) {
 function getPhotoReportDisplay(sys, cam) {
   const count = getPhotoCount(sys.id, cam.camera);
   const status = getPhotoStatus(sys.id, cam.camera);
-  if (count > 0 || status === "done") {
-    return { cls: "done", text: count > 0 ? String(count) : "✓" };
+  if (count > 0) {
+    const label = count === 1 ? "1 фото" : `${count} фото`;
+    return { cls: "done", text: label };
+  }
+  if (status === "done") {
+    return { cls: "done", text: "Фото есть" };
   }
   if (status === "skip") {
-    return { cls: "skip", text: "пропуск" };
+    return { cls: "skip", text: "Без фото" };
   }
   const hasCable = Boolean(metrazhMap[metrazhKey(sys.id, cam.camera)]);
   if (hasCable) {
-    return { cls: "need", text: "нужно" };
+    return { cls: "need", text: "Нужно фото" };
   }
-  return { cls: "none", text: "—" };
+  return { cls: "none", text: "Фото —" };
 }
 
 function updatePhotoReportBadge() {
@@ -885,6 +889,7 @@ async function loadSessionPhotosFromDrive() {
       camera: normalizeCameraCode(cam.camera),
     });
     if (!r.ok) {
+      const status = $("photo-status");
       if (status) {
         status.textContent = r.needDriveAuth
           ? "Нужно разрешить Диск в таблице (меню Метраж)"
@@ -893,8 +898,7 @@ async function loadSessionPhotosFromDrive() {
       return;
     }
     if (!Array.isArray(r.photos) || !r.photos.length) {
-      renderPhotoSession();
-      updatePhotoReportBadge();
+      setPhotoStatus(system.id, cam.camera, null);
       return;
     }
     clearSessionPhotos();
@@ -913,8 +917,13 @@ async function loadSessionPhotosFromDrive() {
     renderCameras();
     hydrateSessionPhotoPreviews();
   } catch {
+    const status = $("photo-status");
     if (status) status.textContent = "Нет связи — фото на Диске, обновите позже";
+  } finally {
+    photoSessionLoading = false;
     renderPhotoSession();
+    updatePhotoReportBadge();
+    if (selectedCamera) renderCameras();
   }
 }
 
@@ -929,9 +938,28 @@ function renderPhotoSession() {
 
   if (!n) {
     photoSheetIndex = 0;
-    status.textContent = `До ${MAX_SESSION_PHOTOS} фото на камеру`;
     preview.classList.add("photo-preview--empty");
-    preview.innerHTML = '<span class="photo-preview-empty">Нет фото — снимите или «Без фото»</span>';
+    if (photoSessionLoading) {
+      status.textContent = "Загрузка фото с Диска…";
+      preview.innerHTML =
+        '<span class="photo-preview-empty">Загрузка с Диска…</span>';
+    } else if (selectedCamera) {
+      const { system, cam } = selectedCamera;
+      const count = getPhotoCount(system.id, cam.camera);
+      if (count > 0) {
+        status.textContent = "Фото на Диске — не удалось показать превью";
+        preview.innerHTML =
+          '<span class="photo-preview-empty">Обновите страницу или снимите заново</span>';
+      } else {
+        status.textContent = `До ${MAX_SESSION_PHOTOS} фото на камеру`;
+        preview.innerHTML =
+          '<span class="photo-preview-empty">Нет фото — снимите или «Без фото»</span>';
+      }
+    } else {
+      status.textContent = `До ${MAX_SESSION_PHOTOS} фото на камеру`;
+      preview.innerHTML =
+        '<span class="photo-preview-empty">Нет фото — снимите или «Без фото»</span>';
+    }
     updatePhotoReportBadge();
     return;
   }
@@ -2416,7 +2444,7 @@ function clearMeterKind(kind) {
   updateMetersDisplay();
 }
 
-function openCamSheet(system, section, cam) {
+async function openCamSheet(system, section, cam) {
   selectedCamera = { system, section, cam };
   loadInputValues();
   writeMeterFields();
@@ -2425,10 +2453,7 @@ function openCamSheet(system, section, cam) {
   $("input-info").textContent = [cam.floor, cam.place, cam.cable].filter(Boolean).join(" · ");
 
   clearSessionPhotos();
-  renderPhotoSession();
-  updatePhotoBlockVisibility();
-  updateMetersDisplay();
-  updatePhotoReportBadge();
+  photoSessionLoading = photosEnabled() && apiConfigured();
 
   const sheet = $("cam-sheet");
   if (sheet) {
@@ -2437,15 +2462,23 @@ function openCamSheet(system, section, cam) {
   }
   camSheetOpen = true;
   document.body.classList.add("cam-sheet-open");
+
+  renderPhotoSession();
+  updatePhotoBlockVisibility();
+  updateMetersDisplay();
+  updatePhotoReportBadge();
   persistNavState("cameras");
 
   const details = $("photo-details");
   if (details) {
     const photo = getPhotoReportDisplay(system, cam);
-    details.open = photo.cls === "need" || sessionPhotos.length > 0;
+    details.open =
+      photo.cls === "need" ||
+      sessionPhotos.length > 0 ||
+      getPhotoCount(system.id, cam.camera) > 0;
   }
 
-  loadSessionPhotosFromDrive();
+  await loadSessionPhotosFromDrive();
   requestAnimationFrame(() => meterInputEl("cable")?.focus());
   pushNavHistory();
 }

@@ -1106,6 +1106,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   gap: 8px;
 }
 
+.cam-sheet__photos-title {
+  flex: 1;
+  min-width: 0;
+}
+
 .cam-sheet__photos-summary::-webkit-details-marker {
   display: none;
 }
