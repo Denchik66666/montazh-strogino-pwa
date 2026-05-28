@@ -120,12 +120,43 @@ const $ = (id) => document.getElementById(id);
 /** Совпадает с normalizeCameraCode_ в Apps Script (BK в таблице / ВК в приложении). */
 function normalizeCameraCode(code) {
   const s = String(code || "").trim();
-  // БР: "ВК ММС №5" / "ВК ПВН №23" / "ВК16" → BK5 / BK23 / BK16
+  // БР: "ВК ММС № 5" / "ВК ПВН № 23" / "ВК16" → BK5 / BK23 / BK16
   const mBr = s.match(/^[\u0412\u0432Bb][\u041a\u043aKk]\s*(?:[^\d№]*?)№?\s*(\d+)\s*$/i);
   if (mBr) return `BK${mBr[1]}`;
-  const m = s.match(/^([\u0412\u0432Bb])([\u041a\u043aKk])(.*)$/);
-  if (m) return `BK${m[3]}`;
-  return s;
+  const m = s.match(/^([\u0412\u0432Bb])([\u041a\u043aKk])(.*)$/i);
+  if (m) return `BK${String(m[3]).replace(/\s+/g, "")}`;
+  return s.replace(/\s+/g, "");
+}
+
+/** Ключи metrazhMap — всегда с нормализованным кодом (без пробелов). */
+function normalizeMetrazhKey(key) {
+  const gofra = key.endsWith(":gofra");
+  const base = gofra ? key.slice(0, -6) : key;
+  const idx = base.indexOf(":");
+  if (idx < 0) return key;
+  const sys = base.slice(0, idx);
+  const cam = base.slice(idx + 1);
+  return `${sys}:${normalizeCameraCode(cam)}${gofra ? ":gofra" : ""}`;
+}
+
+function normalizeMetrazhMap(map) {
+  const out = {};
+  for (const [k, v] of Object.entries(map || {})) {
+    out[normalizeMetrazhKey(k)] = v;
+  }
+  return out;
+}
+
+/** Единый вид: «ВК 2.11.1», «ВК ММС № 5» — как в таблице после правок. */
+function formatCameraLabelDisplay(text) {
+  let s = String(text || "").trim();
+  if (!s) return s;
+  const m = s.match(/^([\u0412\u0432Bb])([\u041a\u043aKk])\s*(.+)$/i);
+  if (!m) return s;
+  const tail = m[3].trim();
+  const compact = tail.replace(/\s+/g, "");
+  if (/^[\d.]/.test(compact)) return `ВК ${compact}`;
+  return `ВК ${tail.replace(/№\s*/g, "№ ")}`;
 }
 
 function metrazhKey(systemId, camera) {
@@ -379,7 +410,7 @@ function cacheMetrazh(map) {
 
 function loadCachedMetrazh() {
   try {
-    return JSON.parse(localStorage.getItem(METRAZH_CACHE_KEY) || "{}");
+    return normalizeMetrazhMap(JSON.parse(localStorage.getItem(METRAZH_CACHE_KEY) || "{}"));
   } catch {
     return {};
   }
@@ -1457,15 +1488,13 @@ function escapeHtml(s) {
 }
 
 function cameraDisplayName(cam) {
-  const raw = cam && typeof cam.label === "string" ? cam.label.trim() : "";
-  if (raw) return raw;
-  return formatCameraCode(cam?.camera || "");
+  if (cam?.label) return formatCameraLabelDisplay(cam.label);
+  return formatCameraLabelDisplay(cam?.camera || "");
 }
 
-/** На экране всегда кириллица ВК; в таблице и API — BK */
+/** На экране кириллица ВК с пробелами как в таблице. */
 function formatCameraCode(code) {
-  const n = normalizeCameraCode(code);
-  return n.replace(/^BK\s*(?=\d)/i, "ВК ");
+  return formatCameraLabelDisplay(code);
 }
 
 function systemDisplayTitle(sys) {
@@ -2269,7 +2298,7 @@ async function refreshMetrazh() {
   try {
     const data = await apiGet("metrazh");
     if (data.ok && data.metrazh) {
-      let merged = mergeMetrazhMaps(local, data.metrazh);
+      let merged = mergeMetrazhMaps(local, normalizeMetrazhMap(data.metrazh));
       const recovered = recoverMetrazhIfRegressed(local, merged);
       if (recovered !== merged) {
         merged = recovered;
