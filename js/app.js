@@ -21,7 +21,8 @@ let inputActiveKind = "cable";
 let inputValues = { cable: "", gofra: "" };
 /** @type {{ cable: number|null, gofra: number|null }} */
 let inputInitial = { cable: null, gofra: null };
-const MAX_SESSION_PHOTOS = 3;
+const MAX_SESSION_PHOTOS = 5;
+let photoLightboxIndex = 0;
 /** @type {{ previewUrl: string, driveUrl?: string, fileId?: string }[]} */
 let sessionPhotos = [];
 
@@ -433,39 +434,95 @@ function renderPhotoSession() {
   setPhotoButtonsDisabled(atMax);
 
   if (!n) {
-    status.textContent = "1–3 фото · до 10 МБ как есть, больше — сожмём · × — удалить";
-    preview.hidden = true;
-    preview.innerHTML = "";
+    status.textContent = `До ${MAX_SESSION_PHOTOS} фото · до 10 МБ, больше — сожмём · превью — просмотр`;
+    preview.classList.add("photo-preview--empty");
+    preview.innerHTML = '<span class="photo-preview-empty">Нет фото</span>';
     return;
   }
 
-  const last = sessionPhotos[n - 1];
   status.innerHTML = atMax
-    ? `На Диске: <strong>${n}</strong> фото. Не то? <strong>×</strong> на превью — удалить.`
-    : `На Диске: <strong>${n}</strong> фото. Размазано — снимите ещё или <strong>×</strong> удалить.`;
+    ? `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · нажмите превью — просмотр · <strong>×</strong> — удалить`
+    : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>×</strong> — удалить`;
 
-  preview.hidden = false;
+  preview.classList.remove("photo-preview--empty");
   preview.innerHTML = sessionPhotos
     .map(
       (p, i) => `
       <div class="photo-thumb-wrap">
-        <a class="photo-thumb" href="${escapeHtml(p.driveUrl || "#")}" target="_blank" rel="noopener" title="Фото ${i + 1} на Диске">
-          <img src="${p.previewUrl}" alt="фото ${i + 1}" loading="lazy" referrerpolicy="no-referrer" />
-        </a>
+        <button type="button" class="photo-thumb" data-photo-idx="${i}" aria-label="Открыть фото ${i + 1}">
+          <img src="${escapeHtml(p.previewUrl)}" alt="фото ${i + 1}" loading="lazy" referrerpolicy="no-referrer" />
+        </button>
         <button type="button" class="photo-delete" data-photo-idx="${i}" aria-label="Удалить фото ${i + 1}">×</button>
       </div>`
     )
     .join("");
+}
 
-  if (last.driveUrl) {
-    const link = document.createElement("a");
-    link.className = "photo-open-last";
-    link.href = last.driveUrl;
-    link.target = "_blank";
-    link.rel = "noopener";
-    link.textContent = "На Диске ↗";
-    preview.appendChild(link);
+function updatePhotoLightboxView() {
+  const p = sessionPhotos[photoLightboxIndex];
+  const box = $("photo-lightbox");
+  const img = $("photo-lightbox-img");
+  const counter = $("photo-lightbox-counter");
+  const drive = $("photo-lightbox-drive");
+  const prev = $("photo-lightbox-prev");
+  const next = $("photo-lightbox-next");
+  if (!box || !img || !p) return;
+
+  img.src = p.previewUrl;
+  if (counter) {
+    counter.textContent = `${photoLightboxIndex + 1} / ${sessionPhotos.length}`;
   }
+  if (drive) {
+    if (p.driveUrl) {
+      drive.href = p.driveUrl;
+      drive.hidden = false;
+    } else {
+      drive.hidden = true;
+    }
+  }
+  if (prev) prev.disabled = photoLightboxIndex <= 0;
+  if (next) next.disabled = photoLightboxIndex >= sessionPhotos.length - 1;
+}
+
+function openPhotoLightbox(index) {
+  if (!sessionPhotos[index]) return;
+  photoLightboxIndex = index;
+  updatePhotoLightboxView();
+  const box = $("photo-lightbox");
+  if (box) {
+    box.hidden = false;
+    document.body.classList.add("photo-lightbox-open");
+  }
+}
+
+function closePhotoLightbox() {
+  const box = $("photo-lightbox");
+  if (box) box.hidden = true;
+  document.body.classList.remove("photo-lightbox-open");
+  const img = $("photo-lightbox-img");
+  if (img) img.removeAttribute("src");
+}
+
+function stepPhotoLightbox(delta) {
+  const next = photoLightboxIndex + delta;
+  if (next < 0 || next >= sessionPhotos.length) return;
+  photoLightboxIndex = next;
+  updatePhotoLightboxView();
+}
+
+function initPhotoLightbox() {
+  $("photo-lightbox-close")?.addEventListener("click", closePhotoLightbox);
+  $("photo-lightbox")?.addEventListener("click", (e) => {
+    if (e.target.id === "photo-lightbox") closePhotoLightbox();
+  });
+  $("photo-lightbox-prev")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    stepPhotoLightbox(-1);
+  });
+  $("photo-lightbox-next")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    stepPhotoLightbox(1);
+  });
 }
 
 async function deleteSessionPhoto(index) {
@@ -493,6 +550,13 @@ async function deleteSessionPhoto(index) {
 
     if (p.previewUrl && !p.fromDrive) URL.revokeObjectURL(p.previewUrl);
     sessionPhotos.splice(index, 1);
+    if (!$("photo-lightbox")?.hidden) {
+      if (!sessionPhotos.length) closePhotoLightbox();
+      else {
+        photoLightboxIndex = Math.min(index, sessionPhotos.length - 1);
+        updatePhotoLightboxView();
+      }
+    }
     renderPhotoSession();
     toast(
       p.fileId ? "Фото удалено с Диска" : "Убрано из списка · на Диске удалите вручную",
@@ -1675,11 +1739,20 @@ async function init() {
   $("btn-photo-gallery")?.addEventListener("click", () => $("photo-input-gallery")?.click());
   $("photo-input-camera")?.addEventListener("change", onPhotoPick);
   $("photo-input-gallery")?.addEventListener("change", onPhotoPick);
+  initPhotoLightbox();
   $("photo-preview")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-photo-idx]");
-    if (!btn || !btn.classList.contains("photo-delete")) return;
-    e.preventDefault();
-    deleteSessionPhoto(parseInt(btn.getAttribute("data-photo-idx"), 10));
+    const del = e.target.closest(".photo-delete");
+    if (del) {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteSessionPhoto(parseInt(del.getAttribute("data-photo-idx"), 10));
+      return;
+    }
+    const thumb = e.target.closest(".photo-thumb");
+    if (thumb) {
+      e.preventDefault();
+      openPhotoLightbox(parseInt(thumb.getAttribute("data-photo-idx"), 10));
+    }
   });
   updatePhotoBlockVisibility();
 

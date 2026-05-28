@@ -911,11 +911,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   padding-top: 8px;
 }
 
-#screen-input.active:has(.photo-preview:not([hidden])) {
+#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) {
   --numpad-key-h: 42px;
 }
 
-#screen-input.active:has(.photo-preview:not([hidden])) .meter-field__value {
+#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) .meter-field__value {
   font-size: 1.45rem;
 }
 
@@ -930,7 +930,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 .photo-block {
   width: 100%;
   max-width: 100%;
-  margin: 4px 0 0;
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
   overflow: hidden;
 }
 
@@ -989,15 +991,26 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
-  margin-top: 4px;
-  padding: 4px 6px;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 8px;
+  min-height: 76px;
   border-radius: 10px;
   background: var(--surface);
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+}
+
+.photo-preview--empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.photo-preview-empty {
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .photo-preview::-webkit-scrollbar {
@@ -1007,17 +1020,25 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 .photo-thumb-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
 }
 
 .photo-thumb {
   display: block;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
+  padding: 0;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid var(--ok);
+  background: var(--bg);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.photo-thumb:active {
+  transform: scale(0.97);
 }
 
 .photo-thumb img {
@@ -1050,19 +1071,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   transform: scale(0.92);
 }
 
-.photo-open-last {
-  flex-shrink: 0;
-  font-size: 0.68rem;
-  color: var(--accent);
-  white-space: nowrap;
-  padding: 0 4px;
-}
-
 .save-btn {
   width: 100%;
   min-height: 46px;
   max-height: 48px;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1287,6 +1300,102 @@ html[data-theme="light"] .theme-icon--moon {
 .save-btn.save-btn--clear {
   background: var(--warn);
   color: #1a1206;
+}
+
+body.photo-lightbox-open {
+  overflow: hidden;
+}
+
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.92);
+}
+
+.photo-lightbox[hidden] {
+  display: none !important;
+}
+
+.photo-lightbox__stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.photo-lightbox__stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.photo-lightbox__close {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.photo-lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 48px;
+  height: 56px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.photo-lightbox__nav:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.photo-lightbox__nav--prev {
+  left: 4px;
+}
+
+.photo-lightbox__nav--next {
+  right: 4px;
+}
+
+.photo-lightbox__counter {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.photo-lightbox__drive {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding-bottom: 4px;
 }
 
 @media (min-height: 640px) {
