@@ -777,6 +777,19 @@ function showScreen(name) {
 
   updateHeader(name);
   persistNavState(name);
+  syncRdPanelVisibility();
+}
+
+/** Панель РД под шапкой — видна в системе (секции / камеры / ввод). */
+function syncRdPanelVisibility() {
+  const panel = $("rd-panel");
+  if (!panel) return;
+  if (!nav.system?.ready) {
+    panel.hidden = true;
+    return;
+  }
+  const active = document.querySelector(".screen.active")?.id;
+  panel.hidden = active === "screen-systems";
 }
 
 function findSystemById(systemId) {
@@ -920,7 +933,8 @@ async function refreshRdPanel(sys) {
     panel.hidden = true;
     return;
   }
-  panel.hidden = false;
+  syncRdPanelVisibility();
+  if (panel.hidden) return;
 
   if (!apiConfigured()) {
     status.textContent = "РД: подключите таблицу в config.js";
@@ -942,10 +956,10 @@ async function refreshRdPanel(sys) {
       btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
       status.textContent = r.name ? `На Диске: ${r.name}` : "РД загружена";
     } else {
-      status.textContent = "РД не загружена — выберите PDF";
+      status.textContent = r.error || "РД не загружена — выберите PDF";
     }
   } catch {
-    status.textContent = "РД не загружена — выберите PDF";
+    status.textContent = "РД не загружена — проверьте интернет";
   }
 }
 

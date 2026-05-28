@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=66" />
+    <link rel="stylesheet" href="css/app.css?v=67" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -61,6 +61,15 @@
       </button>
     </header>
 
+    <div class="rd-panel" id="rd-panel" hidden>
+      <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
+      <div class="rd-actions">
+        <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
+        <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
+      </div>
+      <p class="rd-status" id="rd-status">РД не загружена</p>
+    </div>
+
     <div id="pull-refresh" class="pull-refresh" aria-hidden="true">
       <span class="pull-refresh__spinner"></span>
       <span class="pull-refresh__label">Обновить</span>
@@ -75,14 +84,6 @@
 
     <!-- 2. Секции -->
     <div id="screen-sections" class="screen">
-      <div class="rd-panel" id="rd-panel">
-        <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
-        <div class="rd-actions">
-          <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
-          <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
-        </div>
-        <p class="rd-status" id="rd-status">РД не загружена</p>
-      </div>
       <p class="screen-hint screen-hint--sections">Нажмите на <strong>номер секции</strong> — цвет и счётчик справа</p>
       <main id="sections-root" class="tile-grid"></main>
     </div>
@@ -202,7 +203,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=66"></script>
-    <script src="js/app.js?v=66" defer></script>
+    <script src="config.js?v=67"></script>
+    <script src="js/app.js?v=67" defer></script>
   </body>
 </html>
