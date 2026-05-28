@@ -2282,6 +2282,10 @@ async function init() {
     });
   });
   $("cam-sheet-backdrop")?.addEventListener("click", () => closeCamSheet());
+  $("cam-sheet-close")?.addEventListener("click", () => closeCamSheet());
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && camSheetOpen) closeCamSheet();
+  });
   $("btn-save")?.addEventListener("click", saveMeters);
   $("btn-next-cam")?.addEventListener("click", goNextCamera);
   $("btn-photo-skip")?.addEventListener("click", markPhotoSkipped);

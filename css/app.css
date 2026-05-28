@@ -739,8 +739,10 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   inset: 0;
   z-index: 40;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
   pointer-events: none;
 }
 
@@ -752,26 +754,49 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   position: absolute;
   inset: 0;
   border: none;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   pointer-events: auto;
   cursor: pointer;
+  animation: camBackdropIn 0.2s ease;
+}
+
+@keyframes camBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .cam-sheet__panel {
   position: relative;
   z-index: 1;
-  max-height: min(88vh, 640px);
+  width: min(100%, 400px);
+  max-height: min(90vh, 520px);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 14px 14px max(14px, env(safe-area-inset-bottom));
-  border-radius: 16px 16px 0 0;
-  background: var(--bg);
-  border-top: 1px solid var(--surface2);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+  padding: 16px 16px 18px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
+  animation: camPanelIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes camPanelIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .cam-sheet__panel::-webkit-scrollbar {
@@ -781,21 +806,51 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .cam-sheet__head {
-  text-align: center;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cam-sheet__titles {
+  flex: 1;
+  min-width: 0;
 }
 
 .cam-sheet__head .cam-code {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
   margin: 0;
   color: var(--text-strong);
+  line-height: 1.2;
 }
 
 .cam-sheet__head .cam-info {
   margin: 4px 0 0;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--muted);
+  line-height: 1.35;
+}
+
+.cam-sheet__close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: -4px -4px 0 0;
+  padding: 0;
+  border: 1px solid var(--surface2);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cam-sheet__close:active {
+  transform: scale(0.96);
+  background: var(--surface2);
 }
 
 .metrazh-dual {
@@ -817,12 +872,12 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 .meter-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
-  border-radius: 10px;
-  background: var(--surface);
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  border-radius: 12px;
+  background: var(--bg);
 }
 
 .meter-field__row {
@@ -843,11 +898,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex: 1;
   min-width: 0;
   margin: 0;
-  padding: 4px 6px;
+  padding: 6px 8px;
   border: none;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bg) 60%, transparent);
-  font-size: 1.5rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  font-size: 1.65rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -891,13 +946,13 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .cam-sheet__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .btn-next-cam {
-  min-height: 46px;
+  min-height: 48px;
   font-size: 0.9rem;
   font-weight: 700;
   border: 1px solid var(--surface2);
@@ -910,14 +965,14 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .cam-sheet__actions .save-btn {
   margin: 0;
-  min-height: 46px;
-  font-size: 0.9rem;
+  min-height: 48px;
+  font-size: 0.95rem;
 }
 
 .cam-sheet__photos {
-  margin-top: 12px;
+  margin-top: 14px;
   border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
-  padding-top: 8px;
+  padding-top: 10px;
 }
 
 .cam-sheet__photos-summary {
