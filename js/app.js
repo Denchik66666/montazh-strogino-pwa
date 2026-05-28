@@ -635,24 +635,36 @@ async function syncProjectNameFromApi() {
   }
 }
 
+let refreshAppDataInFlight = null;
+let lastSilentRefreshAt = 0;
+const SILENT_REFRESH_MIN_MS = 60000;
+
 async function refreshAppData(showToast = false) {
+  if (refreshAppDataInFlight) return refreshAppDataInFlight;
+  refreshAppDataInFlight = (async () => {
+    try {
+      await loadCatalog(true);
+    } catch {
+      /* офлайн — остаётся текущий каталог */
+    }
+    await syncProjectNameFromApi();
+    await refreshMetrazh();
+    await flushQueue(false);
+    refreshCurrentView();
+    updateStats();
+    const active = document.querySelector(".screen.active")?.id;
+    if (active === "screen-input" && selectedCamera) {
+      await loadSessionPhotosFromDrive();
+    }
+    const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
+    if (activeName) updateHeader(activeName);
+    if (showToast) toast("Данные обновлены", "success");
+  })();
   try {
-    await loadCatalog(true);
-  } catch {
-    /* офлайн — остаётся текущий каталог */
+    await refreshAppDataInFlight;
+  } finally {
+    refreshAppDataInFlight = null;
   }
-  await syncProjectNameFromApi();
-  await refreshMetrazh();
-  await flushQueue(false);
-  refreshCurrentView();
-  updateStats();
-  const active = document.querySelector(".screen.active")?.id;
-  if (active === "screen-input" && selectedCamera) {
-    await loadSessionPhotosFromDrive();
-  }
-  const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
-  if (activeName) updateHeader(activeName);
-  if (showToast) toast("Данные обновлены", "success");
 }
 
 function getActiveScrollEl() {
@@ -665,7 +677,7 @@ function initPullToRefresh() {
   const indicator = $("pull-refresh");
   if (!indicator) return;
 
-  const THRESH = 56;
+  const THRESH = 88;
   let startY = 0;
   let pulling = false;
   let refreshing = false;
@@ -679,7 +691,7 @@ function initPullToRefresh() {
   const onStart = (e) => {
     if (refreshing || e.touches.length !== 1) return;
     const scrollEl = getActiveScrollEl();
-    if (!scrollEl || scrollEl.scrollTop > 4) return;
+    if (!scrollEl || scrollEl.scrollTop > 0) return;
     startY = e.touches[0].clientY;
     pulling = true;
   };
@@ -716,7 +728,7 @@ function initPullToRefresh() {
     const label = indicator.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
     try {
-      await refreshAppData(true);
+      await refreshAppData(false);
     } catch {
       toast("Не удалось обновить", "error");
     } finally {
@@ -792,21 +804,23 @@ function initServiceWorkerUpdates() {
 }
 
 function initAutoRefresh() {
-  const runSilentRefresh = () => {
+  const runSilentRefresh = (force = false) => {
     if (document.visibilityState !== "visible") return;
+    const now = Date.now();
+    if (!force && now - lastSilentRefreshAt < SILENT_REFRESH_MIN_MS) return;
+    lastSilentRefreshAt = now;
     refreshAppData(false).catch(() => {});
   };
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
       swRegistration?.update().catch(() => {});
-      runSilentRefresh();
+      runSilentRefresh(false);
     }
   });
 
-  window.addEventListener("focus", runSilentRefresh);
   window.addEventListener("pageshow", (e) => {
-    if (e.persisted) runSilentRefresh();
+    if (e.persisted) runSilentRefresh(true);
   });
 
   setInterval(() => {
