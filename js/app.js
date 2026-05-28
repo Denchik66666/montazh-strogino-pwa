@@ -1696,16 +1696,17 @@ async function refreshAppData(showToast = false) {
       /* офлайн — остаётся текущий каталог */
     }
     await syncProjectNameFromApi();
+    loadPhotoStatusMap();
     await refreshMetrazh();
     await flushQueue(false);
     refreshCurrentView();
     updateStats();
-    const active = document.querySelector(".screen.active")?.id;
     if (camSheetOpen && selectedCamera) {
       await loadSessionPhotosFromDrive();
     }
     const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
     if (activeName) updateHeader(activeName);
+    if (nav.system?.ready) await refreshRdPanel(nav.system);
     if (showToast) toast("Данные обновлены", "success");
   })();
   try {
@@ -1715,59 +1716,120 @@ async function refreshAppData(showToast = false) {
   }
 }
 
+/** Полное обновление: данные, очистка кэша PWA, перезагрузка страницы (как Ctrl+Shift+R). */
+async function hardRefreshApp() {
+  await flushQueue(true);
+  await refreshAppData(false);
+  if ("caches" in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k.startsWith("montazh-")).map((k) => caches.delete(k)));
+  }
+  if (swRegistration) await swRegistration.update().catch(() => {});
+  sessionStorage.setItem("montazh_ptr_done", "1");
+  window.location.reload();
+}
+
 function getActiveScrollEl() {
   const screen = document.querySelector(".screen.active");
   if (!screen) return null;
   return screen.querySelector(".tile-grid, .camera-list") || screen;
 }
 
+function ptrGestureBlocked() {
+  return (
+    document.body.classList.contains("cam-sheet-open") ||
+    document.body.classList.contains("photo-lightbox-open")
+  );
+}
+
+function ptrRubberBand(dy, thresh) {
+  if (dy <= thresh) return dy;
+  return thresh + (dy - thresh) * 0.35;
+}
+
 function initPullToRefresh() {
   const indicator = $("pull-refresh");
-  if (!indicator) return;
+  const screens = $("screens");
+  if (!indicator || !screens) return;
 
-  const THRESH = 88;
+  const THRESH = 72;
+  const MAX_PULL = 112;
   let startY = 0;
   let pulling = false;
   let refreshing = false;
+  let pullPx = 0;
 
-  const resetPull = () => {
-    indicator.classList.remove("pull-refresh--visible", "pull-refresh--ready", "pull-refresh--loading");
-    indicator.style.setProperty("--pull", "0px");
-    indicator.setAttribute("aria-hidden", "true");
+  const setPullVisual = (px, dragging) => {
+    pullPx = px;
+    screens.style.transform = px > 0 ? `translateY(${px}px)` : "";
+    screens.classList.toggle("ptr-dragging", Boolean(dragging));
+    screens.classList.toggle("ptr-pulling", px > 2);
+    indicator.style.setProperty("--pull-rotate", `${Math.min(px / THRESH, 1) * 300}deg`);
+    const ready = px >= THRESH;
+    indicator.classList.toggle("pull-refresh--visible", px > 2);
+    indicator.classList.toggle("pull-refresh--ready", ready);
+    indicator.setAttribute("aria-hidden", px > 2 ? "false" : "true");
+    const label = indicator.querySelector(".pull-refresh__label");
+    if (label && !refreshing) {
+      label.textContent = ready ? "Отпустите — обновить" : "Потяните вниз";
+    }
   };
 
-  const onStart = (e) => {
-    if (refreshing || e.touches.length !== 1) return;
+  const resetPull = (animate = true) => {
+    if (animate) {
+      screens.classList.add("ptr-resetting");
+      screens.classList.remove("ptr-dragging");
+      setPullVisual(0, false);
+      const onDone = () => {
+        screens.removeEventListener("transitionend", onDone);
+        screens.classList.remove("ptr-resetting", "ptr-pulling");
+        screens.style.transform = "";
+      };
+      screens.addEventListener("transitionend", onDone);
+    } else {
+      screens.classList.remove("ptr-resetting", "ptr-dragging", "ptr-pulling");
+      screens.style.transform = "";
+      setPullVisual(0, false);
+    }
+    indicator.classList.remove("pull-refresh--loading");
+  };
+
+  const canStartPull = () => {
+    if (refreshing || ptrGestureBlocked()) return false;
     const scrollEl = getActiveScrollEl();
-    if (!scrollEl || scrollEl.scrollTop > 0) return;
-    startY = e.touches[0].clientY;
-    pulling = true;
+    return scrollEl && scrollEl.scrollTop <= 1;
   };
 
-  const onMove = (e) => {
+  const onStart = (clientY) => {
+    if (!canStartPull()) return false;
+    startY = clientY;
+    pulling = true;
+    return true;
+  };
+
+  const onMove = (clientY, preventDefault) => {
     if (!pulling || refreshing) return;
-    const dy = e.touches[0].clientY - startY;
-    if (dy <= 0) {
-      resetPull();
+    const scrollEl = getActiveScrollEl();
+    if (!scrollEl || scrollEl.scrollTop > 1) {
+      pulling = false;
+      resetPull(true);
       return;
     }
-    if (dy > 8) e.preventDefault();
-    const h = Math.min(dy * 0.45, 72);
-    indicator.style.setProperty("--pull", `${h}px`);
-    indicator.classList.add("pull-refresh--visible");
-    indicator.classList.toggle("pull-refresh--ready", dy >= THRESH);
-    indicator.setAttribute("aria-hidden", "false");
-    const label = indicator.querySelector(".pull-refresh__label");
-    if (label) label.textContent = dy >= THRESH ? "Отпустите" : "Потяните вниз";
+    let dy = clientY - startY;
+    if (dy <= 0) {
+      setPullVisual(0, true);
+      return;
+    }
+    if (preventDefault) preventDefault();
+    dy = ptrRubberBand(dy, THRESH);
+    setPullVisual(Math.min(dy, MAX_PULL), true);
   };
 
   const onEnd = async () => {
     if (!pulling) return;
     pulling = false;
-    const pull = parseFloat(indicator.style.getPropertyValue("--pull") || "0");
-    const ready = indicator.classList.contains("pull-refresh--ready");
-    if (!ready || pull < 20) {
-      resetPull();
+    if (pullPx < THRESH) {
+      resetPull(true);
       return;
     }
 
@@ -1775,20 +1837,68 @@ function initPullToRefresh() {
     indicator.classList.add("pull-refresh--loading");
     const label = indicator.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
+    screens.classList.remove("ptr-dragging");
+    setPullVisual(Math.min(pullPx, 56), false);
+
     try {
-      await refreshAppData(false);
+      await hardRefreshApp();
     } catch {
       toast("Не удалось обновить", "error");
-    } finally {
       refreshing = false;
-      resetPull();
+      resetPull(true);
     }
   };
 
-  document.addEventListener("touchstart", onStart, { passive: true });
-  document.addEventListener("touchmove", onMove, { passive: false });
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length !== 1) return;
+      onStart(e.touches[0].clientY);
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!pulling) return;
+      onMove(e.touches[0].clientY, () => e.preventDefault());
+    },
+    { passive: false }
+  );
+
   document.addEventListener("touchend", onEnd);
   document.addEventListener("touchcancel", onEnd);
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (!onStart(e.clientY)) return;
+      try {
+        getActiveScrollEl()?.setPointerCapture?.(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!pulling) return;
+      onMove(e.clientY, () => e.preventDefault());
+    },
+    { passive: false }
+  );
+
+  document.addEventListener("pointerup", () => {
+    if (pulling) onEnd();
+  });
+  document.addEventListener("pointercancel", () => {
+    if (pulling) onEnd();
+  });
 }
 
 async function refreshMetrazh() {
@@ -2374,6 +2484,10 @@ function initTheme() {
 
 async function init() {
   document.title = "Монтажник";
+  if (sessionStorage.getItem("montazh_ptr_done")) {
+    sessionStorage.removeItem("montazh_ptr_done");
+    setTimeout(() => toast("Приложение обновлено", "success"), 400);
+  }
   initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 

@@ -120,48 +120,64 @@ body {
   position: relative;
   overflow: hidden;
   width: 100%;
+  will-change: transform;
+}
+
+#screens.ptr-resetting {
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#screens.ptr-dragging {
+  transition: none;
 }
 
 .pull-refresh {
   position: absolute;
-  top: 0;
-  left: 50%;
-  z-index: 8;
+  top: -54px;
+  left: 0;
+  right: 0;
+  z-index: 6;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--surface2);
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, calc(-120% + var(--pull, 0px)));
-  transition: opacity 0.15s ease;
+  transition: opacity 0.12s ease;
 }
 
 .pull-refresh--visible {
   opacity: 1;
 }
 
-.pull-refresh--ready {
+.pull-refresh--ready .pull-refresh__label {
   color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--surface2));
+}
+
+.pull-refresh--ready .pull-refresh__spinner {
+  border-top-color: var(--accent);
+  border-right-color: color-mix(in srgb, var(--accent) 55%, var(--surface2));
 }
 
 .pull-refresh--loading .pull-refresh__spinner {
-  animation: pull-spin 0.7s linear infinite;
+  animation: pull-spin 0.65s linear infinite;
 }
 
 .pull-refresh__spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--surface2);
-  border-top-color: var(--accent);
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 3px solid var(--surface2);
+  border-top-color: var(--muted);
   border-radius: 50%;
+  transform: rotate(var(--pull-rotate, 0deg));
+}
+
+.pull-refresh__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 @keyframes pull-spin {
