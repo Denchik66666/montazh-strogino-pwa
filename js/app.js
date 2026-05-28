@@ -53,15 +53,7 @@ function apiErrorMessage(err) {
 function photoApiErrorMessage(r) {
   const err = (r && r.error) || "";
   if ((r && r.needDriveAuth) || /DriveApp|auth\/drive|разрешени/i.test(err)) {
-    if (r && r.authUrl) {
-      try {
-        window.open(r.authUrl, "_blank");
-      } catch {
-        /* ignore */
-      }
-      return "Фото: в новой вкладке нажмите «Разрешить», затем снова Фото";
-    }
-    return "Фото: таблица → Метраж → Разрешить фото (ссылка «Разрешить доступ»)";
+    return "Фото: в таблице Метраж → Разрешить фото (или Apps Script → authorizeDrive_)";
   }
   if (err.length > 120) return "Фото: разрешите Диск в таблице (меню Метраж)";
   return err || "Ошибка загрузки";
