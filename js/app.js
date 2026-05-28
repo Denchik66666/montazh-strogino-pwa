@@ -1771,37 +1771,43 @@ function initPullToRefresh() {
   const screens = $("screens");
   if (!indicator || !screens) return;
 
-  /** Сначала нужно явно потянуть (случайный тап/сдвиг не считается). */
-  const ACTIVATE_PX = 36;
-  /** Порог «отпустите — обновить». */
-  const THRESH = 112;
-  const MAX_PULL = 140;
+  /** Игнорировать лёгкое касание / микродвижение. */
+  const SLOP_PX = 22;
+  /** Сырой сдвиг пальца вниз для «отпустите — обновить» (достижимо, но не случайно). */
+  const TRIGGER_PX = 88;
+  const MAX_VISUAL_PX = 96;
   let startY = 0;
   let watching = false;
   let engaged = false;
   let refreshing = false;
+  let lastRawDy = 0;
   let pullPx = 0;
+  let touchSession = false;
 
-  const setPullVisual = (px, dragging) => {
-    pullPx = px;
-    screens.style.transform = px > 0 ? `translateY(${px}px)` : "";
+  const setPullVisual = (rawDy, dragging) => {
+    lastRawDy = rawDy;
+    const beyond = Math.max(0, rawDy - SLOP_PX);
+    pullPx = Math.min(beyond * 0.62, MAX_VISUAL_PX);
+    const ready = rawDy >= TRIGGER_PX;
+    screens.style.transform = pullPx > 0 ? `translateY(${pullPx}px)` : "";
     screens.classList.toggle("ptr-dragging", Boolean(dragging));
-    screens.classList.toggle("ptr-pulling", px > 8);
-    indicator.style.setProperty("--pull-rotate", `${Math.min(px / THRESH, 1) * 300}deg`);
-    const ready = px >= THRESH;
-    indicator.classList.toggle("pull-refresh--visible", px > 12);
+    screens.classList.toggle("ptr-pulling", pullPx > 6);
+    indicator.style.setProperty("--pull-rotate", `${Math.min(rawDy / TRIGGER_PX, 1) * 300}deg`);
+    indicator.classList.toggle("pull-refresh--visible", pullPx > 8);
     indicator.classList.toggle("pull-refresh--ready", ready);
-    indicator.setAttribute("aria-hidden", px > 12 ? "false" : "true");
+    indicator.setAttribute("aria-hidden", pullPx > 8 ? "false" : "true");
     const label = indicator.querySelector(".pull-refresh__label");
     if (label && !refreshing) {
-      if (!engaged) label.textContent = "Потяните ниже";
-      else label.textContent = ready ? "Отпустите — обновить" : "Ещё чуть-чуть…";
+      if (rawDy < SLOP_PX) label.textContent = "Потяните вниз";
+      else if (!ready) label.textContent = "Ещё чуть-чуть…";
+      else label.textContent = "Отпустите — обновить";
     }
   };
 
   const resetPull = (animate = true) => {
     watching = false;
     engaged = false;
+    lastRawDy = 0;
     if (animate) {
       screens.classList.add("ptr-resetting");
       screens.classList.remove("ptr-dragging");
@@ -1820,48 +1826,56 @@ function initPullToRefresh() {
     indicator.classList.remove("pull-refresh--loading");
   };
 
-  const canStartPull = () => {
-    if (refreshing || ptrGestureBlocked()) return false;
+  const atScrollTop = () => {
     const scrollEl = getActiveScrollEl();
-    return scrollEl && scrollEl.scrollTop <= 0;
+    return scrollEl && scrollEl.scrollTop <= 2;
   };
 
-  const onStart = (clientY) => {
+  const canStartPull = () => {
+    if (refreshing || ptrGestureBlocked()) return false;
+    return atScrollTop();
+  };
+
+  const onStart = (clientY, fromTouch) => {
     if (!canStartPull()) return false;
+    if (fromTouch) touchSession = true;
+    else if (touchSession) return false;
     startY = clientY;
     watching = true;
     engaged = false;
+    lastRawDy = 0;
     pullPx = 0;
     return true;
   };
 
-  const onMove = (clientY, preventDefault) => {
+  const onMove = (clientY, e) => {
     if (!watching || refreshing) return;
-    const scrollEl = getActiveScrollEl();
-    if (!scrollEl || scrollEl.scrollTop > 0) {
+    if (!atScrollTop()) {
       resetPull(true);
       return;
     }
     const dy = clientY - startY;
     if (dy <= 0) {
       if (engaged) setPullVisual(0, true);
-      else engaged = false;
+      engaged = false;
       return;
     }
-    if (dy < ACTIVATE_PX) return;
+    if (dy < SLOP_PX) return;
 
-    if (!engaged) engaged = true;
-    if (preventDefault) preventDefault();
-    const pull = ptrRubberBand(dy - ACTIVATE_PX * 0.35, THRESH - ACTIVATE_PX);
-    setPullVisual(Math.min(ACTIVATE_PX * 0.35 + pull, MAX_PULL), true);
+    engaged = true;
+    if (e?.cancelable) e.preventDefault();
+    setPullVisual(dy, true);
   };
 
   const onEnd = async () => {
-    if (!watching) return;
-    watching = false;
+    if (!watching || refreshing) return;
     const wasEngaged = engaged;
+    const raw = lastRawDy;
+    watching = false;
     engaged = false;
-    if (!wasEngaged || pullPx < THRESH) {
+    touchSession = false;
+
+    if (!wasEngaged || raw < TRIGGER_PX) {
       resetPull(true);
       return;
     }
@@ -1889,7 +1903,7 @@ function initPullToRefresh() {
     "touchstart",
     (e) => {
       if (e.touches.length !== 1) return;
-      onStart(e.touches[0].clientY);
+      onStart(e.touches[0].clientY, true);
     },
     { passive: true }
   );
@@ -1898,7 +1912,7 @@ function initPullToRefresh() {
     "touchmove",
     (e) => {
       if (!watching) return;
-      onMove(e.touches[0].clientY, () => e.preventDefault());
+      onMove(e.touches[0].clientY, e);
     },
     { passive: false }
   );
@@ -1910,8 +1924,7 @@ function initPullToRefresh() {
     "pointerdown",
     (e) => {
       if (e.pointerType === "mouse") return;
-      if (e.pointerType === "pen" && e.button !== 0) return;
-      if (!onStart(e.clientY)) return;
+      if (!onStart(e.clientY, false)) return;
       try {
         getActiveScrollEl()?.setPointerCapture?.(e.pointerId);
       } catch {
@@ -1925,18 +1938,18 @@ function initPullToRefresh() {
     "pointermove",
     (e) => {
       if (!watching || e.pointerType === "mouse") return;
-      onMove(e.clientY, () => e.preventDefault());
+      onMove(e.clientY, e);
     },
     { passive: false }
   );
 
   document.addEventListener("pointerup", (e) => {
     if (e.pointerType === "mouse") return;
-    if (watching) onEnd();
+    onEnd();
   });
   document.addEventListener("pointercancel", (e) => {
     if (e.pointerType === "mouse") return;
-    if (watching) onEnd();
+    onEnd();
   });
 }
 
