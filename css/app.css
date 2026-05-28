@@ -581,8 +581,30 @@ html[data-theme="light"] .app-header {
 }
 
 .pick-card--disabled {
-  opacity: 0.5;
+  opacity: 0.88;
   box-shadow: inset 4px 0 0 var(--muted);
+}
+
+.systems-block-title {
+  margin: 4px 0 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.systems-block-title--pending {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+}
+
+.pick-status--soon {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--warn);
+  white-space: nowrap;
 }
 
 .pick-num {
@@ -1167,12 +1189,15 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .cam-photo {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  text-transform: lowercase;
-  padding: 2px 7px;
+  padding: 3px 7px;
   border-radius: 999px;
   line-height: 1.2;
+  white-space: nowrap;
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cam-photo--done {

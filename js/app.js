@@ -8,6 +8,76 @@ const THEME_KEY = "montazh_theme";
 const THEME_COLORS = { dark: "#0f172a", light: "#e3e4ea" };
 
 let catalog = { site: { id: "", name: "" }, systems: [] };
+
+/** Порядок и заглушки — системы никогда не пропадают с экрана, даже при устаревшем catalog.json. */
+const CANONICAL_SYSTEM_ORDER = ["cot", "br", "rf", "spd", "df", "sin-br"];
+const CANONICAL_SYSTEM_STUBS = [
+  {
+    id: "cot",
+    code: "СОТ",
+    title: "СОТ — Система охранного телевидения",
+    ready: false,
+    note: "Нет данных каталога",
+    sections: [],
+    cameraCount: 0,
+  },
+  {
+    id: "br",
+    code: "БР",
+    title: "Безопасный регион",
+    ready: false,
+    note: "Нет данных каталога",
+    sections: [],
+    cameraCount: 0,
+  },
+  {
+    id: "rf",
+    code: "РФ",
+    title: "РФ — распределительный щит",
+    ready: false,
+    note: "Таблица ещё не подключена",
+    sections: [],
+    cameraCount: 0,
+  },
+  {
+    id: "spd",
+    code: "СПД",
+    title: "СПД",
+    ready: false,
+    note: "Таблица ещё не подключена",
+    sections: [],
+    cameraCount: 0,
+  },
+  {
+    id: "df",
+    code: "ДФ",
+    title: "ДФ — дымоудаление",
+    ready: false,
+    note: "Таблица ещё не подключена",
+    sections: [],
+    cameraCount: 0,
+  },
+  {
+    id: "sin-br",
+    code: "СИН",
+    title: "СИН-1.1-Р-БР2.1",
+    ready: false,
+    note: "вынесено в систему БР",
+    sections: [],
+    cameraCount: 0,
+  },
+];
+
+function mergeCatalogSystems(systems) {
+  const byId = new Map();
+  for (const s of systems || []) {
+    if (s?.id) byId.set(s.id, s);
+  }
+  for (const stub of CANONICAL_SYSTEM_STUBS) {
+    if (!byId.has(stub.id)) byId.set(stub.id, { ...stub });
+  }
+  return CANONICAL_SYSTEM_ORDER.map((id) => byId.get(id)).filter(Boolean);
+}
 /** @type {Record<string, number|string>} */
 let metrazhMap = {};
 
@@ -337,13 +407,13 @@ function updatePhotoReportBadge() {
 
   if (camSheetOpen) {
     if (photoSessionLoading) {
-      badge.textContent = "…";
+      badge.textContent = "Загрузка…";
       badge.className = "photo-report-badge photo-report-badge--loading";
       return;
     }
     const count = getPhotoCount(system.id, cam.camera);
     if (count > 0) {
-      badge.textContent = "на Диске";
+      badge.textContent = count === 1 ? "1 на Диске" : `${count} на Диске`;
       badge.className = "photo-report-badge photo-report-badge--done";
       return;
     }
@@ -1818,6 +1888,7 @@ async function loadCatalog(bustCache = false) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("Нет catalog.json");
   catalog = await res.json();
+  catalog.systems = mergeCatalogSystems(catalog.systems);
   rebindNavFromCatalog();
 }
 
@@ -2280,47 +2351,75 @@ function updateStats() {
   }
 }
 
+function appendSystemPickCard(root, sys, toneIndex) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+
+  if (sys.ready) {
+    const { done, total } = countDone(sys);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    btn.className = `pick-card pick-card--system ${pickTone(toneIndex)} ${pickStatus(done, total)}`;
+    btn.innerHTML = `
+      <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+      <span class="pick-body">
+        <span class="pick-label">${escapeHtml(systemDisplayTitle(sys))}</span>
+        <span class="pick-sub">${total} камер</span>
+        <span class="pick-bar"><span style="width:${pct}%"></span></span>
+      </span>
+      <span class="pick-side">
+        <span class="pick-fraction">${done}<span>/${total}</span></span>
+        <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
+      </span>
+    `;
+    btn.addEventListener("click", () => goSections(sys));
+  } else {
+    btn.className = `pick-card pick-card--system pick-card--disabled ${pickTone(toneIndex)}`;
+    const sub = sys.cameraCount
+      ? `${sys.cameraCount} камер · скоро`
+      : sys.note || "Скоро";
+    btn.innerHTML = `
+      <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+      <span class="pick-body">
+        <span class="pick-label">${escapeHtml(sys.title)}</span>
+        <span class="pick-sub pick-sub--warn">${escapeHtml(sub)}</span>
+      </span>
+      <span class="pick-side">
+        <span class="pick-status pick-status--soon">Скоро</span>
+      </span>
+    `;
+    btn.addEventListener("click", () =>
+      toast(sys.note || "Таблица для этой системы ещё не подключена", "queue")
+    );
+  }
+  root.appendChild(btn);
+}
+
 function renderSystems() {
   const root = $("systems-root");
   if (!root) return;
   root.innerHTML = "";
-  const list = catalog.systems || [];
-  list.forEach((sys, i) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
+  const list = mergeCatalogSystems(catalog.systems);
+  const readyList = list.filter((s) => s.ready);
+  const pendingList = list.filter((s) => !s.ready);
 
-    if (sys.ready) {
-      const { done, total } = countDone(sys);
-      const pct = total ? Math.round((done / total) * 100) : 0;
-      btn.className = `pick-card pick-card--system ${pickTone(i)} ${pickStatus(done, total)}`;
-      btn.innerHTML = `
-        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
-        <span class="pick-body">
-          <span class="pick-label">${escapeHtml(systemDisplayTitle(sys))}</span>
-          <span class="pick-sub">${total} камер</span>
-          <span class="pick-bar"><span style="width:${pct}%"></span></span>
-        </span>
-        <span class="pick-side">
-          <span class="pick-fraction">${done}<span>/${total}</span></span>
-          <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
-        </span>
-      `;
-      btn.addEventListener("click", () => goSections(sys));
-    } else {
-      btn.className = `pick-card pick-card--system pick-card--disabled ${pickTone(i)}`;
-      btn.innerHTML = `
-        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
-        <span class="pick-body">
-          <span class="pick-label">${escapeHtml(sys.title)}</span>
-          <span class="pick-sub pick-sub--warn">Скоро</span>
-        </span>
-      `;
-      btn.addEventListener("click", () =>
-        toast("Таблица для этой системы ещё не подключена", "queue")
-      );
-    }
-    root.appendChild(btn);
-  });
+  if (readyList.length) {
+    const head = document.createElement("p");
+    head.className = "systems-block-title";
+    head.textContent = "В работе";
+    root.appendChild(head);
+    readyList.forEach((sys, i) => appendSystemPickCard(root, sys, i));
+  }
+
+  if (pendingList.length) {
+    const head = document.createElement("p");
+    head.className = "systems-block-title systems-block-title--pending";
+    head.textContent =
+      pendingList.length > 1
+        ? `Все системы объекта · ${pendingList.length} скоро`
+        : "Скоро на объекте";
+    root.appendChild(head);
+    pendingList.forEach((sys, i) => appendSystemPickCard(root, sys, readyList.length + i));
+  }
 }
 
 function renderSections() {
