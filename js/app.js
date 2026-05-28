@@ -2603,6 +2603,10 @@ function mapMetersForKind(systemId, camera, kind) {
   return Number.isFinite(n) ? n : null;
 }
 
+function meterInputEl(kind) {
+  return $(`input-meter-${kind}`);
+}
+
 let meterKeyboardLock = 0;
 
 function isMeterEnterKey(e) {
