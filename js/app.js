@@ -85,6 +85,15 @@ function rdApiErrorMessage(err, r) {
   return m || "Не удалось загрузить PDF";
 }
 
+/** URL превью через Apps Script (надёжнее, чем drive.google.com в img). */
+function photoThumbSrc(fileId) {
+  if (!fileId || !apiConfigured()) return "";
+  const url = new URL(CONFIG.API_URL);
+  url.searchParams.set("action", "photoThumb");
+  url.searchParams.set("fileId", fileId);
+  return url.toString();
+}
+
 function photoApiErrorMessage(r) {
   const err = (r && r.error) || "";
   if ((r && r.needDriveAuth) || /DriveApp|auth\/drive|разрешени/i.test(err)) {
@@ -411,7 +420,7 @@ async function loadSessionPhotosFromDrive() {
     clearSessionPhotos();
     for (const p of r.photos) {
       sessionPhotos.push({
-        previewUrl: p.thumbUrlAlt || p.thumbUrl || p.url,
+        previewUrl: photoThumbSrc(p.fileId) || p.thumbUrlAlt || p.thumbUrl || p.url,
         driveUrl: p.url,
         fileId: p.fileId,
         fromDrive: true,
@@ -445,17 +454,41 @@ function renderPhotoSession() {
     : `<strong>${n}/${MAX_SESSION_PHOTOS}</strong> · превью — просмотр · <strong>×</strong> — удалить`;
 
   preview.classList.remove("photo-preview--empty");
-  preview.innerHTML = sessionPhotos
-    .map(
-      (p, i) => `
-      <div class="photo-thumb-wrap">
-        <button type="button" class="photo-thumb" data-photo-idx="${i}" aria-label="Открыть фото ${i + 1}">
-          <img src="${escapeHtml(p.previewUrl)}" alt="фото ${i + 1}" loading="lazy" referrerpolicy="no-referrer" />
-        </button>
-        <button type="button" class="photo-delete" data-photo-idx="${i}" aria-label="Удалить фото ${i + 1}">×</button>
-      </div>`
-    )
-    .join("");
+  preview.innerHTML = "";
+  sessionPhotos.forEach((p, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "photo-thumb-wrap";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "photo-thumb";
+    btn.dataset.photoIdx = String(i);
+    btn.setAttribute("aria-label", `Открыть фото ${i + 1}`);
+
+    const img = document.createElement("img");
+    img.alt = `фото ${i + 1}`;
+    img.loading = "lazy";
+    img.decoding = "async";
+    const src = p.previewUrl || photoThumbSrc(p.fileId);
+    if (src) img.src = src;
+    img.addEventListener("error", () => {
+      const alt = p.fileId ? photoThumbSrc(p.fileId) : "";
+      if (alt && img.src !== alt) img.src = alt;
+    });
+
+    btn.appendChild(img);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "photo-delete";
+    del.dataset.photoIdx = String(i);
+    del.setAttribute("aria-label", `Удалить фото ${i + 1}`);
+    del.textContent = "×";
+
+    wrap.appendChild(btn);
+    wrap.appendChild(del);
+    preview.appendChild(wrap);
+  });
 }
 
 function updatePhotoLightboxView() {
@@ -619,8 +652,12 @@ async function uploadPhotoFromFile(file) {
       mimeType: prepared.mimeType,
     });
     if (r.ok) {
-      const previewUrl = URL.createObjectURL(prepared.blob);
-      sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId, fromDrive: false });
+      sessionPhotos.push({
+        previewUrl: URL.createObjectURL(prepared.blob),
+        driveUrl: r.url,
+        fileId: r.fileId,
+        fromDrive: false,
+      });
       renderPhotoSession();
       const savedMsg = prepared.compressed
         ? `Фото ${sessionPhotos.length} (сжато) · ${formatCameraCode(cam.camera)}`
