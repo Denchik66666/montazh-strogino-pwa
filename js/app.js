@@ -2073,8 +2073,26 @@ function getActiveScrollEl() {
 function ptrGestureBlocked() {
   return (
     document.body.classList.contains("cam-sheet-open") ||
-    document.body.classList.contains("photo-lightbox-open")
+    document.body.classList.contains("photo-lightbox-open") ||
+    document.body.classList.contains("refresh-overlay-open") ||
+    Boolean($("refresh-overlay") && !$("refresh-overlay").hidden)
   );
+}
+
+function atScrollTopForPtr() {
+  const scrollEl = getActiveScrollEl();
+  if (!scrollEl) return true;
+  return scrollEl.scrollTop <= 12;
+}
+
+function chooseGestureAxis(dx, dy) {
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+  if (adx < 8 && ady < 8) return null;
+  if (atScrollTopForPtr() && dy > 0 && ady >= adx * 0.75) return "y";
+  if (adx > ady * 1.12) return "x";
+  if (atScrollTopForPtr() && dy > 0) return "y";
+  return null;
 }
 
 function initScreenGestures() {
@@ -2085,7 +2103,6 @@ function initScreenGestures() {
   const PTR_SLOP = 14;
   const PTR_TRIGGER = 34;
   const PTR_MAX_VISUAL = 72;
-  const AXIS_LOCK = 12;
   const SWIPE_TRIGGER = 52;
   const SWIPE_MAX_VISUAL = 44;
 
@@ -2098,10 +2115,9 @@ function initScreenGestures() {
   let lastRawDy = 0;
   let lastRawDx = 0;
 
-  const atScrollTop = () => {
-    const scrollEl = getActiveScrollEl();
-    return scrollEl && scrollEl.scrollTop <= 4;
-  };
+  const gestureOpts = { capture: true };
+
+  const atScrollTop = atScrollTopForPtr;
 
   const gestureTargetOk = (e) => {
     const t = e.target;
@@ -2182,9 +2198,11 @@ function initScreenGestures() {
     showRefreshOverlay("Обновление…");
     try {
       await hardRefreshApp();
-    } catch {
+    } catch (err) {
+      console.error("pull refresh failed", err);
       hideRefreshOverlay();
       toast("Не удалось обновить", "error");
+    } finally {
       ptrRefreshing = false;
       resetGesture(true);
     }
@@ -2239,7 +2257,7 @@ function initScreenGestures() {
         /* ignore */
       }
     },
-    { passive: true }
+    { passive: true, capture: true }
   );
 
   screens.addEventListener(
@@ -2251,13 +2269,10 @@ function initScreenGestures() {
       const dy = e.clientY - startY;
 
       if (!axis) {
-        if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
-        if (Math.abs(dx) > Math.abs(dy)) axis = "x";
-        else if (atScrollTop()) axis = "y";
-        else {
-          activePointerId = null;
-          return;
-        }
+        const nextAxis = chooseGestureAxis(dx, dy);
+        if (!nextAxis) return;
+        axis = nextAxis;
+        if (axis === "y" && atScrollTop() && dy > 0 && e.cancelable) e.preventDefault();
       }
 
       if (axis === "x") {
@@ -2280,11 +2295,11 @@ function initScreenGestures() {
       if (e.cancelable) e.preventDefault();
       setPullVisual(dy, true);
     },
-    { passive: false }
+    { passive: false, capture: true }
   );
 
-  screens.addEventListener("pointerup", onPtrUp);
-  screens.addEventListener("pointercancel", onPtrUp);
+  screens.addEventListener("pointerup", onPtrUp, gestureOpts);
+  screens.addEventListener("pointercancel", onPtrUp, gestureOpts);
 }
 
 async function refreshMetrazh() {
