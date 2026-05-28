@@ -957,7 +957,7 @@ function updatePhotoBlockVisibility() {
 }
 
 function photoMaxBytes() {
-  return (CONFIG.PHOTO_MAX_MB || 10) * 1024 * 1024;
+  return (CONFIG.PHOTO_MAX_MB || 2) * 1024 * 1024;
 }
 
 function photoMinWarnBytes() {
@@ -965,7 +965,7 @@ function photoMinWarnBytes() {
 }
 
 function photoMaxSide() {
-  return CONFIG.PHOTO_MAX_SIDE || 2560;
+  return CONFIG.PHOTO_MAX_SIDE || 1920;
 }
 
 function photoJpegQuality() {
@@ -1019,15 +1019,16 @@ async function compressImageToBlob(file, maxSide, quality) {
   });
 }
 
-/** До PHOTO_MAX_MB — оригинал (HEIC/PNG → JPEG без уменьшения); больше — сжатие до лимита. */
+/** Нормализация: макс. 1080p (1920 px) и PHOTO_MAX_MB; если больше — сжимаем. */
 async function preparePhotoForUpload(file) {
   const maxBytes = photoMaxBytes();
+  const maxSide = photoMaxSide();
   const mime = photoMimeType(file);
   const isJpeg = mime.includes("jpeg");
   const meta = await readImageMeta(file);
   const longSide = Math.max(meta.width, meta.height);
 
-  if (isJpeg && file.size <= maxBytes && longSide <= photoMaxSide()) {
+  if (isJpeg && file.size <= maxBytes && longSide <= maxSide) {
     return {
       blob: file,
       mimeType: mime,
@@ -1038,25 +1039,16 @@ async function preparePhotoForUpload(file) {
     };
   }
 
-  if (!isJpeg && file.size <= maxBytes && longSide <= photoMaxSide()) {
-    const blob = await compressImageToBlob(file, photoMaxSide(), photoJpegQuality());
-    return {
-      blob,
-      mimeType: "image/jpeg",
-      compressed: true,
-      bytes: blob.size,
-      width: meta.width,
-      height: meta.height,
-    };
-  }
-
   const tries = [
-    [photoMaxSide(), photoJpegQuality()],
-    [photoMaxSide(), 0.82],
-    [2048, 0.8],
-    [2048, 0.72],
-    [1920, 0.68],
-    [1600, 0.65],
+    [maxSide, photoJpegQuality()],
+    [maxSide, 0.82],
+    [maxSide, 0.76],
+    [maxSide, 0.7],
+    [maxSide, 0.64],
+    [maxSide, 0.58],
+    [maxSide, 0.52],
+    [Math.round(maxSide * 0.85), 0.5],
+    [1280, 0.48],
   ];
   let lastBlob = null;
   for (const [side, q] of tries) {
@@ -1074,7 +1066,7 @@ async function preparePhotoForUpload(file) {
     }
   }
   throw new Error(
-    `Не удалось уместить фото в ${CONFIG.PHOTO_MAX_MB || 10} МБ — попробуйте другой снимок`
+    `Не удалось уместить фото в ${CONFIG.PHOTO_MAX_MB || 2} МБ — попробуйте другой снимок`
   );
 }
 
@@ -1549,7 +1541,10 @@ async function uploadPhotoFromFile(file) {
       "warn"
     );
   }
-  const needsCompress = file.size > photoMaxBytes() || srcLong > photoMaxSide();
+  const needsCompress =
+    file.size > photoMaxBytes() ||
+    srcLong > photoMaxSide() ||
+    !photoMimeType(file).includes("jpeg");
   status.textContent = needsCompress ? "Сжатие фото…" : "Отправка фото…";
   apiUploadPhoto.onProgress = (n, total) => {
     status.textContent =
