@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=76" />
+    <link rel="stylesheet" href="css/app.css?v=77" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -32,6 +32,13 @@
       <div class="header-text">
         <h1 id="screen-title">Den - Монтажник</h1>
         <p class="breadcrumb" id="breadcrumb"></p>
+        <div class="header-rd" id="header-rd" hidden>
+          <select id="rd-system-pick" class="header-rd__pick" hidden aria-label="Система для РД"></select>
+          <span class="header-rd__status" id="rd-status" title="">—</span>
+          <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
+          <button type="button" class="header-rd__btn" id="btn-rd-open" hidden>РД</button>
+          <button type="button" class="header-rd__btn header-rd__btn--accent" id="btn-rd-upload">PDF</button>
+        </div>
       </div>
       <div class="status-bar">
         <span class="pill ok" id="stat-done">—</span>
@@ -69,19 +76,6 @@
     <div id="screens">
     <!-- 1. Системы (СОТ, РФ, …) -->
     <div id="screen-systems" class="screen active">
-      <div id="rd-upload-banner" class="rd-upload-banner" hidden role="status"></div>
-      <div class="rd-panel" id="rd-panel" hidden>
-        <label class="rd-pick" id="rd-pick-wrap" hidden>
-          <span class="rd-pick__label">Система</span>
-          <select id="rd-system-pick" class="rd-pick__select"></select>
-        </label>
-        <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
-        <div class="rd-actions">
-          <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
-          <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
-        </div>
-        <p class="rd-status" id="rd-status">РД не загружена</p>
-      </div>
       <p class="screen-hint">Выберите систему</p>
       <main id="systems-root" class="tile-grid"></main>
     </div>
@@ -208,7 +202,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=76"></script>
-    <script src="js/app.js?v=76" defer></script>
+    <script src="config.js?v=77"></script>
+    <script src="js/app.js?v=77" defer></script>
   </body>
 </html>

@@ -515,22 +515,24 @@ function rdUploadProgressText(done, total) {
 
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
-  const onSystems = document.querySelector(".screen.active")?.id === "screen-systems";
-  const banner = $("rd-upload-banner");
-  if (banner) {
-    if (active && onSystems) {
-      banner.hidden = false;
-      banner.classList.add("rd-upload-banner--show");
-      banner.textContent = text;
-    } else {
-      banner.classList.remove("rd-upload-banner--show");
-      banner.hidden = true;
-      if (!active) banner.textContent = "";
-    }
-  }
   const status = $("rd-status");
-  const rdSys = rdRootSystem || nav.system;
-  if (status && active && rdSys) status.textContent = text;
+  if (!status) return;
+  if (active) {
+    status.textContent = text || "Загрузка PDF…";
+    status.classList.add("header-rd__status--busy");
+    status.title = text || "Загрузка PDF";
+  } else {
+    status.classList.remove("header-rd__status--busy");
+  }
+}
+
+function formatRdStatusShort(text) {
+  const s = String(text || "").trim();
+  if (!s) return "—";
+  const m = s.match(/^На Диске:\s*(.+)$/i);
+  const name = m ? m[1] : s;
+  if (name.length > 24) return `${name.slice(0, 22)}…`;
+  return m ? name : s.length > 28 ? `${s.slice(0, 26)}…` : s;
 }
 
 async function apiUploadRd(payload, opts = {}) {
@@ -1247,24 +1249,22 @@ function ensureRdRootSystem() {
 
 function populateRdSystemPick() {
   const sel = $("rd-system-pick");
-  const wrap = $("rd-pick-wrap");
   const list = readySystems();
-  if (wrap) wrap.hidden = list.length < 2;
   if (!sel) return;
+  const multi = list.length > 1;
+  sel.hidden = !multi;
+  if (!multi) return;
   sel.innerHTML = list
-    .map(
-      (s) =>
-        `<option value="${escapeHtml(s.id)}">${escapeHtml(s.code)} — ${escapeHtml(systemDisplayTitle(s))}</option>`
-    )
+    .map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.code)}</option>`)
     .join("");
   if (rdRootSystem) sel.value = rdRootSystem.id;
 }
 
 function syncRdPanelVisibility() {
-  const panel = $("rd-panel");
-  if (!panel) return;
+  const bar = $("header-rd");
+  if (!bar) return;
   const active = document.querySelector(".screen.active")?.id;
-  panel.hidden = active !== "screen-systems" || readySystems().length === 0;
+  bar.hidden = active !== "screen-systems" || readySystems().length === 0;
   populateRdSystemPick();
 }
 
@@ -1407,11 +1407,10 @@ function updateHeader(screenName) {
 let rdViewUrl = "";
 
 async function refreshRdPanel(sys) {
-  const panel = $("rd-panel");
   const btnOpen = $("btn-rd-open");
   const btnUpload = $("btn-rd-upload");
   const status = $("rd-status");
-  if (!panel || !btnUpload) return;
+  if (!btnUpload || !status) return;
 
   rdViewUrl = "";
   btnOpen.hidden = true;
@@ -1419,15 +1418,19 @@ async function refreshRdPanel(sys) {
 
   if (!sys?.ready) return;
   syncRdPanelVisibility();
-  if (panel.hidden) return;
+  if ($("header-rd")?.hidden) return;
+
+  if (rdUploadActive) return;
 
   if (!apiConfigured()) {
-    status.textContent = "РД: подключите таблицу в config.js";
+    status.textContent = "РД: нет таблицы";
+    status.title = "Подключите API_URL в config.js";
     btnUpload.disabled = true;
     return;
   }
   btnUpload.disabled = false;
-  status.textContent = "Проверка РД…";
+  status.textContent = "проверка…";
+  status.title = "Проверка РД на Диске";
 
   try {
     const r = await apiGet("rdLink", {
@@ -1439,12 +1442,20 @@ async function refreshRdPanel(sys) {
       rdViewUrl = r.viewUrl || r.url;
       btnOpen.hidden = false;
       btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
-      status.textContent = r.name ? `На Диске: ${r.name}` : "РД загружена";
+      const full = r.name ? `На Диске: ${r.name}` : "РД на Диске";
+      status.textContent = formatRdStatusShort(full);
+      status.title = full;
+      status.classList.add("header-rd__status--ok");
     } else {
-      status.textContent = r.error || "РД не загружена — выберите PDF";
+      const full = r.error || "нет PDF — нажмите PDF";
+      status.textContent = formatRdStatusShort(full);
+      status.title = full;
+      status.classList.remove("header-rd__status--ok");
     }
   } catch {
-    status.textContent = "РД не загружена — проверьте интернет";
+    status.textContent = "нет связи";
+    status.title = "РД не проверена — нужен интернет";
+    status.classList.remove("header-rd__status--ok");
   }
 }
 
