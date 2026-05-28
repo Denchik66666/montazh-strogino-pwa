@@ -2,6 +2,8 @@ const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
 const NAV_STATE_KEY = "montazh_nav_state";
+const PHOTO_STATUS_KEY = "montazh_photo_status";
+const PHOTO_COUNT_KEY = "montazh_photo_count";
 const THEME_KEY = "montazh_theme";
 const THEME_COLORS = { dark: "#0f172a", light: "#e3e4ea" };
 
@@ -18,8 +20,12 @@ const nav = {
 let rdRootSystem = null;
 
 let selectedCamera = null;
-/** @type {"cable"|"gofra"} */
-let inputActiveKind = "cable";
+let camSheetOpen = false;
+/** @type {Record<string, "done"|"skip">} */
+let photoStatusMap = {};
+/** @type {Record<string, number>} */
+let photoCountMap = {};
+let sectionPhotoProbeToken = 0;
 /** @type {{ cable: string, gofra: string }} */
 let inputValues = { cable: "", gofra: "" };
 /** @type {{ cable: number|null, gofra: number|null }} */
@@ -203,6 +209,113 @@ function loadCachedMetrazh() {
   } catch {
     return {};
   }
+}
+
+function loadPhotoStatusMap() {
+  try {
+    photoStatusMap = JSON.parse(localStorage.getItem(PHOTO_STATUS_KEY) || "{}");
+  } catch {
+    photoStatusMap = {};
+  }
+  try {
+    photoCountMap = JSON.parse(localStorage.getItem(PHOTO_COUNT_KEY) || "{}");
+  } catch {
+    photoCountMap = {};
+  }
+}
+
+function savePhotoStatusMap() {
+  try {
+    localStorage.setItem(PHOTO_STATUS_KEY, JSON.stringify(photoStatusMap));
+    localStorage.setItem(PHOTO_COUNT_KEY, JSON.stringify(photoCountMap));
+  } catch {
+    /* quota */
+  }
+}
+
+function photoStatusStorageKey(systemId, camera) {
+  return `${systemId}:${normalizeCameraCode(camera)}`;
+}
+
+function getPhotoStatus(systemId, camera) {
+  return photoStatusMap[photoStatusStorageKey(systemId, camera)] || null;
+}
+
+function getPhotoCount(systemId, camera) {
+  const n = photoCountMap[photoStatusStorageKey(systemId, camera)];
+  return typeof n === "number" && n > 0 ? n : 0;
+}
+
+function setPhotoStatus(systemId, camera, status, count) {
+  const key = photoStatusStorageKey(systemId, camera);
+  if (status === "done") {
+    photoStatusMap[key] = "done";
+    if (typeof count === "number") photoCountMap[key] = count;
+  } else if (status === "skip") {
+    photoStatusMap[key] = "skip";
+    delete photoCountMap[key];
+  } else {
+    delete photoStatusMap[key];
+    delete photoCountMap[key];
+  }
+  savePhotoStatusMap();
+}
+
+function getPhotoReportDisplay(sys, cam) {
+  const count = getPhotoCount(sys.id, cam.camera);
+  const status = getPhotoStatus(sys.id, cam.camera);
+  if (count > 0 || status === "done") {
+    return { cls: "done", text: count > 0 ? String(count) : "✓" };
+  }
+  if (status === "skip") {
+    return { cls: "skip", text: "пропуск" };
+  }
+  const hasCable = Boolean(metrazhMap[metrazhKey(sys.id, cam.camera)]);
+  if (hasCable) {
+    return { cls: "need", text: "нужно" };
+  }
+  return { cls: "none", text: "—" };
+}
+
+function updatePhotoReportBadge() {
+  const badge = $("photo-report-badge");
+  if (!badge || !selectedCamera) return;
+  const { system, cam } = selectedCamera;
+  const d = getPhotoReportDisplay(system, cam);
+  const n = sessionPhotos.length;
+  if (n > 0) {
+    badge.textContent = `${n} фото`;
+    badge.className = "photo-report-badge photo-report-badge--done";
+  } else {
+    badge.textContent = d.text;
+    badge.className = `photo-report-badge photo-report-badge--${d.cls}`;
+  }
+}
+
+async function probeSectionPhotos(sys, sec) {
+  if (!photosEnabled() || !apiConfigured() || !navigator.onLine) return;
+  const token = ++sectionPhotoProbeToken;
+  for (const cam of sec.cameras) {
+    if (token !== sectionPhotoProbeToken) return;
+    if (getPhotoStatus(sys.id, cam.camera) === "skip") continue;
+    try {
+      const r = await apiGet("listPhotos", {
+        system: sys.id,
+        systemCode: sys.code,
+        camera: normalizeCameraCode(cam.camera),
+        sectionFolder: sectionFolderName(sec),
+        projectName: projectFolderName(),
+      });
+      if (token !== sectionPhotoProbeToken) return;
+      if (r.ok && Array.isArray(r.photos) && r.photos.length) {
+        setPhotoStatus(sys.id, cam.camera, "done", r.photos.length);
+      }
+    } catch {
+      /* офлайн */
+    }
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  if (token === sectionPhotoProbeToken) renderCameras();
 }
 
 async function apiGet(action, params = {}) {
@@ -633,6 +746,7 @@ async function loadSessionPhotosFromDrive() {
     }
     if (!Array.isArray(r.photos) || !r.photos.length) {
       renderPhotoSession();
+      updatePhotoReportBadge();
       return;
     }
     clearSessionPhotos();
@@ -645,7 +759,10 @@ async function loadSessionPhotosFromDrive() {
         fromDrive: true,
       });
     }
+    setPhotoStatus(system.id, cam.camera, "done", r.photos.length);
     renderPhotoSession();
+    updatePhotoReportBadge();
+    renderCameras();
     hydrateSessionPhotoPreviews();
   } catch {
     if (status) status.textContent = "Нет связи — фото на Диске, обновите позже";
@@ -663,9 +780,10 @@ function renderPhotoSession() {
   setPhotoButtonsDisabled(atMax);
 
   if (!n) {
-    status.textContent = `До ${MAX_SESSION_PHOTOS} фото · до 10 МБ, больше — сожмём · превью — просмотр`;
+    status.textContent = `До ${MAX_SESSION_PHOTOS} фото · превью — просмотр · 🗑 — удалить`;
     preview.classList.add("photo-preview--empty");
-    preview.innerHTML = '<span class="photo-preview-empty">Нет фото</span>';
+    preview.innerHTML = '<span class="photo-preview-empty">Нет фото — снимите или «Без фото»</span>';
+    updatePhotoReportBadge();
     return;
   }
 
@@ -718,6 +836,16 @@ function renderPhotoSession() {
     wrap.appendChild(del);
     preview.appendChild(wrap);
   });
+  updatePhotoReportBadge();
+}
+
+function markPhotoSkipped() {
+  if (!selectedCamera) return;
+  const { system, cam } = selectedCamera;
+  setPhotoStatus(system.id, cam.camera, "skip");
+  renderCameras();
+  updatePhotoReportBadge();
+  toast("Отчёт отмечен: без фото", "queue");
 }
 
 function updatePhotoLightboxView() {
@@ -823,7 +951,16 @@ async function deleteSessionPhoto(index) {
         updatePhotoLightboxView();
       }
     }
+    const { system, cam } = selectedCamera;
+    if (!sessionPhotos.length) {
+      if (getPhotoStatus(system.id, cam.camera) !== "skip") {
+        setPhotoStatus(system.id, cam.camera, null);
+      }
+    } else {
+      setPhotoStatus(system.id, cam.camera, "done", sessionPhotos.length);
+    }
     renderPhotoSession();
+    renderCameras();
     toast(
       p.fileId ? "Фото удалено с Диска" : "Убрано из списка · на Диске удалите вручную",
       "success"
@@ -891,7 +1028,9 @@ async function uploadPhotoFromFile(file) {
         fileId: r.fileId,
         fromDrive: false,
       });
+      setPhotoStatus(system.id, cam.camera, "done", sessionPhotos.length);
       renderPhotoSession();
+      renderCameras();
       const savedMsg = prepared.compressed
         ? `Фото ${sessionPhotos.length} (сжато) · ${formatCameraCode(cam.camera)}`
         : `Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`;
@@ -1001,6 +1140,7 @@ function countSectionDone(system, section) {
 }
 
 function showScreen(name) {
+  if (name !== "cameras") closeCamSheet(false);
   document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
   const screen = document.getElementById(`screen-${name}`);
   if (screen) screen.classList.add("active");
@@ -1103,8 +1243,9 @@ function persistNavState(screenName) {
     const state = { screen: screenName };
     if (nav.system) state.systemId = nav.system.id;
     if (nav.section) state.sectionId = nav.section.id;
-    if (screenName === "input" && selectedCamera) {
+    if (screenName === "cameras" && camSheetOpen && selectedCamera) {
       state.camera = selectedCamera.cam.camera;
+      state.sheet = true;
     }
     sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
   } catch {
@@ -1140,15 +1281,20 @@ function restoreNavState() {
       goCameras(sec);
       return true;
     }
-    if (state.screen === "input" && state.camera) {
+    if (state.screen === "cameras" && state.camera && state.sheet) {
       const cam = findCameraInSection(sec, state.camera);
-      if (!cam) {
-        goCameras(sec);
-        return true;
-      }
       nav.system = sys;
       nav.section = sec;
-      openInput(sys, sec, cam);
+      goCameras(sec);
+      if (cam) openCamSheet(sys, sec, cam);
+      return true;
+    }
+    if (state.screen === "input" && state.camera) {
+      const cam = findCameraInSection(sec, state.camera);
+      nav.system = sys;
+      nav.section = sec;
+      goCameras(sec);
+      if (cam) openCamSheet(sys, sec, cam);
       return true;
     }
     goSystems();
@@ -1168,7 +1314,6 @@ function updateHeader(screenName) {
     systems: appName(),
     sections: systemDisplayTitle(nav.system),
     cameras: nav.section?.name || "Секция",
-    input: "Метраж",
   };
   $("screen-title").textContent = titles[screenName] || appName();
   document.title =
@@ -1177,7 +1322,7 @@ function updateHeader(screenName) {
   const crumbs = [];
   if (screenName !== "systems") crumbs.push(site);
   if (nav.system && screenName !== "systems") crumbs.push(nav.system.code);
-  if (nav.section && (screenName === "cameras" || screenName === "input")) {
+  if (nav.section && screenName === "cameras") {
     crumbs.push(nav.section.name.replace(/секция\s*/i, "Сек. "));
   }
   $("breadcrumb").textContent = crumbs.join(" › ");
@@ -1319,14 +1464,15 @@ function goCameras(section) {
   nav.section = section;
   showScreen("cameras");
   renderCameras();
+  probeSectionPhotos(nav.system, section);
 }
 
 function goBack() {
-  const active = document.querySelector(".screen.active")?.id;
-  if (active === "screen-input") {
-    showScreen("cameras");
+  if (camSheetOpen) {
+    closeCamSheet();
     return;
   }
+  const active = document.querySelector(".screen.active")?.id;
   if (active === "screen-cameras") {
     goSections(nav.system);
     return;
@@ -1378,7 +1524,7 @@ async function refreshAppData(showToast = false) {
     refreshCurrentView();
     updateStats();
     const active = document.querySelector(".screen.active")?.id;
-    if (active === "screen-input" && selectedCamera) {
+    if (camSheetOpen && selectedCamera) {
       await loadSessionPhotosFromDrive();
     }
     const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
@@ -1593,7 +1739,6 @@ function refreshCurrentView() {
   if (active === "screen-systems") renderSystems();
   else if (active === "screen-sections") renderSections();
   else if (active === "screen-cameras") renderCameras();
-  else if (active === "screen-input" && nav.system && nav.section) renderCameras();
 }
 
 function updateStats() {
@@ -1708,10 +1853,11 @@ function renderCameras() {
     const m = metrazhMap[metrazhKey(sys.id, cam.camera)];
     const g = metrazhMap[gofraKey(sys.id, cam.camera)];
     const done = Boolean(m);
-    let badgeHtml = "ввод";
+    let badgeHtml = "—";
     if (m && g) badgeHtml = `${escapeHtml(String(m))} / ${escapeHtml(String(g))}`;
     else if (m) badgeHtml = `${escapeHtml(String(m))} м`;
     else if (g) badgeHtml = `г ${escapeHtml(String(g))}`;
+    const photo = getPhotoReportDisplay(sys, cam);
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `camera-btn ${done ? "camera-btn--done" : "camera-btn--pending"} ${
@@ -1723,9 +1869,12 @@ function renderCameras() {
         <div class="code">${escapeHtml(cameraDisplayName(cam))}</div>
         <div class="meta">${escapeHtml(cam.floor)} · ${escapeHtml(cam.place)}</div>
       </div>
-      <div class="badge ${done ? "done" : "pending"}">${badgeHtml}</div>
+      <div class="cam-side">
+        <div class="badge ${done ? "done" : "pending"}">${badgeHtml}</div>
+        <span class="cam-photo cam-photo--${photo.cls}">${escapeHtml(photo.text)}</span>
+      </div>
     `;
-    btn.addEventListener("click", () => openInput(sys, sec, cam));
+    btn.addEventListener("click", () => openCamSheet(sys, sec, cam));
     root.appendChild(btn);
   });
 }
@@ -1775,55 +1924,72 @@ function loadInputValues() {
   writeMeterFields();
 }
 
-function setInputActiveKind(kind, focusInput = true) {
-  inputActiveKind = kind === "gofra" ? "gofra" : "cable";
-  document.querySelectorAll(".meter-field").forEach((el) => {
-    const active = el.dataset.kind === inputActiveKind;
-    el.classList.toggle("meter-field--active", active);
-  });
-  if (focusInput) {
-    const el = meterInputEl(inputActiveKind);
-    if (!el) return;
-    el.focus();
-    try {
-      const len = el.value.length;
-      el.setSelectionRange(len, len);
-    } catch {
-      /* iOS */
-    }
-  }
+function clearMeterKind(kind) {
+  inputValues[kind] = "";
+  const el = meterInputEl(kind);
+  if (el) el.value = "";
+  updateMetersDisplay();
 }
 
-function updateOverwriteHint() {
-  const hint = $("overwrite-hint");
-  if (!hint) return;
-  hint.classList.remove("show");
-  hint.textContent = "";
-}
-
-function openInput(system, section, cam) {
+function openCamSheet(system, section, cam) {
   selectedCamera = { system, section, cam };
-  inputActiveKind = "cable";
   loadInputValues();
-  setInputActiveKind("cable");
+  writeMeterFields();
 
-  $("input-system").textContent = `${catalog.site.name} · ${system.code} · ${section.name}`;
   $("input-code").textContent = cameraDisplayName(cam);
   $("input-info").textContent = [cam.floor, cam.place, cam.cable].filter(Boolean).join(" · ");
-
-  updateOverwriteHint();
 
   clearSessionPhotos();
   renderPhotoSession();
   updatePhotoBlockVisibility();
   updateMetersDisplay();
-  showScreen("input");
+  updatePhotoReportBadge();
+
+  const sheet = $("cam-sheet");
+  if (sheet) {
+    sheet.hidden = false;
+    sheet.setAttribute("aria-hidden", "false");
+  }
+  camSheetOpen = true;
+  document.body.classList.add("cam-sheet-open");
+  persistNavState("cameras");
+
+  const details = $("photo-details");
+  if (details) {
+    const photo = getPhotoReportDisplay(system, cam);
+    details.open = photo.cls === "need" || sessionPhotos.length > 0;
+  }
+
   loadSessionPhotosFromDrive();
-  requestAnimationFrame(() => setInputActiveKind("cable", true));
+  requestAnimationFrame(() => meterInputEl("cable")?.focus());
+}
+
+function closeCamSheet(rerender = true) {
+  const sheet = $("cam-sheet");
+  if (sheet) {
+    sheet.hidden = true;
+    sheet.setAttribute("aria-hidden", "true");
+  }
+  camSheetOpen = false;
+  document.body.classList.remove("cam-sheet-open");
+  selectedCamera = null;
+  if (rerender && nav.system && nav.section) renderCameras();
+  persistNavState("cameras");
+}
+
+function goNextCamera() {
+  if (!selectedCamera) return;
+  const { system, section, cam } = selectedCamera;
+  const idx = section.cameras.findIndex((c) => c.camera === cam.camera);
+  if (idx < 0 || idx >= section.cameras.length - 1) {
+    toast("Последняя камера в секции", "queue");
+    closeCamSheet();
+    return;
+  }
+  openCamSheet(system, section, section.cameras[idx + 1]);
 }
 
 function isMetersValid(n) {
-  if (n === 0) return true;
   return n >= 1 && n <= (CONFIG.MAX_METERS || 500);
 }
 
@@ -1831,15 +1997,13 @@ function getPendingMeterSaves() {
   const pending = [];
   for (const kind of ["cable", "gofra"]) {
     const raw = inputValues[kind];
-    if (!raw) continue;
-    const n = parseInt(raw, 10);
-    if (!isMetersValid(n)) continue;
     const init = inputInitial[kind];
-    if (n === 0) {
-      if (init == null) continue;
-      pending.push({ kind, meters: 0, clearing: true });
+    if (raw === "") {
+      if (init != null) pending.push({ kind, meters: 0, clearing: true });
       continue;
     }
+    const n = parseInt(raw, 10);
+    if (!isMetersValid(n)) continue;
     if (n === init) continue;
     pending.push({ kind, meters: n, clearing: false });
   }
@@ -1860,24 +2024,10 @@ function updateMetersDisplay() {
   readMeterFields();
   for (const kind of ["cable", "gofra"]) {
     const el = meterInputEl(kind);
-    const hint = $(`hint-${kind}`);
-    const field = document.querySelector(`.meter-field[data-kind="${kind}"]`);
     const raw = inputValues[kind];
-    const init = inputInitial[kind];
     if (el) {
       const n = raw ? parseInt(raw, 10) : NaN;
-      el.classList.toggle("meter-field__input--clear", raw !== "" && n === 0);
       el.classList.toggle("meter-field__input--invalid", raw !== "" && !isMetersValid(n));
-    }
-    if (hint) {
-      hint.textContent =
-        init != null ? `В таблице: ${init} м` : "Пусто — введите или оставьте";
-    }
-    if (field) {
-      field.classList.toggle(
-        "meter-field--pending-clear",
-        Boolean(raw) && parseInt(raw, 10) === 0 && init != null
-      );
     }
   }
 
@@ -1886,25 +2036,8 @@ function updateMetersDisplay() {
   const invalid = hasInvalidMeterInput();
   btn.disabled = !pending.length || invalid;
   const onlyClear = pending.length > 0 && pending.every((p) => p.clearing);
-  btn.textContent = onlyClear ? "СТЕРЕТЬ" : "СОХРАНИТЬ";
+  btn.textContent = onlyClear ? "Стереть" : "Сохранить";
   btn.classList.toggle("save-btn--clear", onlyClear);
-}
-
-function numpadHandler(e) {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  const digit = btn.dataset.digit;
-  const action = btn.dataset.action;
-  let val = inputValues[inputActiveKind];
-  if (digit !== undefined) {
-    if (val.length >= 3) return;
-    val = val === "0" ? digit : val + digit;
-  } else if (action === "back") val = val.slice(0, -1);
-  else if (action === "clear") val = "";
-  inputValues[inputActiveKind] = val;
-  const inp = meterInputEl(inputActiveKind);
-  if (inp) inp.value = val;
-  updateMetersDisplay();
 }
 
 function buildMeterPayload(system, cam, item) {
@@ -1937,11 +2070,12 @@ function formatSavedMeterParts(items) {
 /** После сохранения — остаёмся на камере, поля = актуальные значения из таблицы. */
 function afterMetersSaved() {
   loadInputValues();
-  updateOverwriteHint();
+  writeMeterFields();
   updateMetersDisplay();
+  updatePhotoReportBadge();
   if (nav.system && nav.section) renderCameras();
   updateStats();
-  persistNavState("input");
+  persistNavState("cameras");
 }
 
 async function saveMeters() {
@@ -1954,7 +2088,7 @@ async function saveMeters() {
     return;
   }
   if (hasInvalidMeterInput()) {
-    toast(`Введите 0 (стереть) или от 1 до ${CONFIG.MAX_METERS || 500} м`, "error");
+    toast(`Введите от 1 до ${CONFIG.MAX_METERS || 500} м или очистите поле (×)`, "error");
     return;
   }
 
@@ -2086,25 +2220,26 @@ async function init() {
   for (const kind of ["cable", "gofra"]) {
     const inp = meterInputEl(kind);
     inp?.addEventListener("input", () => updateMetersDisplay());
-    inp?.addEventListener("focus", () => setInputActiveKind(kind, false));
     inp?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        if (kind === "cable") setInputActiveKind("gofra", true);
+        if (kind === "cable") meterInputEl("gofra")?.focus();
         else saveMeters();
       }
     });
   }
-  document.querySelectorAll(".meter-field").forEach((field) => {
-    field.addEventListener("click", (e) => {
-      if (e.target.closest("input")) return;
-      const kind = field.dataset.kind;
-      if (!kind) return;
-      setInputActiveKind(kind);
+  document.querySelectorAll(".meter-field__clear").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.getAttribute("data-clear-kind");
+      if (kind === "cable" || kind === "gofra") clearMeterKind(kind);
     });
   });
-  $("numpad").addEventListener("click", numpadHandler);
-  $("btn-save").addEventListener("click", saveMeters);
+  $("cam-sheet-backdrop")?.addEventListener("click", () => closeCamSheet());
+  $("btn-save")?.addEventListener("click", saveMeters);
+  $("btn-next-cam")?.addEventListener("click", goNextCamera);
+  $("btn-photo-skip")?.addEventListener("click", markPhotoSkipped);
   const onPhotoPick = (e) => {
     const file = e.target.files?.[0];
     if (file) uploadPhotoFromFile(file);
@@ -2142,6 +2277,7 @@ async function init() {
   try {
     await loadCatalog();
     await syncProjectNameFromApi();
+    loadPhotoStatusMap();
     metrazhMap = loadCachedMetrazh();
     await refreshMetrazh();
     await flushQueue();

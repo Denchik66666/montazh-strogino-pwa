@@ -170,26 +170,8 @@ body {
   }
 }
 
-body:has(#screen-input.active) .setup-banner {
-  display: none;
-}
-
-body:has(#screen-input.active) .app-header {
-  padding: 6px 40px 4px 12px;
-  padding-top: max(6px, env(safe-area-inset-top, 0px));
-  gap: 4px;
-}
-
-body:has(#screen-input.active) .app-header h1 {
-  font-size: 1.05rem;
-}
-
-body:has(#screen-input.active) .breadcrumb {
-  display: none;
-}
-
-body:has(#screen-input.active) .status-bar {
-  font-size: 0.68rem;
+body.cam-sheet-open {
+  overflow: hidden;
 }
 
 .scroll-pane {
@@ -736,100 +718,101 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   font-size: 1.1rem;
 }
 
-.screen-input {
-  padding: 0;
-}
-
-#screen-input.active {
+.cam-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  padding: 0;
-  overflow: hidden;
+  justify-content: flex-end;
+  pointer-events: none;
 }
 
-.input-card {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  max-width: var(--input-col-max);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.cam-sheet[hidden] {
+  display: none !important;
 }
 
-.input-scroll {
-  flex: 1;
-  min-height: 0;
+.cam-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.cam-sheet__panel {
+  position: relative;
+  z-index: 1;
+  max-height: min(88vh, 640px);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  padding: 6px 12px 10px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding: 14px 14px max(14px, env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  background: var(--bg);
+  border-top: 1px solid var(--surface2);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
 }
 
-.input-scroll::-webkit-scrollbar {
+.cam-sheet__panel::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-.input-scroll .input-head,
-.input-scroll .metrazh-dual,
-.input-scroll .input-actions,
-.input-scroll .photo-block {
-  width: 100%;
+.cam-sheet__head {
+  text-align: center;
+  margin-bottom: 10px;
 }
 
-.input-dock {
-  flex-shrink: 0;
-  padding: 6px 12px max(6px, env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid color-mix(in srgb, var(--surface2) 75%, transparent);
-  background: var(--bg);
+.cam-sheet__head .cam-code {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-strong);
 }
 
-#screen-input .input-dock {
-  --numpad-key-h: 40px;
-}
-
-.input-dock .numpad {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
+.cam-sheet__head .cam-info {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
 }
 
 .metrazh-dual {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 2px;
+}
+
+.metrazh-dual--row {
+  flex-direction: row;
+  gap: 10px;
+}
+
+.metrazh-dual--row .meter-field {
+  flex: 1;
+  min-width: 0;
 }
 
 .meter-field {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 2px 10px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
   border-radius: 10px;
   background: var(--surface);
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
 }
 
-.meter-field--active {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--surface2));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+.meter-field__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .meter-field__label {
@@ -840,32 +823,36 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--muted);
 }
 
-.meter-field--active .meter-field__label {
-  color: var(--text-strong);
-}
-
 .meter-field__input {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  width: 100%;
-  min-width: 4.5rem;
-  max-width: 8rem;
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  padding: 4px 0;
+  padding: 4px 6px;
   border: none;
-  border-radius: 0;
-  background: transparent;
-  font-size: 1.75rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  font-size: 1.5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  text-align: right;
-  letter-spacing: 0.04em;
+  text-align: center;
   color: var(--text-strong);
-  cursor: text;
-  pointer-events: auto;
   -webkit-appearance: none;
   appearance: none;
+}
+
+.meter-field__clear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--surface2);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--warn);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .meter-field__input::placeholder {
@@ -886,88 +873,126 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--danger, #ef4444);
 }
 
-.meter-field__hint {
-  grid-column: 1;
-  grid-row: 2;
-  font-size: 0.62rem;
-  color: var(--muted);
-  line-height: 1.2;
-}
-
-.input-head {
-  text-align: center;
-  padding: 0 4px;
-}
-
-.input-system {
-  margin: 0;
-  font-size: 0.68rem;
-  line-height: 1.25;
-  color: var(--muted);
-}
-
-.input-card .cam-code {
-  font-size: 1.2rem;
-  font-weight: 800;
-  margin: 4px 0 0;
-  line-height: 1.15;
-  letter-spacing: 0.02em;
-  color: var(--text-strong);
-}
-
-.input-card .cam-info {
-  margin: 2px 0 0;
-  font-size: 0.72rem;
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.25;
-}
-
-.numpad {
-  width: 100%;
-  max-width: 300px;
+.cam-sheet__actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, var(--numpad-key-h));
-  gap: var(--numpad-gap);
-  height: auto;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.numpad button {
-  height: var(--numpad-key-h);
-  min-height: var(--numpad-key-h);
-  max-height: var(--numpad-key-h);
-  font-size: 1.2rem;
-  font-weight: 600;
-  border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
-  border-radius: 8px;
+.btn-next-cam {
+  min-height: 46px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid var(--surface2);
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--text-strong);
   cursor: pointer;
   touch-action: manipulation;
-  padding: 0;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
-  transition: background 0.12s ease, transform 0.08s ease;
 }
 
-.numpad button:active {
-  background: color-mix(in srgb, var(--accent) 35%, var(--surface));
-  transform: scale(0.97);
+.cam-sheet__actions .save-btn {
+  margin: 0;
+  min-height: 46px;
+  font-size: 0.9rem;
 }
 
-.numpad .key-clear {
+.cam-sheet__photos {
+  margin-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
+  padding-top: 8px;
+}
+
+.cam-sheet__photos-summary {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cam-sheet__photos-summary::-webkit-details-marker {
+  display: none;
+}
+
+.photo-report-badge {
   font-size: 0.72rem;
   font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+.photo-report-badge--done {
+  background: color-mix(in srgb, var(--ok) 20%, var(--surface));
+  color: var(--ok);
+}
+
+.photo-report-badge--need {
+  background: color-mix(in srgb, var(--warn) 22%, var(--surface));
   color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 8%, var(--surface));
 }
 
-.numpad .key-back {
-  font-size: 1rem;
+.photo-report-badge--skip {
+  background: var(--surface2);
+  color: var(--muted);
 }
 
-.input-actions {
-  margin-top: 4px;
+.btn-photo-skip {
+  width: 100%;
+  margin-top: 8px;
+  min-height: 40px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px dashed var(--surface2);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cam-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cam-photo {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
+.cam-photo--done {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+}
+
+.cam-photo--need {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+}
+
+.cam-photo--skip {
+  color: var(--muted);
+  background: var(--surface2);
+}
+
+.cam-photo--none {
+  color: var(--muted);
+  opacity: 0.5;
 }
 
 #screen-systems .rd-panel,
@@ -1072,12 +1097,11 @@ body:not(:has(#screen-systems.active)) .rd-panel {
 }
 
 /* Превью фото — на всю ширину экрана телефона */
-#screen-input.active .photo-preview {
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  box-sizing: border-box;
+.cam-sheet .photo-preview {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 0;
 }
 
 .photo-preview {
@@ -1181,21 +1205,6 @@ html[data-theme="light"] .save-btn {
   box-shadow: 0 1px 4px rgba(52, 199, 89, 0.35);
 }
 
-html[data-theme="light"] .numpad button {
-  background: var(--numpad-key);
-  box-shadow: 0 1px 0 rgba(36, 36, 44, 0.06);
-  color: var(--text);
-}
-
-html[data-theme="light"] .numpad button:active {
-  background: var(--numpad-key-active);
-}
-
-html[data-theme="light"] .numpad .key-clear {
-  background: var(--numpad-clear);
-  color: var(--danger);
-}
-
 html[data-theme="light"] .pick-card {
   color: var(--text);
 }
@@ -1221,7 +1230,7 @@ html[data-theme="light"] .pick-card--status-done .pick-status {
 
 html[data-theme="light"] .screen-hint strong,
 html[data-theme="light"] .camera-btn .code,
-html[data-theme="light"] .input-card .cam-code,
+html[data-theme="light"] .cam-sheet__head .cam-code,
 html[data-theme="light"] .app-header h1 {
   color: var(--text-strong);
 }
