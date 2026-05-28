@@ -233,6 +233,14 @@ html[data-theme="light"] .app-header {
   font-weight: 800;
 }
 
+.screen-title--hidden {
+  display: none;
+}
+
+body:has(#screen-systems.active) .header-text {
+  min-height: 0;
+}
+
 .breadcrumb {
   margin: 4px 0 0;
   font-size: 0.8rem;

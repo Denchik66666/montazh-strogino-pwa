@@ -1,6 +1,6 @@
 {
-  "name": "Den - Монтажник",
-  "short_name": "Den",
+  "name": "Монтажник",
+  "short_name": "Монтаж",
   "description": "Ввод длины кабеля по камерам",
   "start_url": "./index.html",
   "display": "standalone",

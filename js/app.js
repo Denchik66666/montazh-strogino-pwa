@@ -1383,13 +1383,18 @@ function appName() {
 function updateHeader(screenName) {
   const site = catalog.site?.name || CONFIG.PROJECT_NAME || "Объект";
   const titles = {
-    systems: appName(),
+    systems: site,
     sections: systemDisplayTitle(nav.system),
     cameras: nav.section?.name || "Секция",
   };
-  $("screen-title").textContent = titles[screenName] || appName();
+  const titleEl = $("screen-title");
+  const label = titles[screenName] || site;
+  if (titleEl) {
+    titleEl.textContent = label;
+    titleEl.classList.toggle("screen-title--hidden", screenName === "systems");
+  }
   document.title =
-    screenName === "systems" ? appName() : `${titles[screenName] || appName()} · ${appName()}`;
+    screenName === "systems" ? site : `${label} · ${appName()}`;
 
   const crumbs = [];
   if (screenName !== "systems") crumbs.push(site);
