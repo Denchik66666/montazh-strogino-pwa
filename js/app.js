@@ -32,10 +32,20 @@ function metrazhKey(systemId, camera) {
   return `${systemId}:${normalizeCameraCode(camera)}`;
 }
 
+function apiErrorMessage(err) {
+  const m = err && err.message ? String(err.message) : "";
+  if (/failed to fetch|networkerror|load failed/i.test(m)) {
+    return "Нет связи с таблицей. Проверьте интернет и обновите страницу";
+  }
+  return m || "Нет связи с таблицей";
+}
+
 async function parseApiResponse(res) {
   const text = await res.text();
   if (!text || text.trimStart().startsWith("<")) {
-    throw new Error("Сервер таблицы недоступен — откройте ссылку API в браузере и разрешите доступ");
+    throw new Error(
+      "Таблица требует настройки доступа. Бригадиру: Apps Script → Развернуть → доступ «Все, в т.ч. анонимные»"
+    );
   }
   try {
     return JSON.parse(text);
@@ -289,7 +299,7 @@ async function uploadPhotoFromFile(file) {
       renderPhotoSession();
     }
   } catch (err) {
-    const msg = err && err.message ? String(err.message) : "";
+    const msg = apiErrorMessage(err);
     toast(msg && msg !== "Сеть" ? msg : "Не удалось отправить фото", "error");
     renderPhotoSession();
   } finally {
@@ -521,7 +531,7 @@ async function flushQueue(showResult) {
       }
     } catch (e) {
       remain.push(item);
-      lastErr = e && e.message ? String(e.message) : "Нет связи с таблицей";
+      lastErr = apiErrorMessage(e);
     }
   }
   setQueue(remain);
@@ -844,7 +854,7 @@ async function saveMeters() {
   } catch (e) {
     setQueue([...getQueue(), payload]);
     afterLocal();
-    toast(e && e.message ? e.message : "В очередь — отправится позже", "queue");
+    toast(apiErrorMessage(e) || "В очередь — отправится позже", "queue");
   } finally {
     $("btn-save").disabled = false;
   }
