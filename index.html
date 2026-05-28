@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" id="meta-apple-status" />
     <title>Монтажник</title>
     <script>
+      document.title = "Монтажник";
       (function () {
         var t = localStorage.getItem("montazh_theme");
         if (t !== "light" && t !== "dark") t = "light";
@@ -19,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=83" />
+    <link rel="stylesheet" href="css/app.css?v=87" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -211,7 +212,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=83"></script>
-    <script src="js/app.js?v=83" defer></script>
+    <script src="config.js?v=87"></script>
+    <script src="js/app.js?v=87" defer></script>
   </body>
 </html>

@@ -1355,33 +1355,26 @@ function restoreNavState() {
   }
 }
 
-function appName() {
-  return CONFIG.APP_NAME || "Den - Монтажник";
-}
-
 function updateHeader(screenName) {
   const site = catalog.site?.name || CONFIG.PROJECT_NAME || "Объект";
-  const titles = {
-    systems: site,
-    sections: systemDisplayTitle(nav.system),
-    cameras: nav.section?.name || "Секция",
-  };
+  const sysTitle = nav.system ? systemDisplayTitle(nav.system) : "";
   const titleEl = $("screen-title");
-  const label = titles[screenName] || site;
   if (titleEl) {
-    titleEl.textContent = label;
-    titleEl.classList.toggle("screen-title--hidden", screenName === "systems");
+    titleEl.textContent = screenName === "systems" ? site : sysTitle || "Монтажник";
+    titleEl.classList.remove("screen-title--hidden");
   }
-  document.title =
-    screenName === "systems" ? site : `${label} · ${appName()}`;
+  /* document.title не трогаем: в PWA Windows = «Монтажник — …» из этой строки */
 
   const crumbs = [];
-  if (screenName !== "systems") crumbs.push(site);
-  if (nav.system && screenName !== "systems") crumbs.push(nav.system.code);
   if (nav.section && screenName === "cameras") {
-    crumbs.push(nav.section.name.replace(/секция\s*/i, "Сек. "));
+    const info = parseSectionName(nav.section.name);
+    crumbs.push(info.num ? `Сек. ${info.num}` : nav.section.name);
   }
   $("breadcrumb").textContent = crumbs.join(" › ");
+
+  const meta = document.querySelector(".header-meta");
+  if (meta) meta.hidden = screenName === "systems";
+
   syncRdPanelVisibility();
 }
 
@@ -1497,7 +1490,6 @@ async function uploadRdFromFile(file) {
   }
 
   $("rd-input").value = "";
-  toast("Загрузка PDF — можно работать с камерами, не закрывайте вкладку", "queue");
   runRdUploadJob(record);
 }
 
@@ -2255,6 +2247,7 @@ function initTheme() {
 }
 
 async function init() {
+  document.title = "Монтажник";
   initTheme();
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 

@@ -237,10 +237,6 @@ html[data-theme="light"] .app-header {
   display: none;
 }
 
-body:has(#screen-systems.active) .header-text {
-  min-height: 0;
-}
-
 .header-meta {
   display: flex;
   align-items: center;
@@ -1257,17 +1253,20 @@ html[data-theme="dark"] .app-header h1 {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 28px;
+  bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   transform: translateX(-50%) translateY(120px);
-  z-index: 100;
+  z-index: 10000;
   min-width: min(90vw, 360px);
-  padding: 16px 24px;
+  max-width: min(92vw, 380px);
+  padding: 12px 18px;
   border-radius: var(--radius);
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1.35;
   text-align: center;
   transition: transform 0.35s ease;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 .toast.show {
