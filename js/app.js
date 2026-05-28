@@ -77,7 +77,9 @@ function rdApiErrorMessage(err, r) {
   if (r && r.needDriveAuth) {
     return "Нужен Диск: в таблице Метраж → Разрешить фото на Диске";
   }
-  if (r && r.error) return String(r.error);
+  if (r && r.error) {
+    return String(r.error).replace(/^Exception:\s*/i, "").trim();
+  }
   const m = err && err.message ? String(err.message) : "";
   if (/failed to fetch|networkerror|load failed|сеть/i.test(m)) {
     return "Не удалось загрузить PDF. Проверьте интернет и повторите";
@@ -235,8 +237,8 @@ async function apiSave(payload) {
 }
 
 const PHOTO_CHUNK_SIZE = 500;
-/** ~3 МБ base64 за запрос (вместо 50 КБ — было сотни запросов на PDF). */
-const RD_CHUNK_SIZE = 3 * 1024 * 1024;
+/** ~2 МБ base64 за запрос — на сервере во временную папку Диска (не в кэш 100 КБ). */
+const RD_CHUNK_SIZE = 2 * 1024 * 1024;
 /** PDF до ~16 МБ — одним POST (10–12 МБ обычно < 1 мин). */
 const RD_SINGLE_MAX_B64 = 22 * 1024 * 1024;
 const RD_IDB_NAME = "montazh_rd";
@@ -403,9 +405,10 @@ async function apiUploadRd(payload, opts = {}) {
         fileName,
         data,
       });
-      if (one.ok || one.error) return one;
+      if (one.ok) return one;
+      if (one.error && !/слишком|large|limit/i.test(String(one.error))) return one;
     } catch {
-      /* крупными частями */
+      /* крупными частями через Диск */
     }
   }
 
