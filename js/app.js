@@ -1771,11 +1771,11 @@ function initPullToRefresh() {
   const screens = $("screens");
   if (!indicator || !screens) return;
 
-  /** Игнорировать лёгкое касание / микродвижение. */
-  const SLOP_PX = 22;
-  /** Сырой сдвиг пальца вниз для «отпустите — обновить» (достижимо, но не случайно). */
-  const TRIGGER_PX = 88;
-  const MAX_VISUAL_PX = 96;
+  /** Игнорировать лёгкое касание / микродвижение (~0,7 см). */
+  const SLOP_PX = 14;
+  /** Сырой сдвиг вниз для обновления (~3 см на типичном телефоне). */
+  const TRIGGER_PX = 34;
+  const MAX_VISUAL_PX = 72;
   let startY = 0;
   let watching = false;
   let engaged = false;
