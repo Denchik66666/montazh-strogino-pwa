@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=107" />
+    <link rel="stylesheet" href="css/app.css?v=110" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -244,9 +244,40 @@
       </div>
     </div>
 
+    <div
+      id="photo-delete-confirm"
+      class="photo-delete-confirm"
+      hidden
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="photo-delete-title"
+      aria-describedby="photo-delete-desc"
+    >
+      <button
+        type="button"
+        class="photo-delete-confirm__backdrop"
+        id="photo-delete-cancel-backdrop"
+        aria-label="Отмена"
+      ></button>
+      <div class="photo-delete-confirm__card">
+        <h2 id="photo-delete-title" class="photo-delete-confirm__title">Удалить фото?</h2>
+        <p id="photo-delete-desc" class="photo-delete-confirm__desc">
+          Фото будет удалено с Google Диска без возможности восстановления.
+        </p>
+        <div class="photo-delete-confirm__actions">
+          <button type="button" class="photo-delete-confirm__btn photo-delete-confirm__btn--cancel" id="photo-delete-cancel">
+            Отмена
+          </button>
+          <button type="button" class="photo-delete-confirm__btn photo-delete-confirm__btn--danger" id="photo-delete-ok">
+            Удалить
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=107"></script>
-    <script src="js/app.js?v=107" defer></script>
+    <script src="config.js?v=110"></script>
+    <script src="js/app.js?v=110" defer></script>
   </body>
 </html>

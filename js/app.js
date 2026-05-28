@@ -1343,11 +1343,60 @@ function initPhotoLightbox() {
   });
   $("photo-lightbox-delete")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    deleteSessionPhoto(photoLightboxIndex);
+    requestPhotoDelete(photoLightboxIndex);
   });
 }
 
-async function deleteSessionPhoto(index) {
+let pendingPhotoDeleteIndex = null;
+
+function closePhotoDeleteConfirm() {
+  pendingPhotoDeleteIndex = null;
+  const el = $("photo-delete-confirm");
+  if (el) el.hidden = true;
+  document.body.classList.remove("photo-delete-confirm-open");
+}
+
+function requestPhotoDelete(index) {
+  if (!sessionPhotos[index]) return;
+  const p = sessionPhotos[index];
+  const msg = p.fileId
+    ? "Удалить это фото?\n\nФото будет удалено с Google Диска. Восстановить будет нельзя."
+    : "Убрать это фото из списка?";
+
+  const el = $("photo-delete-confirm");
+  if (!el) {
+    if (!window.confirm(msg)) return;
+    deleteSessionPhoto(index, true);
+    return;
+  }
+
+  pendingPhotoDeleteIndex = index;
+  const desc = $("photo-delete-desc");
+  if (desc) {
+    desc.textContent = p.fileId
+      ? "Фото будет удалено с Google Диска без возможности восстановления."
+      : "Фото ещё не на Диске — будет убрано из списка.";
+  }
+  el.hidden = false;
+  document.body.classList.add("photo-delete-confirm-open");
+  $("photo-delete-cancel")?.focus();
+}
+
+function initPhotoDeleteConfirm() {
+  $("photo-delete-cancel")?.addEventListener("click", closePhotoDeleteConfirm);
+  $("photo-delete-cancel-backdrop")?.addEventListener("click", closePhotoDeleteConfirm);
+  $("photo-delete-ok")?.addEventListener("click", () => {
+    const idx = pendingPhotoDeleteIndex;
+    closePhotoDeleteConfirm();
+    if (idx != null) deleteSessionPhoto(idx, true);
+  });
+}
+
+async function deleteSessionPhoto(index, confirmed = false) {
+  if (!confirmed) {
+    requestPhotoDelete(index);
+    return;
+  }
   const p = sessionPhotos[index];
   if (!p) return;
 
@@ -1636,7 +1685,7 @@ function applyNavSnap(snap) {
     return;
   }
 
-  goCameras(sec);
+  goCameras(sec, sys);
   if (snap.sheet) {
     const cam = findCameraInSection(sec, snap.sheet);
     if (cam) openCamSheet(sys, sec, cam);
@@ -1698,6 +1747,20 @@ function findSectionById(system, sectionId) {
   return system?.sections?.find((s) => s.id === sectionId) || null;
 }
 
+function findSystemForSection(section) {
+  if (!section?.id) return null;
+  for (const sys of catalog.systems || []) {
+    if (sys.sections?.some((s) => s.id === section.id)) return sys;
+  }
+  return null;
+}
+
+function ensureNavSystem(system) {
+  const sys = system || nav.system || (nav.section ? findSystemForSection(nav.section) : null);
+  if (sys) nav.system = sys;
+  return sys;
+}
+
 function findCameraInSection(section, cameraCode) {
   const norm = normalizeCameraCode(cameraCode);
   return (
@@ -1709,6 +1772,10 @@ function findCameraInSection(section, cameraCode) {
 
 /** После loadCatalog — ссылки на system/section/camera из свежего каталога. */
 function rebindNavFromCatalog() {
+  if (!nav.system && nav.section) {
+    const inferred = findSystemForSection(nav.section);
+    if (inferred) nav.system = inferred;
+  }
   if (!nav.system) return;
   const sys = findSystemById(nav.system.id);
   if (!sys?.ready) {
@@ -1776,7 +1843,7 @@ function restoreNavState() {
       return true;
     }
     if (state.screen === "cameras") {
-      goCameras(sec);
+      goCameras(sec, sys);
       if (state.camera && state.sheet) {
         const cam = findCameraInSection(sec, state.camera);
         if (cam) openCamSheet(sys, sec, cam);
@@ -1957,12 +2024,17 @@ function goSections(system) {
   pushNavHistory();
 }
 
-function goCameras(section) {
+function goCameras(section, system) {
+  const sys = ensureNavSystem(system || findSystemForSection(section));
+  if (!sys) {
+    goSystems();
+    return;
+  }
   nav.section = section;
   showScreen("cameras");
   renderCameras();
-  probeSectionPhotos(nav.system, section);
-  if (nav.system?.ready) refreshRdPanel(nav.system);
+  probeSectionPhotos(sys, section);
+  if (sys.ready) refreshRdPanel(sys);
   pushNavHistory();
 }
 
@@ -2001,7 +2073,7 @@ async function syncProjectNameFromApi() {
 
 let refreshAppDataInFlight = null;
 let lastSilentRefreshAt = 0;
-const SILENT_REFRESH_MIN_MS = 60000;
+const SILENT_REFRESH_MIN_MS = 120000;
 
 async function refreshAppData(showToast = false) {
   if (refreshAppDataInFlight) return refreshAppDataInFlight;
@@ -2331,18 +2403,18 @@ async function refreshMetrazh() {
   updateStats();
 }
 
-const AUTO_REFRESH_MS = 45000;
+const AUTO_REFRESH_MS = 90000;
 let swRegistration = null;
 let appReloadScheduled = false;
 
-/** Новая версия PWA: активировать service worker и один раз перезагрузить страницу. */
+/** Новая версия PWA: активировать SW без перезагрузки посреди работы (обновление — pull-to-refresh). */
 function initServiceWorkerUpdates() {
   if (!("serviceWorker" in navigator)) return;
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (appReloadScheduled) return;
     appReloadScheduled = true;
-    window.location.reload();
+    toast("Доступна новая версия — потяните вниз для обновления", "queue");
   });
 
   navigator.serviceWorker
@@ -2575,12 +2647,21 @@ function renderSections() {
 
 function renderCameras() {
   const root = $("cameras-root");
-  root.innerHTML = "";
-  const sys = nav.system;
+  if (!root) return;
+  const sys = ensureNavSystem();
   const sec = nav.section;
-  if (!sys || !sec) return;
+  if (!sys || !sec) {
+    root.innerHTML = "";
+    return;
+  }
+  const cameras = Array.isArray(sec.cameras) ? sec.cameras : [];
+  if (!cameras.length) {
+    root.innerHTML = '<p class="empty-msg">Список камер пуст. Назад → секция → снова, или потяните вниз для обновления.</p>';
+    return;
+  }
 
-  sec.cameras.forEach((cam, i) => {
+  root.innerHTML = "";
+  cameras.forEach((cam, i) => {
     const m = metrazhMap[metrazhKey(sys.id, cam.camera)];
     const g = metrazhMap[gofraKey(sys.id, cam.camera)];
     const done = Boolean(m);
@@ -3044,12 +3125,13 @@ async function init() {
   $("photo-input-camera")?.addEventListener("change", onPhotoPick);
   $("photo-input-gallery")?.addEventListener("change", onPhotoPick);
   initPhotoLightbox();
+  initPhotoDeleteConfirm();
   $("photo-preview")?.addEventListener("click", (e) => {
     const del = e.target.closest(".photo-toolbar__delete, .photo-delete");
     if (del) {
       e.preventDefault();
       e.stopPropagation();
-      deleteSessionPhoto(parseInt(del.getAttribute("data-photo-idx"), 10));
+      requestPhotoDelete(parseInt(del.dataset.photoIdx ?? del.getAttribute("data-photo-idx"), 10));
       return;
     }
     const hero = e.target.closest(".photo-hero");

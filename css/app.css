@@ -1705,6 +1705,84 @@ html[data-theme="light"] .theme-icon--moon {
   color: #1a1206;
 }
 
+body.photo-delete-confirm-open {
+  overflow: hidden;
+}
+
+.photo-delete-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.photo-delete-confirm[hidden] {
+  display: none !important;
+}
+
+.photo-delete-confirm__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.photo-delete-confirm__card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 340px);
+  padding: 20px 18px 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.photo-delete-confirm__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.photo-delete-confirm__desc {
+  margin: 0 0 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.photo-delete-confirm__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.photo-delete-confirm__btn {
+  flex: 1;
+  min-height: 48px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.photo-delete-confirm__btn--cancel {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.photo-delete-confirm__btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
 body.photo-lightbox-open {
   overflow: hidden;
 }
