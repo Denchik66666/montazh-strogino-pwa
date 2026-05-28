@@ -1041,7 +1041,7 @@ function applyTheme(theme) {
 
 function initTheme() {
   let theme = localStorage.getItem(THEME_KEY);
-  if (theme !== "light" && theme !== "dark") theme = "dark";
+  if (theme !== "light" && theme !== "dark") theme = "light";
   applyTheme(theme);
   const toggle = document.getElementById("theme-toggle");
   if (toggle) {
