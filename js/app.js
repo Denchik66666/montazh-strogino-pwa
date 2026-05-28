@@ -20,8 +20,28 @@ let sessionPhotos = [];
 
 const $ = (id) => document.getElementById(id);
 
+/** Совпадает с normalizeCameraCode_ в Apps Script (BK в таблице / ВК в приложении). */
+function normalizeCameraCode(code) {
+  const s = String(code || "").trim();
+  const m = s.match(/^([\u0412\u0432Bb])([\u041a\u043aKk])(.*)$/);
+  if (m) return `BK${m[3]}`;
+  return s;
+}
+
 function metrazhKey(systemId, camera) {
-  return `${systemId}:${camera}`;
+  return `${systemId}:${normalizeCameraCode(camera)}`;
+}
+
+async function parseApiResponse(res) {
+  const text = await res.text();
+  if (!text || text.trimStart().startsWith("<")) {
+    throw new Error("Сервер таблицы недоступен — откройте ссылку API в браузере и разрешите доступ");
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Неверный ответ сервера");
+  }
 }
 
 function toast(text, type = "success") {
@@ -68,7 +88,7 @@ async function apiGet(action, params = {}) {
   }
   const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) throw new Error("Сеть");
-  return res.json();
+  return parseApiResponse(res);
 }
 
 async function apiSave(payload) {
@@ -78,29 +98,66 @@ async function apiSave(payload) {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
     });
-    if (res.ok) return res.json();
+    if (res.ok) return parseApiResponse(res);
   } catch {
     /* GET fallback */
   }
   const url = new URL(CONFIG.API_URL);
   url.searchParams.set("action", "save");
   url.searchParams.set("system", payload.system);
-  url.searchParams.set("camera", payload.camera);
+  url.searchParams.set("camera", normalizeCameraCode(payload.camera));
   url.searchParams.set("row", String(payload.row));
   url.searchParams.set("meters", String(payload.meters));
   const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) throw new Error("Сеть");
-  return res.json();
+  return parseApiResponse(res);
 }
 
+const PHOTO_CHUNK_SIZE = 500;
+
 async function apiUploadPhoto(payload) {
-  const res = await fetch(CONFIG.API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ action: "photo", ...payload }),
-  });
-  if (!res.ok) throw new Error("Сеть");
-  return res.json();
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "photo", ...payload }),
+    });
+    if (res.ok) {
+      const j = await parseApiResponse(res);
+      if (j && (j.ok || j.error)) return j;
+    }
+  } catch {
+    /* GET по частям — как метраж */
+  }
+
+  const { data, system, systemCode, sectionFolder, camera, row, mimeType } = payload;
+  const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const total = Math.max(1, Math.ceil(data.length / PHOTO_CHUNK_SIZE));
+  let last = null;
+
+  for (let part = 0; part < total; part++) {
+    const chunk = data.slice(part * PHOTO_CHUNK_SIZE, (part + 1) * PHOTO_CHUNK_SIZE);
+    const params = {
+      uploadId,
+      part: String(part),
+      total: String(total),
+      chunk,
+    };
+    if (part === 0) {
+      params.system = system;
+      params.systemCode = systemCode;
+      params.sectionFolder = sectionFolder;
+      params.camera = camera;
+      params.row = String(row);
+      params.mimeType = mimeType;
+    }
+    last = await apiGet("photoChunk", params);
+    if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка");
+    if (typeof apiUploadPhoto.onProgress === "function") {
+      apiUploadPhoto.onProgress(part + 1, total);
+    }
+  }
+  return last;
 }
 
 function photosEnabled() {
@@ -113,7 +170,7 @@ function updatePhotoBlockVisibility() {
   block.hidden = !photosEnabled();
 }
 
-async function compressImageFile(file, maxSide = 1600, quality = 0.82) {
+async function compressImageFile(file, maxSide = 1024, quality = 0.75) {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const w = Math.max(1, Math.round(bitmap.width * scale));
@@ -204,6 +261,10 @@ async function uploadPhotoFromFile(file) {
   const status = $("photo-status");
   setPhotoButtonsDisabled(true);
   status.textContent = "Отправка фото…";
+  apiUploadPhoto.onProgress = (n, total) => {
+    status.textContent =
+      total > 1 ? `Отправка фото… ${n}/${total}` : "Отправка фото…";
+  };
 
   try {
     const blob = await compressImageFile(file);
@@ -213,7 +274,7 @@ async function uploadPhotoFromFile(file) {
       system: system.id,
       systemCode: system.code,
       sectionFolder: sectionFolderName(section),
-      camera: cam.camera,
+      camera: normalizeCameraCode(cam.camera),
       row: cam.row,
       data,
       mimeType: "image/jpeg",
@@ -227,10 +288,12 @@ async function uploadPhotoFromFile(file) {
       toast(r.error || "Ошибка загрузки", "error");
       renderPhotoSession();
     }
-  } catch {
-    toast("Не удалось отправить фото", "error");
+  } catch (err) {
+    const msg = err && err.message ? String(err.message) : "";
+    toast(msg && msg !== "Сеть" ? msg : "Не удалось отправить фото", "error");
     renderPhotoSession();
   } finally {
+    apiUploadPhoto.onProgress = null;
     setPhotoButtonsDisabled(false);
     $("photo-input-camera").value = "";
     $("photo-input-gallery").value = "";
@@ -243,9 +306,10 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
-/** На экране: ВК2.1.1 → ВК 2.1.1 (в таблице код без пробела) */
+/** На экране всегда кириллица ВК; в таблице и API — BK */
 function formatCameraCode(code) {
-  return String(code || "").replace(/^ВК(?=\d)/i, "ВК ");
+  const n = normalizeCameraCode(code);
+  return n.replace(/^BK(?=\d)/i, "ВК ");
 }
 
 function systemDisplayTitle(sys) {
@@ -432,25 +496,37 @@ async function refreshMetrazh() {
   }
 }
 
-async function flushQueue() {
-  if (!apiConfigured() || !navigator.onLine) return;
+async function flushQueue(showResult) {
+  if (!apiConfigured() || !navigator.onLine) return false;
+  const pending = getQueue();
+  if (!pending.length) return true;
   const remain = [];
-  for (const item of getQueue()) {
+  let lastErr = "";
+  for (const item of pending) {
     try {
       const r = await apiSave(item);
       if (r.ok) {
         const k = metrazhKey(item.system, item.camera);
         if (item.meters === 0) delete metrazhMap[k];
         else metrazhMap[k] = item.meters;
-      } else remain.push(item);
-    } catch {
+      } else {
+        remain.push(item);
+        lastErr = r.error || "Ошибка сохранения";
+      }
+    } catch (e) {
       remain.push(item);
+      lastErr = e && e.message ? String(e.message) : "Нет связи с таблицей";
     }
   }
   setQueue(remain);
   cacheMetrazh(metrazhMap);
   refreshCurrentView();
   updateStats();
+  if (showResult) {
+    if (!remain.length) toast("Очередь отправлена в таблицу", "success");
+    else toast(lastErr || "Не удалось отправить очередь", "error");
+  }
+  return remain.length === 0;
 }
 
 function refreshCurrentView() {
@@ -478,8 +554,8 @@ function updateStats() {
     net.textContent = "Офлайн";
     net.className = "pill warn";
   } else if (q > 0) {
-    net.textContent = `Очередь ${q}`;
-    net.className = "pill warn";
+    net.textContent = `Очередь ${q} · нажмите`;
+    net.className = "pill warn pill--queue";
   } else {
     net.textContent = "Онлайн";
     net.className = "pill ok";
@@ -755,11 +831,14 @@ async function saveMeters() {
 
   try {
     const r = await apiSave(payload);
-    if (r.ok) afterLocal();
-    else toast(r.error || "Ошибка", "error");
-  } catch {
+    if (r.ok) {
+      afterLocal();
+      await refreshMetrazh();
+    } else toast(r.error || "Ошибка", "error");
+  } catch (e) {
     setQueue([...getQueue(), payload]);
     afterLocal();
+    toast(e && e.message ? e.message : "В очередь — отправится позже", "queue");
   } finally {
     $("btn-save").disabled = false;
   }
@@ -800,6 +879,9 @@ async function init() {
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);
+  $("stat-net").addEventListener("click", () => {
+    if (getQueue().length > 0) flushQueue(true);
+  });
   $("numpad").addEventListener("click", numpadHandler);
   $("btn-save").addEventListener("click", saveMeters);
   const onPhotoPick = (e) => {

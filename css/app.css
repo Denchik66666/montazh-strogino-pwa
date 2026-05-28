@@ -80,22 +80,44 @@ html[data-theme="light"] {
 html {
   font-size: 18px;
   -webkit-text-size-adjust: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
-  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.35;
-  overflow-x: hidden;
+  overflow: hidden;
+  overscroll-behavior: none;
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+.scroll-pane {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-pane::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .app-header {
-  position: sticky;
-  top: 0;
+  position: relative;
+  flex-shrink: 0;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
@@ -145,9 +167,6 @@ html[data-theme="light"] .app-header {
   text-overflow: ellipsis;
 }
 
-.search-wrap {
-  margin-top: 10px;
-}
 
 .search-wrap input {
   width: 100%;
@@ -174,22 +193,31 @@ html[data-theme="light"] .app-header {
 
 .screen {
   display: none;
-  padding: 0 16px 100px;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 16px 8px;
+  overflow: hidden;
 }
 
 .screen.active {
-  display: block;
+  display: flex;
 }
 
 .screen-hint {
-  margin: 12px 0 10px;
-  padding: 10px 12px;
-  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin: 8px 0 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
   color: var(--muted);
   font-weight: 500;
   background: var(--hint-bg);
   border-radius: 10px;
   border-left: 3px solid var(--accent);
+}
+
+.search-wrap {
+  flex-shrink: 0;
 }
 
 .screen-hint strong {
@@ -200,6 +228,20 @@ html[data-theme="light"] .app-header {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.tile-grid::-webkit-scrollbar,
+.camera-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* ???????? ?????? / ?????? */
@@ -464,6 +506,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   background: rgba(245, 158, 11, 0.15);
 }
 
+.pill--queue {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 .pill.err {
   color: var(--danger);
   background: rgba(239, 68, 68, 0.15);
@@ -474,6 +521,13 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-direction: column;
   gap: 8px;
   padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
 }
 
 .input-system {
@@ -585,9 +639,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 #screen-input.active {
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - 112px - env(safe-area-inset-top, 0px));
-  max-height: calc(100dvh - 112px - env(safe-area-inset-top, 0px));
-  padding-bottom: 0;
+  flex: 1;
+  min-height: 0;
+  padding: 0 8px 0;
   overflow: hidden;
 }
 
@@ -595,12 +649,14 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   width: 100%;
   flex: 1;
   min-height: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
   max-width: 400px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .input-head {
@@ -704,7 +760,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-block {
   width: 100%;
+  max-width: 100%;
   margin: 4px 0 0;
+  overflow: hidden;
 }
 
 .photo-block[hidden] {
@@ -766,6 +824,8 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   padding: 6px;
   border-radius: 10px;
   background: var(--surface);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .photo-thumb {
