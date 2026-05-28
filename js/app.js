@@ -513,29 +513,44 @@ function rdUploadProgressText(done, total) {
   return `Загрузка PDF… ${pct}%`;
 }
 
+function closeRdMenu() {
+  const menu = $("header-rd-menu");
+  const more = $("btn-rd-more");
+  if (menu) menu.hidden = true;
+  if (more) more.setAttribute("aria-expanded", "false");
+}
+
+function toggleRdMenu() {
+  const menu = $("header-rd-menu");
+  const more = $("btn-rd-more");
+  if (!menu || !more) return;
+  if (!menu.hidden) {
+    closeRdMenu();
+    return;
+  }
+  menu.hidden = false;
+  more.setAttribute("aria-expanded", "true");
+}
+
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
-  const status = $("rd-status");
+  const more = $("btn-rd-more");
+  const hint = $("rd-menu-hint");
   const btnUpload = $("btn-rd-upload");
   if (active) {
-    if (status) {
-      status.textContent = text || "Загрузка…";
-      status.classList.add("header-rd__status--busy");
-      status.title = text || "Загрузка PDF";
+    closeRdMenu();
+    if (more) {
+      more.classList.add("header-rd-more--busy");
+      more.title = text || "Загрузка PDF";
     }
-    if (btnUpload) {
-      btnUpload.disabled = true;
-      const m = String(text || "").match(/(\d+)%/);
-      btnUpload.textContent = m ? `${m[1]}%` : "…";
-      btnUpload.title = text || "Загрузка PDF";
-    }
+    if (hint) hint.textContent = text || "Загрузка PDF…";
+    if (btnUpload) btnUpload.disabled = true;
   } else {
-    if (status) status.classList.remove("header-rd__status--busy");
-    if (btnUpload) {
-      btnUpload.disabled = false;
-      btnUpload.textContent = "PDF";
-      btnUpload.title = "Загрузить PDF";
+    if (more) {
+      more.classList.remove("header-rd-more--busy");
+      if (!more.title || /загрузк/i.test(more.title)) more.title = "РД — служебное меню";
     }
+    if (btnUpload) btnUpload.disabled = false;
   }
 }
 
@@ -1231,6 +1246,7 @@ function countSectionDone(system, section) {
 }
 
 function showScreen(name) {
+  closeRdMenu();
   if (name !== "cameras") closeCamSheet(false);
   document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
   const screen = document.getElementById(`screen-${name}`);
@@ -1443,17 +1459,16 @@ async function refreshRdPanel(sys) {
 
   if (rdUploadActive) return;
 
+  const hint = $("rd-menu-hint");
+  const more = $("btn-rd-more");
+
   if (!apiConfigured()) {
-    status.textContent = "";
-    status.title = "Подключите API_URL в config.js";
+    if (hint) hint.textContent = "Нет таблицы";
     btnUpload.disabled = true;
-    btnUpload.title = "Нет таблицы";
     return;
   }
   btnUpload.disabled = false;
-  status.textContent = "";
-  status.title = "Проверка РД…";
-  btnUpload.title = "Проверка…";
+  if (hint) hint.textContent = "";
 
   try {
     const r = await apiGet("rdLink", {
@@ -1464,25 +1479,28 @@ async function refreshRdPanel(sys) {
     if (r.ok && (r.viewUrl || r.url)) {
       rdViewUrl = r.viewUrl || r.url;
       btnOpen.hidden = false;
-      btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
-      const full = r.name ? `На Диске: ${r.name}` : "РД на Диске";
-      status.textContent = "✓";
-      status.title = full;
-      status.classList.add("header-rd__status--ok");
-      btnOpen.title = `Открыть: ${r.name || "РД"}`;
-      btnUpload.title = "Заменить PDF";
+      btnOpen.onclick = () => {
+        closeRdMenu();
+        window.open(rdViewUrl, "_blank", "noopener,noreferrer");
+      };
+      const full = r.name ? r.name : "PDF на Диске";
+      if (hint) hint.textContent = formatRdStatusShort(full);
+      if (more) {
+        more.classList.add("header-rd-more--ok");
+        more.title = full;
+      }
     } else {
-      const full = r.error || "PDF не загружен";
-      status.textContent = "";
-      status.title = full;
-      status.classList.remove("header-rd__status--ok");
-      btnUpload.title = "Загрузить PDF";
+      if (hint) hint.textContent = "PDF не загружен";
+      if (more) {
+        more.classList.remove("header-rd-more--ok");
+        more.title = "РД — загрузить PDF";
+      }
+      btnOpen.hidden = true;
     }
   } catch {
-    status.textContent = "";
-    status.title = "Нет связи — РД не проверена";
-    status.classList.remove("header-rd__status--ok");
-    btnUpload.title = "Загрузить PDF";
+    if (hint) hint.textContent = "Нет связи";
+    if (more) more.classList.remove("header-rd-more--ok");
+    btnOpen.hidden = true;
   }
 }
 
@@ -2322,7 +2340,17 @@ async function init() {
     else refreshAppData(true);
   });
   initPullToRefresh();
-  $("btn-rd-upload")?.addEventListener("click", () => $("rd-input")?.click());
+  $("btn-rd-more")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleRdMenu();
+  });
+  $("btn-rd-upload")?.addEventListener("click", () => {
+    closeRdMenu();
+    $("rd-input")?.click();
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".header-rd-wrap")) closeRdMenu();
+  });
   $("rd-input")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
