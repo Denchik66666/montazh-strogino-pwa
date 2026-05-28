@@ -1761,33 +1761,38 @@ function ptrGestureBlocked() {
   );
 }
 
-function ptrRubberBand(dy, thresh) {
-  if (dy <= thresh) return dy;
-  return thresh + (dy - thresh) * 0.35;
-}
-
 function initPullToRefresh() {
   const indicator = $("pull-refresh");
   const screens = $("screens");
   if (!indicator || !screens) return;
 
-  /** Игнорировать лёгкое касание / микродвижение (~0,7 см). */
   const SLOP_PX = 14;
-  /** Сырой сдвиг вниз для обновления (~3 см на типичном телефоне). */
   const TRIGGER_PX = 34;
   const MAX_VISUAL_PX = 72;
+
   let startY = 0;
   let watching = false;
   let engaged = false;
   let refreshing = false;
   let lastRawDy = 0;
-  let pullPx = 0;
-  let touchSession = false;
+  let activePointerId = null;
+
+  const atScrollTop = () => {
+    const scrollEl = getActiveScrollEl();
+    return scrollEl && scrollEl.scrollTop <= 4;
+  };
+
+  const ptrTargetOk = (e) => {
+    const t = e.target;
+    if (!t?.closest) return false;
+    if (t.closest(".app-header, .cam-sheet, .photo-lightbox, .refresh-overlay, #toast")) return false;
+    return Boolean(t.closest("#screens"));
+  };
 
   const setPullVisual = (rawDy, dragging) => {
     lastRawDy = rawDy;
     const beyond = Math.max(0, rawDy - SLOP_PX);
-    pullPx = Math.min(beyond * 0.62, MAX_VISUAL_PX);
+    const pullPx = Math.min(beyond * 0.62, MAX_VISUAL_PX);
     const ready = rawDy >= TRIGGER_PX;
     screens.style.transform = pullPx > 0 ? `translateY(${pullPx}px)` : "";
     screens.classList.toggle("ptr-dragging", Boolean(dragging));
@@ -1808,6 +1813,7 @@ function initPullToRefresh() {
     watching = false;
     engaged = false;
     lastRawDy = 0;
+    activePointerId = null;
     if (animate) {
       screens.classList.add("ptr-resetting");
       screens.classList.remove("ptr-dragging");
@@ -1826,54 +1832,15 @@ function initPullToRefresh() {
     indicator.classList.remove("pull-refresh--loading");
   };
 
-  const atScrollTop = () => {
-    const scrollEl = getActiveScrollEl();
-    return scrollEl && scrollEl.scrollTop <= 2;
-  };
-
-  const canStartPull = () => {
-    if (refreshing || ptrGestureBlocked()) return false;
-    return atScrollTop();
-  };
-
-  const onStart = (clientY, fromTouch) => {
-    if (!canStartPull()) return false;
-    if (fromTouch) touchSession = true;
-    else if (touchSession) return false;
-    startY = clientY;
-    watching = true;
-    engaged = false;
-    lastRawDy = 0;
-    pullPx = 0;
-    return true;
-  };
-
-  const onMove = (clientY, e) => {
-    if (!watching || refreshing) return;
-    if (!atScrollTop()) {
-      resetPull(true);
-      return;
-    }
-    const dy = clientY - startY;
-    if (dy <= 0) {
-      if (engaged) setPullVisual(0, true);
-      engaged = false;
-      return;
-    }
-    if (dy < SLOP_PX) return;
-
-    engaged = true;
-    if (e?.cancelable) e.preventDefault();
-    setPullVisual(dy, true);
-  };
-
-  const onEnd = async () => {
-    if (!watching || refreshing) return;
+  const finishGesture = async () => {
+    if (activePointerId == null && !watching) return;
     const wasEngaged = engaged;
     const raw = lastRawDy;
+    activePointerId = null;
     watching = false;
     engaged = false;
-    touchSession = false;
+
+    if (refreshing) return;
 
     if (!wasEngaged || raw < TRIGGER_PX) {
       resetPull(true);
@@ -1886,7 +1853,6 @@ function initPullToRefresh() {
     const label = indicator.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
     screens.classList.remove("ptr-dragging");
-    setPullVisual(Math.min(pullPx, 56), false);
     showRefreshOverlay("Обновление…");
 
     try {
@@ -1899,34 +1865,20 @@ function initPullToRefresh() {
     }
   };
 
-  document.addEventListener(
-    "touchstart",
-    (e) => {
-      if (e.touches.length !== 1) return;
-      onStart(e.touches[0].clientY, true);
-    },
-    { passive: true }
-  );
-
-  document.addEventListener(
-    "touchmove",
-    (e) => {
-      if (!watching) return;
-      onMove(e.touches[0].clientY, e);
-    },
-    { passive: false }
-  );
-
-  document.addEventListener("touchend", onEnd);
-  document.addEventListener("touchcancel", onEnd);
-
-  document.addEventListener(
+  screens.addEventListener(
     "pointerdown",
     (e) => {
       if (e.pointerType === "mouse") return;
-      if (!onStart(e.clientY, false)) return;
+      if (activePointerId != null || refreshing || ptrGestureBlocked()) return;
+      if (!ptrTargetOk(e) || !atScrollTop()) return;
+
+      activePointerId = e.pointerId;
+      startY = e.clientY;
+      watching = true;
+      engaged = false;
+      lastRawDy = 0;
       try {
-        getActiveScrollEl()?.setPointerCapture?.(e.pointerId);
+        screens.setPointerCapture(e.pointerId);
       } catch {
         /* ignore */
       }
@@ -1934,22 +1886,46 @@ function initPullToRefresh() {
     { passive: true }
   );
 
-  document.addEventListener(
+  screens.addEventListener(
     "pointermove",
     (e) => {
-      if (!watching || e.pointerType === "mouse") return;
-      onMove(e.clientY, e);
+      if (e.pointerId !== activePointerId || !watching || refreshing) return;
+
+      if (!engaged && !atScrollTop()) {
+        watching = false;
+        activePointerId = null;
+        return;
+      }
+
+      const dy = e.clientY - startY;
+      if (dy <= 0) {
+        if (engaged) setPullVisual(0, true);
+        engaged = false;
+        return;
+      }
+      if (dy < SLOP_PX) return;
+
+      engaged = true;
+      if (e.cancelable) e.preventDefault();
+      setPullVisual(dy, true);
     },
     { passive: false }
   );
 
-  document.addEventListener("pointerup", (e) => {
-    if (e.pointerType === "mouse") return;
-    onEnd();
-  });
-  document.addEventListener("pointercancel", (e) => {
-    if (e.pointerType === "mouse") return;
-    onEnd();
+  const onPtrUp = (e) => {
+    if (e.pointerId !== activePointerId) return;
+    try {
+      screens.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+    finishGesture();
+  };
+
+  screens.addEventListener("pointerup", onPtrUp);
+  screens.addEventListener("pointercancel", onPtrUp);
+  screens.addEventListener("lostpointercapture", (e) => {
+    if (e.pointerId === activePointerId && watching) finishGesture();
   });
 }
 
