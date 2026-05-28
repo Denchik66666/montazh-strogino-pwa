@@ -16,8 +16,6 @@ const nav = {
   section: null,
 };
 
-/** Система для загрузки/просмотра РД (только экран «Системы»). */
-let rdRootSystem = null;
 
 let selectedCamera = null;
 let camSheetOpen = false;
@@ -658,7 +656,6 @@ async function runRdUploadJob(record, opts = {}) {
       toast(`РД загружена: ${r.name || record.fileName}`, "success");
       const uploaded = catalog.systems.find((s) => s.id === record.system);
       if (uploaded?.ready) {
-        rdRootSystem = uploaded;
         if (nav.system?.ready) await refreshRdPanel(nav.system);
       }
     } else {
@@ -1244,35 +1241,6 @@ function showScreen(name) {
   syncRdPanelVisibility();
 }
 
-function readySystems() {
-  return catalog.systems.filter((s) => s.ready);
-}
-
-function ensureRdRootSystem() {
-  const list = readySystems();
-  if (!list.length) {
-    rdRootSystem = null;
-    return null;
-  }
-  if (!rdRootSystem || !list.some((s) => s.id === rdRootSystem.id)) {
-    rdRootSystem = list[0];
-  }
-  return rdRootSystem;
-}
-
-function populateRdSystemPick() {
-  const sel = $("rd-system-pick");
-  const list = readySystems();
-  if (!sel) return;
-  const multi = list.length > 1;
-  sel.hidden = !multi;
-  if (!multi) return;
-  sel.innerHTML = list
-    .map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.code)}</option>`)
-    .join("");
-  if (rdRootSystem) sel.value = rdRootSystem.id;
-}
-
 function syncRdPanelVisibility() {
   const bar = $("header-rd");
   if (!bar) return;
@@ -1280,14 +1248,6 @@ function syncRdPanelVisibility() {
   const show =
     (active === "screen-sections" || active === "screen-cameras") && Boolean(nav.system?.ready);
   bar.hidden = !show;
-  populateRdSystemPick();
-}
-
-async function refreshRdRootPanel() {
-  syncRdPanelVisibility();
-  const sys = ensureRdRootSystem();
-  if (!sys) return;
-  await refreshRdPanel(sys);
 }
 
 function findSystemById(systemId) {
@@ -1473,12 +1433,11 @@ async function refreshRdPanel(sys) {
 }
 
 async function uploadRdFromFile(file) {
-  const sys = nav.system?.ready ? nav.system : ensureRdRootSystem();
+  const sys = nav.system;
   if (!sys?.ready) {
     toast("Сначала выберите систему", "error");
     return;
   }
-  rdRootSystem = sys;
   if (!apiConfigured()) {
     toast("Подключите таблицу в config.js", "error");
     return;
@@ -1553,7 +1512,6 @@ function goSystems() {
 function goSections(system) {
   nav.system = system;
   nav.section = null;
-  rdRootSystem = system;
   showScreen("sections");
   renderSections();
   updateStats();
@@ -2310,13 +2268,6 @@ async function init() {
   $("rd-input")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
-  });
-  $("rd-system-pick")?.addEventListener("change", (e) => {
-    const sys = findSystemById(e.target.value);
-    if (sys?.ready) {
-      rdRootSystem = sys;
-      refreshRdPanel(sys);
-    }
   });
   for (const kind of ["cable", "gofra"]) {
     const inp = meterInputEl(kind);
