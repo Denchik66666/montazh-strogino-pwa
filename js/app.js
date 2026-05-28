@@ -2460,16 +2460,18 @@ function appendSystemPickCard(root, sys, toneIndex) {
     const pct = total ? Math.round((done / total) * 100) : 0;
     btn.className = `pick-card pick-card--system ${pickTone(toneIndex)} ${pickStatus(done, total)}`;
     btn.innerHTML = `
-      <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
-      <span class="pick-body">
-        <span class="pick-label">${escapeHtml(systemDisplayTitle(sys))}</span>
-        <span class="pick-sub">${total} камер</span>
-        <span class="pick-bar"><span style="width:${pct}%"></span></span>
+      <span class="pick-card__main">
+        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+        <span class="pick-body">
+          <span class="pick-label">${escapeHtml(systemDisplayTitle(sys))}</span>
+          <span class="pick-sub">${total} камер</span>
+        </span>
+        <span class="pick-side">
+          <span class="pick-fraction">${done}<span>/${total}</span></span>
+          <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
+        </span>
       </span>
-      <span class="pick-side">
-        <span class="pick-fraction">${done}<span>/${total}</span></span>
-        <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
-      </span>
+      <span class="pick-bar pick-bar--full"><span style="width:${pct}%"></span></span>
     `;
     btn.addEventListener("click", () => goSections(sys));
   } else {
@@ -2478,13 +2480,15 @@ function appendSystemPickCard(root, sys, toneIndex) {
       ? `${sys.cameraCount} камер · скоро`
       : sys.note || "Скоро";
     btn.innerHTML = `
-      <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
-      <span class="pick-body">
-        <span class="pick-label">${escapeHtml(sys.title)}</span>
-        <span class="pick-sub pick-sub--warn">${escapeHtml(sub)}</span>
-      </span>
-      <span class="pick-side">
-        <span class="pick-status pick-status--soon">Скоро</span>
+      <span class="pick-card__main">
+        <span class="pick-num pick-num--code">${escapeHtml(sys.code)}</span>
+        <span class="pick-body">
+          <span class="pick-label">${escapeHtml(sys.title)}</span>
+          <span class="pick-sub pick-sub--warn">${escapeHtml(sub)}</span>
+        </span>
+        <span class="pick-side">
+          <span class="pick-status pick-status--soon">Скоро</span>
+        </span>
       </span>
     `;
     btn.addEventListener("click", () =>
