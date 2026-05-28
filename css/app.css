@@ -454,26 +454,10 @@ html[data-theme="light"] .app-header {
   color: var(--text-strong);
 }
 
-.pick-card--system .pick-body {
-  text-align: center;
-  align-items: center;
-}
-
 .pick-card--system .pick-label {
-  font-size: clamp(0.92rem, 3.4vw, 1.08rem);
-  line-height: 1.18;
-  text-align: center;
+  font-size: clamp(0.9rem, 3.2vw, 1.05rem);
+  line-height: 1.2;
   text-wrap: balance;
-  max-width: 11.5em;
-  margin-inline: auto;
-}
-
-.pick-card--system .pick-sub {
-  text-align: center;
-}
-
-.pick-card--system .pick-bar {
-  align-self: stretch;
 }
 
 .pick-sub {
