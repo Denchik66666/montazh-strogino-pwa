@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=110" />
+    <link rel="stylesheet" href="css/app.css?v=111" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -175,10 +175,10 @@
             <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
             <input type="file" id="photo-input-gallery" accept="image/*" hidden />
             <div class="photo-actions">
-              <button type="button" class="photo-btn" id="btn-photo-camera">Фото</button>
-              <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery">Галерея</button>
+              <button type="button" class="photo-btn" id="btn-photo-camera" title="Быстрый снимок — браузер может уменьшить качество">Камера</button>
+              <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery" title="Полное качество с телефона">Галерея</button>
             </div>
-            <p class="photo-status" id="photo-status">До 5 фото на камеру</p>
+            <p class="photo-status" id="photo-status">До 5 фото · для отчёта лучше «Галерея» (полный размер)</p>
             <div class="photo-preview" id="photo-preview" aria-label="Превью фото"></div>
             <button type="button" class="btn-photo-skip" id="btn-photo-skip">Без фото (пропустить)</button>
           </div>
@@ -277,7 +277,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=110"></script>
-    <script src="js/app.js?v=110" defer></script>
+    <script src="config.js?v=111"></script>
+    <script src="js/app.js?v=111" defer></script>
   </body>
 </html>

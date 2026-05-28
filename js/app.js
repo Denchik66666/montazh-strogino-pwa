@@ -232,6 +232,8 @@ function photoFullFromItem(p) {
   if (p.previewUrl && (p.previewUrl.startsWith("blob:") || p.previewUrl.startsWith("data:"))) {
     return p.previewUrl;
   }
+  if (p.driveUrl) return p.driveUrl;
+  if (p.fileId) return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(p.fileId)}`;
   return photoPreviewFromItem(p);
 }
 
@@ -958,6 +960,37 @@ function photoMaxBytes() {
   return (CONFIG.PHOTO_MAX_MB || 10) * 1024 * 1024;
 }
 
+function photoMinWarnBytes() {
+  return (CONFIG.PHOTO_MIN_WARN_KB || 250) * 1024;
+}
+
+function photoMaxSide() {
+  return CONFIG.PHOTO_MAX_SIDE || 2560;
+}
+
+function photoJpegQuality() {
+  const q = Number(CONFIG.PHOTO_JPEG_QUALITY);
+  return Number.isFinite(q) && q > 0 && q <= 1 ? q : 0.88;
+}
+
+function formatFileSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return `${n} Б`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(n < 10 * 1024 ? 1 : 0)} КБ`;
+  return `${(n / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+async function readImageMeta(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const meta = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return meta;
+  } catch {
+    return { width: 0, height: 0 };
+  }
+}
+
 function photoMimeType(file) {
   const t = String(file.type || "").toLowerCase();
   if (t.includes("png")) return "image/png";
@@ -986,27 +1019,58 @@ async function compressImageToBlob(file, maxSide, quality) {
   });
 }
 
-/** До PHOTO_MAX_MB — оригинал; больше — сжатие до лимита. */
+/** До PHOTO_MAX_MB — оригинал (HEIC/PNG → JPEG без уменьшения); больше — сжатие до лимита. */
 async function preparePhotoForUpload(file) {
   const maxBytes = photoMaxBytes();
-  if (file.size <= maxBytes) {
-    return { blob: file, mimeType: photoMimeType(file), compressed: false };
+  const mime = photoMimeType(file);
+  const isJpeg = mime.includes("jpeg");
+  const meta = await readImageMeta(file);
+  const longSide = Math.max(meta.width, meta.height);
+
+  if (isJpeg && file.size <= maxBytes && longSide <= photoMaxSide()) {
+    return {
+      blob: file,
+      mimeType: mime,
+      compressed: false,
+      bytes: file.size,
+      width: meta.width,
+      height: meta.height,
+    };
   }
+
+  if (!isJpeg && file.size <= maxBytes && longSide <= photoMaxSide()) {
+    const blob = await compressImageToBlob(file, photoMaxSide(), photoJpegQuality());
+    return {
+      blob,
+      mimeType: "image/jpeg",
+      compressed: true,
+      bytes: blob.size,
+      width: meta.width,
+      height: meta.height,
+    };
+  }
+
   const tries = [
-    [2560, 0.85],
-    [2048, 0.82],
-    [2048, 0.7],
+    [photoMaxSide(), photoJpegQuality()],
+    [photoMaxSide(), 0.82],
+    [2048, 0.8],
+    [2048, 0.72],
+    [1920, 0.68],
     [1600, 0.65],
-    [1280, 0.58],
-    [1280, 0.48],
-    [1024, 0.45],
-    [800, 0.4],
   ];
   let lastBlob = null;
   for (const [side, q] of tries) {
     lastBlob = await compressImageToBlob(file, side, q);
     if (lastBlob.size <= maxBytes) {
-      return { blob: lastBlob, mimeType: "image/jpeg", compressed: true };
+      const outMeta = await readImageMeta(lastBlob);
+      return {
+        blob: lastBlob,
+        mimeType: "image/jpeg",
+        compressed: true,
+        bytes: lastBlob.size,
+        width: outMeta.width,
+        height: outMeta.height,
+      };
     }
   }
   throw new Error(
@@ -1477,7 +1541,15 @@ async function uploadPhotoFromFile(file) {
 
   const status = $("photo-status");
   setPhotoButtonsDisabled(true);
-  const needsCompress = file.size > photoMaxBytes();
+  const srcMeta = await readImageMeta(file);
+  const srcLong = Math.max(srcMeta.width, srcMeta.height);
+  if (file.size < photoMinWarnBytes() || (srcLong > 0 && srcLong < 1280)) {
+    toast(
+      `Файл маленький (${formatFileSize(file.size)}${srcLong ? `, ${srcLong}px` : ""}) — для отчёта лучше «Галерея»`,
+      "warn"
+    );
+  }
+  const needsCompress = file.size > photoMaxBytes() || srcLong > photoMaxSide();
   status.textContent = needsCompress ? "Сжатие фото…" : "Отправка фото…";
   apiUploadPhoto.onProgress = (n, total) => {
     status.textContent =
@@ -1511,8 +1583,8 @@ async function uploadPhotoFromFile(file) {
       renderPhotoSession();
       renderCameras();
       const savedMsg = prepared.compressed
-        ? `Фото ${sessionPhotos.length} (сжато) · ${formatCameraCode(cam.camera)}`
-        : `Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`;
+        ? `Фото ${sessionPhotos.length} · ${formatFileSize(prepared.bytes)} (сжато) · ${formatCameraCode(cam.camera)}`
+        : `Фото ${sessionPhotos.length} · ${formatFileSize(prepared.bytes)} · ${formatCameraCode(cam.camera)}`;
       toast(savedMsg, "success");
     } else {
       toast(photoApiErrorMessage(r), "error");
