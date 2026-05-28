@@ -241,8 +241,20 @@ body:has(#screen-systems.active) .header-text {
   min-height: 0;
 }
 
+.header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
 .breadcrumb {
-  margin: 4px 0 0;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
   font-size: 0.8rem;
   color: var(--muted);
   white-space: nowrap;
@@ -277,10 +289,10 @@ body:has(#screen-systems.active) .header-text {
 .header-rd {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  max-width: 100%;
-  min-height: 26px;
+  gap: 4px;
+  flex-shrink: 0;
+  max-width: 42%;
+  min-height: 0;
 }
 
 .header-rd[hidden] {
@@ -301,14 +313,14 @@ body:has(#screen-systems.active) .header-text {
 }
 
 .header-rd__status {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1;
+}
+
+.header-rd__status:empty {
+  display: none;
 }
 
 .header-rd__status--ok {
@@ -346,10 +358,6 @@ body:has(#screen-systems.active) .header-text {
 
 .header-rd__btn:disabled {
   opacity: 0.45;
-}
-
-.rd-slot {
-  display: none !important;
 }
 
 .screen-hint {

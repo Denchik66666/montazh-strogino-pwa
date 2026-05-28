@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=79" />
+    <link rel="stylesheet" href="css/app.css?v=80" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -31,7 +31,15 @@
       <button type="button" class="nav-back" id="nav-back" hidden aria-label="Назад">←</button>
       <div class="header-text">
         <h1 id="screen-title" class="screen-title"></h1>
-        <p class="breadcrumb" id="breadcrumb"></p>
+        <div class="header-meta">
+          <p class="breadcrumb" id="breadcrumb"></p>
+          <div class="header-rd" id="header-rd" hidden>
+            <span class="header-rd__status" id="rd-status" title=""></span>
+            <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
+            <button type="button" class="header-rd__btn" id="btn-rd-open" hidden>РД</button>
+            <button type="button" class="header-rd__btn header-rd__btn--accent" id="btn-rd-upload">PDF</button>
+          </div>
+        </div>
       </div>
       <div class="status-bar">
         <span class="pill ok" id="stat-done">—</span>
@@ -195,16 +203,9 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <!-- РД/PDF: скрыто до переноса в нужный экран -->
-    <div id="rd-slot" class="rd-slot" hidden aria-hidden="true">
-      <select id="rd-system-pick" hidden aria-label="Система для РД"></select>
-      <span id="rd-status" hidden></span>
-      <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
-      <button type="button" id="btn-rd-open" hidden>РД</button>
-      <button type="button" id="btn-rd-upload" hidden>PDF</button>
-    </div>
+    <select id="rd-system-pick" hidden aria-hidden="true" tabindex="-1"></select>
 
-    <script src="config.js?v=79"></script>
-    <script src="js/app.js?v=79" defer></script>
+    <script src="config.js?v=80"></script>
+    <script src="js/app.js?v=80" defer></script>
   </body>
 </html>

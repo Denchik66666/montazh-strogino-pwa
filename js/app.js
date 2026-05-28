@@ -516,13 +516,26 @@ function rdUploadProgressText(done, total) {
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
   const status = $("rd-status");
-  if (!status) return;
+  const btnUpload = $("btn-rd-upload");
   if (active) {
-    status.textContent = text || "Загрузка PDF…";
-    status.classList.add("header-rd__status--busy");
-    status.title = text || "Загрузка PDF";
+    if (status) {
+      status.textContent = text || "Загрузка…";
+      status.classList.add("header-rd__status--busy");
+      status.title = text || "Загрузка PDF";
+    }
+    if (btnUpload) {
+      btnUpload.disabled = true;
+      const m = String(text || "").match(/(\d+)%/);
+      btnUpload.textContent = m ? `${m[1]}%` : "…";
+      btnUpload.title = text || "Загрузка PDF";
+    }
   } else {
-    status.classList.remove("header-rd__status--busy");
+    if (status) status.classList.remove("header-rd__status--busy");
+    if (btnUpload) {
+      btnUpload.disabled = false;
+      btnUpload.textContent = "PDF";
+      btnUpload.title = "Загрузить PDF";
+    }
   }
 }
 
@@ -646,7 +659,7 @@ async function runRdUploadJob(record, opts = {}) {
       const uploaded = catalog.systems.find((s) => s.id === record.system);
       if (uploaded?.ready) {
         rdRootSystem = uploaded;
-        await refreshRdRootPanel();
+        if (nav.system?.ready) await refreshRdPanel(nav.system);
       }
     } else {
       const errMsg = rdApiErrorMessage(null, r);
@@ -657,7 +670,7 @@ async function runRdUploadJob(record, opts = {}) {
         await rdIdbDel(record.uploadId);
       }
       toast(errMsg, "error");
-      if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
+      if (nav.system?.ready) await refreshRdPanel(nav.system);
     }
   } catch (err) {
     const errMsg = rdApiErrorMessage(err, null);
@@ -668,7 +681,7 @@ async function runRdUploadJob(record, opts = {}) {
       await rdIdbDel(record.uploadId);
     }
     toast(errMsg, "error");
-    if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
+    if (nav.system?.ready) await refreshRdPanel(nav.system);
   } finally {
     setRdUploadUi(false);
     const btn = $("btn-rd-upload");
@@ -691,7 +704,7 @@ async function tryResumeRdUpload() {
   const record = await rdIdbGetFirstPending();
   if (!record?.data || !record.uploadId) {
     if (removedStale && document.querySelector("#screen-systems.active")) {
-      await refreshRdRootPanel();
+      if (nav.system?.ready) await refreshRdPanel(nav.system);
     }
     return;
   }
@@ -703,7 +716,7 @@ async function tryResumeRdUpload() {
   const age = Date.now() - (record.updatedAt || 0);
   if (age > RD_RESUME_MAX_AGE_MS) {
     await rdIdbDel(record.uploadId);
-    if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
+    if (nav.system?.ready) await refreshRdPanel(nav.system);
     return;
   }
 
@@ -1261,6 +1274,12 @@ function populateRdSystemPick() {
 }
 
 function syncRdPanelVisibility() {
+  const bar = $("header-rd");
+  if (!bar) return;
+  const active = document.querySelector(".screen.active")?.id;
+  const show =
+    (active === "screen-sections" || active === "screen-cameras") && Boolean(nav.system?.ready);
+  bar.hidden = !show;
   populateRdSystemPick();
 }
 
@@ -1403,6 +1422,7 @@ function updateHeader(screenName) {
     crumbs.push(nav.section.name.replace(/секция\s*/i, "Сек. "));
   }
   $("breadcrumb").textContent = crumbs.join(" › ");
+  syncRdPanelVisibility();
 }
 
 let rdViewUrl = "";
@@ -1419,18 +1439,21 @@ async function refreshRdPanel(sys) {
 
   if (!sys?.ready) return;
   syncRdPanelVisibility();
+  if ($("header-rd")?.hidden) return;
 
   if (rdUploadActive) return;
 
   if (!apiConfigured()) {
-    status.textContent = "РД: нет таблицы";
+    status.textContent = "";
     status.title = "Подключите API_URL в config.js";
     btnUpload.disabled = true;
+    btnUpload.title = "Нет таблицы";
     return;
   }
   btnUpload.disabled = false;
-  status.textContent = "проверка…";
-  status.title = "Проверка РД на Диске";
+  status.textContent = "";
+  status.title = "Проверка РД…";
+  btnUpload.title = "Проверка…";
 
   try {
     const r = await apiGet("rdLink", {
@@ -1443,28 +1466,33 @@ async function refreshRdPanel(sys) {
       btnOpen.hidden = false;
       btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
       const full = r.name ? `На Диске: ${r.name}` : "РД на Диске";
-      status.textContent = formatRdStatusShort(full);
+      status.textContent = "✓";
       status.title = full;
       status.classList.add("header-rd__status--ok");
+      btnOpen.title = `Открыть: ${r.name || "РД"}`;
+      btnUpload.title = "Заменить PDF";
     } else {
-      const full = r.error || "нет PDF — нажмите PDF";
-      status.textContent = formatRdStatusShort(full);
+      const full = r.error || "PDF не загружен";
+      status.textContent = "";
       status.title = full;
       status.classList.remove("header-rd__status--ok");
+      btnUpload.title = "Загрузить PDF";
     }
   } catch {
-    status.textContent = "нет связи";
-    status.title = "РД не проверена — нужен интернет";
+    status.textContent = "";
+    status.title = "Нет связи — РД не проверена";
     status.classList.remove("header-rd__status--ok");
+    btnUpload.title = "Загрузить PDF";
   }
 }
 
 async function uploadRdFromFile(file) {
-  const sys = ensureRdRootSystem();
+  const sys = nav.system?.ready ? nav.system : ensureRdRootSystem();
   if (!sys?.ready) {
-    toast("Сначала откройте список систем", "error");
+    toast("Сначала выберите систему", "error");
     return;
   }
+  rdRootSystem = sys;
   if (!apiConfigured()) {
     toast("Подключите таблицу в config.js", "error");
     return;
@@ -1541,9 +1569,11 @@ function goSystems() {
 function goSections(system) {
   nav.system = system;
   nav.section = null;
+  rdRootSystem = system;
   showScreen("sections");
   renderSections();
   updateStats();
+  refreshRdPanel(system);
 }
 
 function goCameras(section) {
@@ -1551,6 +1581,7 @@ function goCameras(section) {
   showScreen("cameras");
   renderCameras();
   probeSectionPhotos(nav.system, section);
+  if (nav.system?.ready) refreshRdPanel(nav.system);
 }
 
 function goBack() {
