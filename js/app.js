@@ -1771,10 +1771,14 @@ function initPullToRefresh() {
   const screens = $("screens");
   if (!indicator || !screens) return;
 
-  const THRESH = 72;
-  const MAX_PULL = 112;
+  /** Сначала нужно явно потянуть (случайный тап/сдвиг не считается). */
+  const ACTIVATE_PX = 36;
+  /** Порог «отпустите — обновить». */
+  const THRESH = 112;
+  const MAX_PULL = 140;
   let startY = 0;
-  let pulling = false;
+  let watching = false;
+  let engaged = false;
   let refreshing = false;
   let pullPx = 0;
 
@@ -1782,19 +1786,22 @@ function initPullToRefresh() {
     pullPx = px;
     screens.style.transform = px > 0 ? `translateY(${px}px)` : "";
     screens.classList.toggle("ptr-dragging", Boolean(dragging));
-    screens.classList.toggle("ptr-pulling", px > 2);
+    screens.classList.toggle("ptr-pulling", px > 8);
     indicator.style.setProperty("--pull-rotate", `${Math.min(px / THRESH, 1) * 300}deg`);
     const ready = px >= THRESH;
-    indicator.classList.toggle("pull-refresh--visible", px > 2);
+    indicator.classList.toggle("pull-refresh--visible", px > 12);
     indicator.classList.toggle("pull-refresh--ready", ready);
-    indicator.setAttribute("aria-hidden", px > 2 ? "false" : "true");
+    indicator.setAttribute("aria-hidden", px > 12 ? "false" : "true");
     const label = indicator.querySelector(".pull-refresh__label");
     if (label && !refreshing) {
-      label.textContent = ready ? "Отпустите — обновить" : "Потяните вниз";
+      if (!engaged) label.textContent = "Потяните ниже";
+      else label.textContent = ready ? "Отпустите — обновить" : "Ещё чуть-чуть…";
     }
   };
 
   const resetPull = (animate = true) => {
+    watching = false;
+    engaged = false;
     if (animate) {
       screens.classList.add("ptr-resetting");
       screens.classList.remove("ptr-dragging");
@@ -1816,38 +1823,45 @@ function initPullToRefresh() {
   const canStartPull = () => {
     if (refreshing || ptrGestureBlocked()) return false;
     const scrollEl = getActiveScrollEl();
-    return scrollEl && scrollEl.scrollTop <= 1;
+    return scrollEl && scrollEl.scrollTop <= 0;
   };
 
   const onStart = (clientY) => {
     if (!canStartPull()) return false;
     startY = clientY;
-    pulling = true;
+    watching = true;
+    engaged = false;
+    pullPx = 0;
     return true;
   };
 
   const onMove = (clientY, preventDefault) => {
-    if (!pulling || refreshing) return;
+    if (!watching || refreshing) return;
     const scrollEl = getActiveScrollEl();
-    if (!scrollEl || scrollEl.scrollTop > 1) {
-      pulling = false;
+    if (!scrollEl || scrollEl.scrollTop > 0) {
       resetPull(true);
       return;
     }
-    let dy = clientY - startY;
+    const dy = clientY - startY;
     if (dy <= 0) {
-      setPullVisual(0, true);
+      if (engaged) setPullVisual(0, true);
+      else engaged = false;
       return;
     }
+    if (dy < ACTIVATE_PX) return;
+
+    if (!engaged) engaged = true;
     if (preventDefault) preventDefault();
-    dy = ptrRubberBand(dy, THRESH);
-    setPullVisual(Math.min(dy, MAX_PULL), true);
+    const pull = ptrRubberBand(dy - ACTIVATE_PX * 0.35, THRESH - ACTIVATE_PX);
+    setPullVisual(Math.min(ACTIVATE_PX * 0.35 + pull, MAX_PULL), true);
   };
 
   const onEnd = async () => {
-    if (!pulling) return;
-    pulling = false;
-    if (pullPx < THRESH) {
+    if (!watching) return;
+    watching = false;
+    const wasEngaged = engaged;
+    engaged = false;
+    if (!wasEngaged || pullPx < THRESH) {
       resetPull(true);
       return;
     }
@@ -1883,7 +1897,7 @@ function initPullToRefresh() {
   document.addEventListener(
     "touchmove",
     (e) => {
-      if (!pulling) return;
+      if (!watching) return;
       onMove(e.touches[0].clientY, () => e.preventDefault());
     },
     { passive: false }
@@ -1895,7 +1909,8 @@ function initPullToRefresh() {
   document.addEventListener(
     "pointerdown",
     (e) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (e.pointerType === "mouse") return;
+      if (e.pointerType === "pen" && e.button !== 0) return;
       if (!onStart(e.clientY)) return;
       try {
         getActiveScrollEl()?.setPointerCapture?.(e.pointerId);
@@ -1909,17 +1924,19 @@ function initPullToRefresh() {
   document.addEventListener(
     "pointermove",
     (e) => {
-      if (!pulling) return;
+      if (!watching || e.pointerType === "mouse") return;
       onMove(e.clientY, () => e.preventDefault());
     },
     { passive: false }
   );
 
-  document.addEventListener("pointerup", () => {
-    if (pulling) onEnd();
+  document.addEventListener("pointerup", (e) => {
+    if (e.pointerType === "mouse") return;
+    if (watching) onEnd();
   });
-  document.addEventListener("pointercancel", () => {
-    if (pulling) onEnd();
+  document.addEventListener("pointercancel", (e) => {
+    if (e.pointerType === "mouse") return;
+    if (watching) onEnd();
   });
 }
 
