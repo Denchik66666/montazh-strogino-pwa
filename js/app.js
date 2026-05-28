@@ -235,7 +235,14 @@ async function apiSave(payload) {
 }
 
 const PHOTO_CHUNK_SIZE = 500;
-const RD_CHUNK_SIZE = 50000;
+/** ~3 МБ base64 за запрос (вместо 50 КБ — было сотни запросов на PDF). */
+const RD_CHUNK_SIZE = 3 * 1024 * 1024;
+/** PDF до ~16 МБ — одним POST (10–12 МБ обычно < 1 мин). */
+const RD_SINGLE_MAX_B64 = 22 * 1024 * 1024;
+const RD_IDB_NAME = "montazh_rd";
+const RD_IDB_STORE = "pending";
+
+let rdUploadActive = false;
 
 async function apiUploadPhoto(payload) {
   try {
@@ -298,10 +305,95 @@ async function apiPostJson(body) {
   return parseApiResponse(res);
 }
 
-async function apiUploadRd(payload) {
-  const { data, system, systemCode, projectName, fileName } = payload;
+function newRdUploadId() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
 
-  if (data.length <= 6 * 1024 * 1024) {
+function rdIdbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(RD_IDB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore(RD_IDB_STORE, { keyPath: "uploadId" });
+    };
+  });
+}
+
+async function rdIdbPut(record) {
+  const db = await rdIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RD_IDB_STORE, "readwrite");
+    tx.objectStore(RD_IDB_STORE).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function rdIdbGet(uploadId) {
+  const db = await rdIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RD_IDB_STORE, "readonly");
+    const req = tx.objectStore(RD_IDB_STORE).get(uploadId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function rdIdbGetFirstPending() {
+  const db = await rdIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RD_IDB_STORE, "readonly");
+    const req = tx.objectStore(RD_IDB_STORE).openCursor();
+    req.onsuccess = () => resolve(req.result?.value || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function rdIdbDel(uploadId) {
+  const db = await rdIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RD_IDB_STORE, "readwrite");
+    tx.objectStore(RD_IDB_STORE).delete(uploadId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function setRdUploadUi(active, text = "") {
+  rdUploadActive = active;
+  const banner = $("rd-upload-banner");
+  if (banner) {
+    if (active) {
+      banner.hidden = false;
+      banner.classList.add("rd-upload-banner--show");
+      banner.textContent = text;
+    } else {
+      banner.classList.remove("rd-upload-banner--show");
+      banner.hidden = true;
+      banner.textContent = "";
+    }
+  }
+  const status = $("rd-status");
+  if (status && active && nav.system) status.textContent = text;
+}
+
+async function apiUploadRd(payload, opts = {}) {
+  const { data, system, systemCode, projectName, fileName } = payload;
+  const onProgress = opts.onProgress || apiUploadRd.onProgress;
+  let uploadId = opts.uploadId || newRdUploadId();
+  let startPart = opts.startPart || 0;
+
+  const report = (n, total, label) => {
+    const t =
+      label ||
+      (total > 1 ? `Загрузка PDF… ${n}/${total}` : "Загрузка PDF…");
+    setRdUploadUi(true, t);
+    if (typeof onProgress === "function") onProgress(n, total);
+  };
+
+  if (data.length <= RD_SINGLE_MAX_B64) {
+    report(1, 1, "Загрузка PDF…");
     try {
       const one = await apiPostJson({
         action: "rd",
@@ -313,15 +405,27 @@ async function apiUploadRd(payload) {
       });
       if (one.ok || one.error) return one;
     } catch {
-      /* по частям */
+      /* крупными частями */
     }
   }
 
-  const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   const total = Math.max(1, Math.ceil(data.length / RD_CHUNK_SIZE));
   let last = null;
 
-  for (let part = 0; part < total; part++) {
+  const idbRecord = {
+    uploadId,
+    data,
+    system,
+    systemCode,
+    projectName,
+    fileName,
+    nextPart: startPart,
+    total,
+    updatedAt: Date.now(),
+  };
+  await rdIdbPut(idbRecord);
+
+  for (let part = startPart; part < total; part++) {
     const chunk = data.slice(part * RD_CHUNK_SIZE, (part + 1) * RD_CHUNK_SIZE);
     const body = {
       action: "rdChunk",
@@ -336,13 +440,63 @@ async function apiUploadRd(payload) {
       body.projectName = projectName;
       body.fileName = fileName;
     }
+    report(part + 1, total);
     last = await apiPostJson(body);
     if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка PDF");
-    if (typeof apiUploadRd.onProgress === "function") {
-      apiUploadRd.onProgress(part + 1, total);
-    }
+    idbRecord.nextPart = part + 1;
+    idbRecord.updatedAt = Date.now();
+    await rdIdbPut(idbRecord);
   }
+
+  await rdIdbDel(uploadId);
   return last;
+}
+
+async function runRdUploadJob(record) {
+  const sys =
+    catalog.systems.find((s) => s.id === record.system) ||
+    (nav.system?.id === record.system ? nav.system : null);
+  if (!sys?.ready) {
+    await rdIdbDel(record.uploadId);
+    return;
+  }
+
+  setRdUploadUi(true, "Загрузка PDF…");
+  try {
+    const r = await apiUploadRd(
+      {
+        data: record.data,
+        system: record.system,
+        systemCode: record.systemCode,
+        projectName: record.projectName,
+        fileName: record.fileName,
+      },
+      { uploadId: record.uploadId, startPart: record.nextPart || 0 }
+    );
+    if (r.ok) {
+      toast(`РД загружена: ${r.name || record.fileName}`, "success");
+      if (nav.system?.id === record.system) await refreshRdPanel(nav.system);
+    } else {
+      toast(rdApiErrorMessage(null, r), "error");
+    }
+  } catch (err) {
+    toast(rdApiErrorMessage(err, null), "error");
+  } finally {
+    setRdUploadUi(false);
+    const btn = $("btn-rd-upload");
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function tryResumeRdUpload() {
+  const record = await rdIdbGetFirstPending();
+  if (!record?.data || !record.uploadId) return;
+  if (record.nextPart >= record.total) {
+    await rdIdbDel(record.uploadId);
+    return;
+  }
+  toast("Продолжаем загрузку PDF…", "queue");
+  runRdUploadJob(record);
 }
 
 function photosEnabled() {
@@ -1028,6 +1182,10 @@ async function uploadRdFromFile(file) {
     toast("Нужен интернет для загрузки РД", "error");
     return;
   }
+  if (rdUploadActive) {
+    toast("Уже идёт загрузка PDF — дождитесь или обновите страницу", "queue");
+    return;
+  }
   const maxMb = CONFIG.RD_MAX_MB || 30;
   if (file.size > maxMb * 1024 * 1024) {
     toast(`PDF больше ${maxMb} МБ — сожмите или разбейте`, "error");
@@ -1038,42 +1196,47 @@ async function uploadRdFromFile(file) {
     return;
   }
 
-  const status = $("rd-status");
   const btnUpload = $("btn-rd-upload");
   const btnOpen = $("btn-rd-open");
   btnUpload.disabled = true;
   btnOpen.hidden = true;
-  apiUploadRd.onProgress = (n, total) => {
-    status.textContent = total > 1 ? `Загрузка PDF… ${n}/${total}` : "Загрузка PDF…";
+  setRdUploadUi(true, "Подготовка PDF…");
+
+  const uploadId = newRdUploadId();
+  let data;
+  try {
+    data = await blobToBase64(file);
+  } catch {
+    setRdUploadUi(false);
+    btnUpload.disabled = false;
+    toast("Не удалось прочитать файл", "error");
+    $("rd-input").value = "";
+    return;
+  }
+
+  const record = {
+    uploadId,
+    data,
+    system: sys.id,
+    systemCode: sys.code,
+    projectName: projectFolderName(),
+    fileName: file.name,
+    nextPart: 0,
+    total: Math.max(1, Math.ceil(data.length / RD_CHUNK_SIZE)),
+    updatedAt: Date.now(),
   };
 
-  try {
-    const data = await blobToBase64(file);
-    const r = await apiUploadRd({
-      system: sys.id,
-      systemCode: sys.code,
-      projectName: projectFolderName(),
-      fileName: file.name,
-      data,
-    });
-    if (r.ok) {
-      toast(`РД загружена: ${r.name || file.name}`, "success");
-      await refreshRdPanel(sys);
-    } else {
-      const msg = rdApiErrorMessage(null, r);
-      toast(msg, "error");
-      status.textContent = msg;
+  if (data.length > RD_SINGLE_MAX_B64) {
+    try {
+      await rdIdbPut(record);
+    } catch {
+      /* продолжим без IDB */
     }
-  } catch (err) {
-    const msg = rdApiErrorMessage(err, null);
-    toast(msg, "error");
-    status.textContent = msg;
-  } finally {
-    apiUploadRd.onProgress = null;
-    btnUpload.disabled = false;
-    $("rd-input").value = "";
-    if (!rdViewUrl) await refreshRdPanel(sys);
   }
+
+  $("rd-input").value = "";
+  toast("Загрузка PDF — можно перейти в камеры, не закрывайте вкладку", "queue");
+  runRdUploadJob(record);
 }
 
 function goSystems() {
@@ -1926,6 +2089,14 @@ async function init() {
 
   initServiceWorkerUpdates();
   initAutoRefresh();
+  tryResumeRdUpload();
+
+  window.addEventListener("beforeunload", (e) => {
+    if (rdUploadActive) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
 
   setInterval(() => {
     if (document.visibilityState === "visible") flushQueue(false).catch(() => {});
