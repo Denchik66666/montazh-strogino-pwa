@@ -575,9 +575,35 @@ function updateHeader(screenName) {
   $("breadcrumb").textContent = crumbs.join(" › ");
 }
 
+async function loadRdLinkForSystem(sys) {
+  const btn = $("btn-rd");
+  if (!btn) return;
+  btn.hidden = true;
+  btn.onclick = null;
+  if (!sys?.ready || !apiConfigured()) return;
+  try {
+    const r = await apiGet("rdLink", {
+      system: sys.id,
+      systemCode: sys.code,
+      projectName: projectFolderName(),
+    });
+    if (r.ok && (r.viewUrl || r.url)) {
+      const url = r.viewUrl || r.url;
+      const label = r.name ? `📄 ${r.name}` : "📄 РД (PDF)";
+      btn.textContent = label.length > 42 ? "📄 РД (PDF)" : label;
+      btn.hidden = false;
+      btn.onclick = () => window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    btn.hidden = true;
+  }
+}
+
 function goSystems() {
   nav.system = null;
   nav.section = null;
+  const rdBtn = $("btn-rd");
+  if (rdBtn) rdBtn.hidden = true;
   showScreen("systems");
   renderSystems();
   updateStats();
@@ -589,6 +615,7 @@ function goSections(system) {
   showScreen("sections");
   renderSections();
   updateStats();
+  loadRdLinkForSystem(system);
 }
 
 function goCameras(section) {
@@ -873,7 +900,9 @@ function refreshCurrentView() {
 function updateStats() {
   let allDone = 0;
   let allTotal = 0;
-  for (const s of catalog.systems.filter((x) => x.ready)) {
+  const scope =
+    nav.system?.ready ? [nav.system] : catalog.systems.filter((x) => x.ready);
+  for (const s of scope) {
     const c = countDone(s);
     allDone += c.done;
     allTotal += c.total;
