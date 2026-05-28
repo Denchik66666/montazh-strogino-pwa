@@ -839,7 +839,7 @@ async function uploadPhotoFromFile(file) {
     return;
   }
   if (sessionPhotos.length >= MAX_SESSION_PHOTOS) {
-    toast(`Максимум ${MAX_SESSION_PHOTOS} фото — удалите лишнее (×)`, "error");
+    toast(`Максимум ${MAX_SESSION_PHOTOS} фото — удалите лишнее (🗑)`, "error");
     return;
   }
   if (!navigator.onLine) {
@@ -1013,7 +1013,7 @@ function syncRdPanelVisibility() {
     return;
   }
   const active = document.querySelector(".screen.active")?.id;
-  panel.hidden = active === "screen-systems";
+  panel.hidden = active !== "screen-sections";
 }
 
 function findSystemById(systemId) {

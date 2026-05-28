@@ -743,34 +743,56 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 #screen-input.active {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
   width: 100%;
-  padding: 0 12px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding: 0;
+  overflow: hidden;
+}
+
+.input-card {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--input-col-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.input-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  padding: 6px 12px 10px;
 }
 
-.input-card {
+.input-scroll .input-head,
+.input-scroll .metrazh-dual,
+.input-scroll .input-actions,
+.input-scroll .photo-block {
   width: 100%;
-  max-width: var(--input-col-max);
-  flex: none;
-  min-height: min-content;
+}
+
+.input-dock {
+  flex-shrink: 0;
+  padding: 6px 12px max(6px, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid color-mix(in srgb, var(--surface2) 75%, transparent);
+  background: var(--bg);
+}
+
+#screen-input .input-dock {
+  --numpad-key-h: 40px;
+}
+
+.input-dock .numpad {
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  display: grid;
-  grid-template-rows: auto auto auto auto;
-  align-content: start;
-  gap: 10px;
-  overflow: visible;
-}
-
-.input-head,
-.input-card > .metrazh-dual,
-.numpad-panel,
-.input-footer {
-  width: 100%;
 }
 
 .metrazh-dual {
@@ -893,14 +915,6 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   line-height: 1.25;
 }
 
-.numpad-panel {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  min-height: 0;
-  padding-top: 2px;
-}
-
 .numpad {
   width: 100%;
   max-width: 300px;
@@ -944,26 +958,12 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   font-size: 1rem;
 }
 
-.input-footer {
-  padding-top: 0;
-  border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
-  padding-top: 8px;
+.input-actions {
+  margin-top: 4px;
 }
 
-#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) {
-  --numpad-key-h: 42px;
-}
-
-#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) .meter-field__input {
-  font-size: 1.45rem;
-}
-
-.input-footnote {
-  margin: 4px 0 0;
-  font-size: 0.68rem;
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.2;
+body:has(#screen-input.active) .rd-panel {
+  display: none !important;
 }
 
 .photo-block {
@@ -1119,7 +1119,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   width: 100%;
   min-height: 46px;
   max-height: 48px;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1462,8 +1462,3 @@ body.photo-lightbox-open {
   padding-bottom: 4px;
 }
 
-@media (min-height: 640px) {
-  .numpad-panel {
-    align-items: center;
-  }
-}

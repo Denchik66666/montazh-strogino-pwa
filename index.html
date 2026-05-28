@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=72" />
+    <link rel="stylesheet" href="css/app.css?v=73" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -99,46 +99,64 @@
     <!-- 4. Ввод метража -->
     <div id="screen-input" class="screen screen-input">
       <div class="input-card">
-        <div class="input-head">
-          <p class="input-system" id="input-system"></p>
-          <h2 class="cam-code" id="input-code">ВК 2.1.1</h2>
-          <p class="cam-info" id="input-info"></p>
-        </div>
-        <div class="metrazh-dual">
-          <div class="meter-field meter-field--active" data-kind="cable">
-            <label class="meter-field__label" for="input-meter-cable">Кабель, м</label>
-            <input
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              maxlength="3"
-              class="meter-field__input"
-              id="input-meter-cable"
-              autocomplete="off"
-              enterkeyhint="next"
-              placeholder="—"
-              aria-label="Кабель, метры"
-            />
-            <span class="meter-field__hint" id="hint-cable"></span>
+        <div class="input-scroll">
+          <div class="input-head">
+            <p class="input-system" id="input-system"></p>
+            <h2 class="cam-code" id="input-code">ВК 2.1.1</h2>
+            <p class="cam-info" id="input-info"></p>
           </div>
-          <div class="meter-field" data-kind="gofra">
-            <label class="meter-field__label" for="input-meter-gofra">Гофра, м</label>
-            <input
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              maxlength="3"
-              class="meter-field__input"
-              id="input-meter-gofra"
-              autocomplete="off"
-              enterkeyhint="done"
-              placeholder="—"
-              aria-label="Гофра, метры"
-            />
-            <span class="meter-field__hint" id="hint-gofra"></span>
+          <div class="metrazh-dual">
+            <div class="meter-field meter-field--active" data-kind="cable">
+              <label class="meter-field__label" for="input-meter-cable">Кабель, м</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="3"
+                class="meter-field__input"
+                id="input-meter-cable"
+                autocomplete="off"
+                enterkeyhint="next"
+                placeholder="—"
+                aria-label="Кабель, метры"
+              />
+              <span class="meter-field__hint" id="hint-cable"></span>
+            </div>
+            <div class="meter-field" data-kind="gofra">
+              <label class="meter-field__label" for="input-meter-gofra">Гофра, м</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="3"
+                class="meter-field__input"
+                id="input-meter-gofra"
+                autocomplete="off"
+                enterkeyhint="done"
+                placeholder="—"
+                aria-label="Гофра, метры"
+              />
+              <span class="meter-field__hint" id="hint-gofra"></span>
+            </div>
+          </div>
+          <div class="input-actions">
+            <p class="overwrite-hint" id="overwrite-hint"></p>
+            <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
+          </div>
+          <div class="photo-block" id="photo-block">
+            <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
+            <input type="file" id="photo-input-gallery" accept="image/*" hidden />
+            <div class="photo-actions">
+              <button type="button" class="photo-btn" id="btn-photo-camera">Фото</button>
+              <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery">
+                Галерея
+              </button>
+            </div>
+            <p class="photo-status" id="photo-status">До 5 фото</p>
+            <div class="photo-preview" id="photo-preview" aria-label="Превью фото"></div>
           </div>
         </div>
-        <div class="numpad-panel">
+        <div class="input-dock" aria-label="Цифровая клавиатура">
           <div class="numpad" id="numpad">
             <button type="button" data-digit="1">1</button>
             <button type="button" data-digit="2">2</button>
@@ -152,25 +170,6 @@
             <button type="button" class="key-clear" data-action="clear">Стереть</button>
             <button type="button" data-digit="0">0</button>
             <button type="button" class="key-back" data-action="back">⌫</button>
-          </div>
-        </div>
-        <div class="input-footer">
-          <p class="overwrite-hint" id="overwrite-hint"></p>
-          <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
-          <p class="input-footnote">
-            Клавиатура телефона или цифры на экране · пусто — не менять · 0 — стереть
-          </p>
-          <div class="photo-block" id="photo-block">
-            <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
-            <input type="file" id="photo-input-gallery" accept="image/*" hidden />
-            <div class="photo-actions">
-              <button type="button" class="photo-btn" id="btn-photo-camera">Фото</button>
-              <button type="button" class="photo-btn photo-btn--secondary" id="btn-photo-gallery">
-                Галерея
-              </button>
-            </div>
-            <p class="photo-status" id="photo-status">До 5 фото · нажмите превью — просмотр</p>
-            <div class="photo-preview" id="photo-preview" aria-label="Превью фото"></div>
           </div>
         </div>
       </div>
@@ -213,7 +212,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=72"></script>
-    <script src="js/app.js?v=72" defer></script>
+    <script src="config.js?v=73"></script>
+    <script src="js/app.js?v=73" defer></script>
   </body>
 </html>
