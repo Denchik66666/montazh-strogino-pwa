@@ -96,6 +96,10 @@ function rdApiErrorMessage(err, r) {
   return m || "Не удалось загрузить PDF";
 }
 
+function isRdSessionExpiredError(msg) {
+  return /сессия загрузки истекла/i.test(String(msg || ""));
+}
+
 /** URL превью через Apps Script (запасной вариант). */
 function photoThumbSrc(fileId) {
   if (!fileId || !apiConfigured()) return "";
@@ -359,6 +363,8 @@ const RD_CHUNK_SIZE = 2 * 1024 * 1024;
 const RD_SINGLE_MAX_B64 = 22 * 1024 * 1024;
 const RD_IDB_NAME = "montazh_rd";
 const RD_IDB_STORE = "pending";
+/** Старше — не возобновляем (кэш сессии на сервере ~1 ч). */
+const RD_RESUME_MAX_AGE_MS = 50 * 60 * 1000;
 
 let rdUploadActive = false;
 
@@ -478,6 +484,29 @@ async function rdIdbDel(uploadId) {
   });
 }
 
+/** Удалить просроченные / завершённые черновики загрузки PDF в IndexedDB. */
+async function rdIdbClearStale(maxAgeMs = RD_RESUME_MAX_AGE_MS) {
+  const db = await rdIdbOpen();
+  const now = Date.now();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RD_IDB_STORE, "readwrite");
+    const store = tx.objectStore(RD_IDB_STORE);
+    const req = store.openCursor();
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (!cursor) return;
+      const v = cursor.value;
+      const done = v.nextPart >= v.total;
+      const old = !v.updatedAt || now - v.updatedAt > maxAgeMs;
+      if (done || old) cursor.delete();
+      cursor.continue();
+    };
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 function rdUploadProgressText(done, total) {
   if (!total || total <= 1) return "Загрузка PDF…";
   const pct = Math.min(100, Math.max(0, Math.round((done / total) * 100)));
@@ -582,13 +611,20 @@ async function apiUploadRd(payload, opts = {}) {
   return last;
 }
 
-async function runRdUploadJob(record) {
+async function runRdUploadJob(record, opts = {}) {
+  const restartFromStart = Boolean(opts.restartFromStart);
   const sys =
     catalog.systems.find((s) => s.id === record.system) ||
     (nav.system?.id === record.system ? nav.system : null);
   if (!sys?.ready) {
     await rdIdbDel(record.uploadId);
     return;
+  }
+
+  const startPart = restartFromStart ? 0 : record.nextPart || 0;
+  if (restartFromStart) {
+    record.nextPart = 0;
+    await rdIdbPut(record);
   }
 
   setRdUploadUi(true, "Загрузка PDF…");
@@ -601,7 +637,7 @@ async function runRdUploadJob(record) {
         projectName: record.projectName,
         fileName: record.fileName,
       },
-      { uploadId: record.uploadId, startPart: record.nextPart || 0 }
+      { uploadId: record.uploadId, startPart }
     );
     if (r.ok) {
       toast(`РД загружена: ${r.name || record.fileName}`, "success");
@@ -611,10 +647,26 @@ async function runRdUploadJob(record) {
         await refreshRdRootPanel();
       }
     } else {
-      toast(rdApiErrorMessage(null, r), "error");
+      const errMsg = rdApiErrorMessage(null, r);
+      if (isRdSessionExpiredError(errMsg) && !restartFromStart && startPart > 0) {
+        return runRdUploadJob(record, { restartFromStart: true });
+      }
+      if (isRdSessionExpiredError(errMsg)) {
+        await rdIdbDel(record.uploadId);
+      }
+      toast(errMsg, "error");
+      if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
     }
   } catch (err) {
-    toast(rdApiErrorMessage(err, null), "error");
+    const errMsg = rdApiErrorMessage(err, null);
+    if (isRdSessionExpiredError(errMsg) && !restartFromStart && startPart > 0) {
+      return runRdUploadJob(record, { restartFromStart: true });
+    }
+    if (isRdSessionExpiredError(errMsg)) {
+      await rdIdbDel(record.uploadId);
+    }
+    toast(errMsg, "error");
+    if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
   } finally {
     setRdUploadUi(false);
     const btn = $("btn-rd-upload");
@@ -623,12 +675,36 @@ async function runRdUploadJob(record) {
 }
 
 async function tryResumeRdUpload() {
+  let removedStale = false;
+  try {
+    const db = await rdIdbOpen();
+    const before = await rdIdbGetFirstPending();
+    await rdIdbClearStale(RD_RESUME_MAX_AGE_MS);
+    const after = await rdIdbGetFirstPending();
+    removedStale = Boolean(before && !after);
+  } catch {
+    /* private mode */
+  }
+
   const record = await rdIdbGetFirstPending();
-  if (!record?.data || !record.uploadId) return;
+  if (!record?.data || !record.uploadId) {
+    if (removedStale && document.querySelector("#screen-systems.active")) {
+      await refreshRdRootPanel();
+    }
+    return;
+  }
   if (record.nextPart >= record.total) {
     await rdIdbDel(record.uploadId);
     return;
   }
+
+  const age = Date.now() - (record.updatedAt || 0);
+  if (age > RD_RESUME_MAX_AGE_MS) {
+    await rdIdbDel(record.uploadId);
+    if (document.querySelector("#screen-systems.active")) await refreshRdRootPanel();
+    return;
+  }
+
   toast("Продолжаем загрузку PDF…", "queue");
   runRdUploadJob(record);
 }
@@ -2290,6 +2366,7 @@ async function init() {
 
   initServiceWorkerUpdates();
   initAutoRefresh();
+  setRdUploadUi(false);
   tryResumeRdUpload();
 
   window.addEventListener("beforeunload", (e) => {
