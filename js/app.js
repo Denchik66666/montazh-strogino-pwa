@@ -1,6 +1,8 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
+/** Резерв метража на телефоне — если сервер вернул пусто/обрезано, не теряем СОТ/БР. */
+const METRAZH_SNAPSHOT_KEY = "montazh_metrazh_snapshot";
 const NAV_STATE_KEY = "montazh_nav_state";
 const PHOTO_STATUS_KEY = "montazh_photo_status";
 const PHOTO_COUNT_KEY = "montazh_photo_count";
@@ -311,8 +313,68 @@ function setQueue(q) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 }
 
+function countSystemMetrazhKeys(map, systemId) {
+  const prefix = `${systemId}:`;
+  let n = 0;
+  for (const k of Object.keys(map || {})) {
+    if (k.startsWith(prefix) && !k.endsWith(":gofra")) n++;
+  }
+  return n;
+}
+
+/** Сервер дополняет локальный кэш; пустой ответ API не затирает уже введённый метраж. */
+function mergeMetrazhMaps(local, remote) {
+  const merged = { ...(local || {}) };
+  for (const [k, v] of Object.entries(remote || {})) {
+    if (v === "" || v === null || v === undefined) continue;
+    merged[k] = v;
+  }
+  return merged;
+}
+
+function loadMetrazhSnapshot() {
+  try {
+    const raw = localStorage.getItem(METRAZH_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    return o && typeof o.map === "object" ? o : null;
+  } catch {
+    return null;
+  }
+}
+
+function updateMetrazhSnapshot(map) {
+  const cot = countSystemMetrazhKeys(map, "cot");
+  const br = countSystemMetrazhKeys(map, "br");
+  if (cot + br === 0) return;
+  try {
+    localStorage.setItem(
+      METRAZH_SNAPSHOT_KEY,
+      JSON.stringify({ at: new Date().toISOString(), cot, br, map })
+    );
+  } catch {
+    /* localStorage quota */
+  }
+}
+
+/** Если после ответа API резко пропал метраж СОТ — подмешиваем снимок с телефона. */
+function recoverMetrazhIfRegressed(before, merged) {
+  const snap = loadMetrazhSnapshot();
+  if (!snap?.map) return merged;
+  for (const sysId of ["cot", "br"]) {
+    const was = countSystemMetrazhKeys(before, sysId);
+    const now = countSystemMetrazhKeys(merged, sysId);
+    const snapN = countSystemMetrazhKeys(snap.map, sysId);
+    if (was >= 3 && now < was * 0.5 && snapN > now) {
+      return mergeMetrazhMaps(merged, snap.map);
+    }
+  }
+  return merged;
+}
+
 function cacheMetrazh(map) {
   localStorage.setItem(METRAZH_CACHE_KEY, JSON.stringify(map));
+  updateMetrazhSnapshot(map);
 }
 
 function loadCachedMetrazh() {
@@ -2197,8 +2259,9 @@ function initScreenGestures() {
 }
 
 async function refreshMetrazh() {
+  const local = loadCachedMetrazh();
   if (!apiConfigured()) {
-    metrazhMap = loadCachedMetrazh();
+    metrazhMap = local;
     refreshCurrentView();
     updateStats();
     return;
@@ -2206,11 +2269,19 @@ async function refreshMetrazh() {
   try {
     const data = await apiGet("metrazh");
     if (data.ok && data.metrazh) {
-      metrazhMap = data.metrazh;
+      let merged = mergeMetrazhMaps(local, data.metrazh);
+      const recovered = recoverMetrazhIfRegressed(local, merged);
+      if (recovered !== merged) {
+        merged = recovered;
+        toast("Восстановлен метраж из резервной копии на телефоне", "warn");
+      }
+      metrazhMap = merged;
       cacheMetrazh(metrazhMap);
+    } else {
+      metrazhMap = local;
     }
   } catch {
-    metrazhMap = loadCachedMetrazh();
+    metrazhMap = local;
   }
   refreshCurrentView();
   updateStats();
