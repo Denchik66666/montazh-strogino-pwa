@@ -791,29 +791,45 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--text-strong);
 }
 
-.meter-field__value {
+.meter-field__input {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  width: 100%;
   min-width: 4.5rem;
+  max-width: 8rem;
+  margin: 0;
+  padding: 4px 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   font-size: 1.75rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
   letter-spacing: 0.04em;
   color: var(--text-strong);
+  cursor: text;
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.meter-field__value.empty {
+.meter-field__input::placeholder {
   color: var(--muted);
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.meter-field__value.meter-field__value--clear {
+.meter-field__input:focus {
+  outline: none;
+}
+
+.meter-field__input.meter-field__input--clear {
   color: var(--warn);
 }
 
-.meter-field__value.meter-field__value--invalid {
+.meter-field__input.meter-field__input--invalid {
   color: var(--danger, #ef4444);
 }
 
@@ -915,7 +931,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   --numpad-key-h: 42px;
 }
 
-#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) .meter-field__value {
+#screen-input.active:has(.photo-preview:not(.photo-preview--empty)) .meter-field__input {
   font-size: 1.45rem;
 }
 

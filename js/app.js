@@ -1413,10 +1413,32 @@ function mapMetersForKind(systemId, camera, kind) {
   return Number.isFinite(n) ? n : null;
 }
 
+function meterInputEl(kind) {
+  return $(`input-meter-${kind}`);
+}
+
+function readMeterFields() {
+  for (const kind of ["cable", "gofra"]) {
+    const el = meterInputEl(kind);
+    if (!el) continue;
+    let v = el.value.replace(/\D/g, "").slice(0, 3);
+    if (el.value !== v) el.value = v;
+    inputValues[kind] = v;
+  }
+}
+
+function writeMeterFields() {
+  for (const kind of ["cable", "gofra"]) {
+    const el = meterInputEl(kind);
+    if (el) el.value = inputValues[kind] || "";
+  }
+}
+
 function loadInputValues() {
   if (!selectedCamera) {
     inputValues = { cable: "", gofra: "" };
     inputInitial = { cable: null, gofra: null };
+    writeMeterFields();
     return;
   }
   const { system, cam } = selectedCamera;
@@ -1425,14 +1447,26 @@ function loadInputValues() {
     inputInitial[kind] = n;
     inputValues[kind] = n != null ? String(n) : "";
   }
+  writeMeterFields();
 }
 
-function setInputActiveKind(kind) {
+function setInputActiveKind(kind, focusInput = true) {
   inputActiveKind = kind === "gofra" ? "gofra" : "cable";
   document.querySelectorAll(".meter-field").forEach((el) => {
     const active = el.dataset.kind === inputActiveKind;
     el.classList.toggle("meter-field--active", active);
   });
+  if (focusInput) {
+    const el = meterInputEl(inputActiveKind);
+    if (!el) return;
+    el.focus();
+    try {
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    } catch {
+      /* iOS */
+    }
+  }
 }
 
 function updateOverwriteHint() {
@@ -1460,6 +1494,7 @@ function openInput(system, section, cam) {
   updateMetersDisplay();
   showScreen("input");
   loadSessionPhotosFromDrive();
+  requestAnimationFrame(() => setInputActiveKind("cable", true));
 }
 
 function isMetersValid(n) {
@@ -1497,25 +1532,17 @@ function hasInvalidMeterInput() {
 }
 
 function updateMetersDisplay() {
+  readMeterFields();
   for (const kind of ["cable", "gofra"]) {
-    const el = $(`meters-${kind}`);
+    const el = meterInputEl(kind);
     const hint = $(`hint-${kind}`);
     const field = document.querySelector(`.meter-field[data-kind="${kind}"]`);
-    if (!el) continue;
     const raw = inputValues[kind];
     const init = inputInitial[kind];
-    if (!raw) {
-      el.textContent = "—";
-      el.classList.add("empty");
-      el.classList.remove("meter-field__value--clear", "meter-field__value--invalid");
-    } else {
-      el.textContent = raw;
-      el.classList.remove("empty");
-      const n = parseInt(raw, 10);
-      const isClear = n === 0;
-      const invalid = !isMetersValid(n);
-      el.classList.toggle("meter-field__value--clear", isClear);
-      el.classList.toggle("meter-field__value--invalid", invalid);
+    if (el) {
+      const n = raw ? parseInt(raw, 10) : NaN;
+      el.classList.toggle("meter-field__input--clear", raw !== "" && n === 0);
+      el.classList.toggle("meter-field__input--invalid", raw !== "" && !isMetersValid(n));
     }
     if (hint) {
       hint.textContent =
@@ -1550,6 +1577,8 @@ function numpadHandler(e) {
   } else if (action === "back") val = val.slice(0, -1);
   else if (action === "clear") val = "";
   inputValues[inputActiveKind] = val;
+  const inp = meterInputEl(inputActiveKind);
+  if (inp) inp.value = val;
   updateMetersDisplay();
 }
 
@@ -1592,6 +1621,7 @@ function afterMetersSaved() {
 
 async function saveMeters() {
   if (!selectedCamera) return;
+  readMeterFields();
   const { system, cam } = selectedCamera;
   const pending = getPendingMeterSaves();
   if (!pending.length) {
@@ -1721,10 +1751,23 @@ async function init() {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
   });
+  for (const kind of ["cable", "gofra"]) {
+    const inp = meterInputEl(kind);
+    inp?.addEventListener("input", () => updateMetersDisplay());
+    inp?.addEventListener("focus", () => setInputActiveKind(kind, false));
+    inp?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (kind === "cable") setInputActiveKind("gofra", true);
+        else saveMeters();
+      }
+    });
+  }
   document.querySelectorAll(".meter-field").forEach((field) => {
-    field.addEventListener("click", () => {
+    field.addEventListener("click", (e) => {
+      if (e.target.closest("input")) return;
       const kind = field.dataset.kind;
-      if (!kind || kind === inputActiveKind) return;
+      if (!kind) return;
       setInputActiveKind(kind);
     });
   });

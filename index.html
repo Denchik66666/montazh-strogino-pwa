@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=64" />
+    <link rel="stylesheet" href="css/app.css?v=65" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -102,16 +102,38 @@
           <p class="cam-info" id="input-info"></p>
         </div>
         <div class="metrazh-dual">
-          <button type="button" class="meter-field meter-field--active" data-kind="cable">
-            <span class="meter-field__label">Кабель, м</span>
-            <span class="meter-field__value empty" id="meters-cable">—</span>
+          <div class="meter-field meter-field--active" data-kind="cable">
+            <label class="meter-field__label" for="input-meter-cable">Кабель, м</label>
+            <input
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="3"
+              class="meter-field__input"
+              id="input-meter-cable"
+              autocomplete="off"
+              enterkeyhint="next"
+              placeholder="—"
+              aria-label="Кабель, метры"
+            />
             <span class="meter-field__hint" id="hint-cable"></span>
-          </button>
-          <button type="button" class="meter-field" data-kind="gofra">
-            <span class="meter-field__label">Гофра, м</span>
-            <span class="meter-field__value empty" id="meters-gofra">—</span>
+          </div>
+          <div class="meter-field" data-kind="gofra">
+            <label class="meter-field__label" for="input-meter-gofra">Гофра, м</label>
+            <input
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="3"
+              class="meter-field__input"
+              id="input-meter-gofra"
+              autocomplete="off"
+              enterkeyhint="done"
+              placeholder="—"
+              aria-label="Гофра, метры"
+            />
             <span class="meter-field__hint" id="hint-gofra"></span>
-          </button>
+          </div>
         </div>
         <div class="numpad-panel">
           <div class="numpad" id="numpad">
@@ -132,7 +154,9 @@
         <div class="input-footer">
           <p class="overwrite-hint" id="overwrite-hint"></p>
           <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
-          <p class="input-footnote">Пустое поле — не менять · 0 — стереть · макс. 500 м</p>
+          <p class="input-footnote">
+            Клавиатура телефона или цифры на экране · пусто — не менять · 0 — стереть
+          </p>
           <div class="photo-block" id="photo-block">
             <input type="file" id="photo-input-camera" accept="image/*" capture="environment" hidden />
             <input type="file" id="photo-input-gallery" accept="image/*" hidden />
@@ -178,7 +202,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=64"></script>
-    <script src="js/app.js?v=64" defer></script>
+    <script src="config.js?v=65"></script>
+    <script src="js/app.js?v=65" defer></script>
   </body>
 </html>
