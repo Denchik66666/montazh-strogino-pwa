@@ -340,7 +340,7 @@ html[data-theme="light"] .app-header {
   opacity: 0.45;
 }
 
-body:not(:has(#screen-systems.active)) .header-rd {
+.rd-slot {
   display: none !important;
 }
 

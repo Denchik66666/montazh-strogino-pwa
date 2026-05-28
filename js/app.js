@@ -1261,10 +1261,6 @@ function populateRdSystemPick() {
 }
 
 function syncRdPanelVisibility() {
-  const bar = $("header-rd");
-  if (!bar) return;
-  const active = document.querySelector(".screen.active")?.id;
-  bar.hidden = active !== "screen-systems" || readySystems().length === 0;
   populateRdSystemPick();
 }
 
@@ -1418,7 +1414,6 @@ async function refreshRdPanel(sys) {
 
   if (!sys?.ready) return;
   syncRdPanelVisibility();
-  if ($("header-rd")?.hidden) return;
 
   if (rdUploadActive) return;
 
@@ -1535,7 +1530,6 @@ function goSystems() {
   nav.section = null;
   showScreen("systems");
   renderSystems();
-  refreshRdRootPanel();
   updateStats();
 }
 
@@ -2369,7 +2363,6 @@ async function init() {
     await refreshMetrazh();
     await flushQueue();
     if (!restoreNavState()) goSystems();
-    else if (document.querySelector("#screen-systems.active")) refreshRdRootPanel();
   } catch {
     $("systems-root").innerHTML =
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
