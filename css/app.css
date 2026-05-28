@@ -454,6 +454,28 @@ html[data-theme="light"] .app-header {
   color: var(--text-strong);
 }
 
+.pick-card--system .pick-body {
+  text-align: center;
+  align-items: center;
+}
+
+.pick-card--system .pick-label {
+  font-size: clamp(0.92rem, 3.4vw, 1.08rem);
+  line-height: 1.18;
+  text-align: center;
+  text-wrap: balance;
+  max-width: 11.5em;
+  margin-inline: auto;
+}
+
+.pick-card--system .pick-sub {
+  text-align: center;
+}
+
+.pick-card--system .pick-bar {
+  align-self: stretch;
+}
+
 .pick-sub {
   font-size: 0.88rem;
   color: var(--muted);
@@ -1256,16 +1278,6 @@ html[data-theme="light"] .theme-icon--moon {
 .save-btn.save-btn--clear {
   background: var(--warn);
   color: #1a1206;
-}
-
-/* ????? ???? ?? ?? / ??????? ?????: ??????? ?? ??????, ??? ???????????? */
-@media (min-width: 480px) {
-  #app-shell {
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface2) 55%, transparent);
-  }
 }
 
 @media (min-height: 640px) {
