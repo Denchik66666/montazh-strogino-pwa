@@ -1,4 +1,4 @@
-const CACHE = "montazh-v50";
+const CACHE = "montazh-v51";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,6 +25,10 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
 function isAppAsset(pathname) {
   return (
     pathname.endsWith(".css") ||
@@ -34,6 +38,23 @@ function isAppAsset(pathname) {
   );
 }
 
+function isDataAsset(pathname) {
+  return pathname.endsWith(".json") || pathname.includes("config.js");
+}
+
+/** Сначала сеть — актуальные catalog.json и скрипты; офлайн — из кэша. */
+function networkFirst(request) {
+  return fetch(request)
+    .then((res) => {
+      if (res.ok) {
+        const clone = res.clone();
+        caches.open(CACHE).then((c) => c.put(request, clone));
+      }
+      return res;
+    })
+    .catch(() => caches.match(request));
+}
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin.includes("script.google.com")) {
@@ -41,18 +62,8 @@ self.addEventListener("fetch", (e) => {
   }
   if (e.request.method !== "GET") return;
 
-  if (isAppAsset(url.pathname)) {
-    e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, clone));
-          }
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
+  if (isAppAsset(url.pathname) || isDataAsset(url.pathname)) {
+    e.respondWith(networkFirst(e.request));
     return;
   }
 
@@ -61,10 +72,8 @@ self.addEventListener("fetch", (e) => {
       (cached) =>
         cached ||
         fetch(e.request).then((res) => {
-          if (url.pathname.endsWith(".json")) {
-            const clone = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, clone));
-          }
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, clone));
           return res;
         })
     )

@@ -596,8 +596,9 @@ function goBack() {
   }
 }
 
-async function loadCatalog() {
-  const res = await fetch("catalog.json", { cache: "no-cache" });
+async function loadCatalog(bustCache = false) {
+  const url = bustCache ? `catalog.json?t=${Date.now()}` : "catalog.json";
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("Нет catalog.json");
   catalog = await res.json();
 }
@@ -619,6 +620,11 @@ async function syncProjectNameFromApi() {
 }
 
 async function refreshAppData(showToast = false) {
+  try {
+    await loadCatalog(true);
+  } catch {
+    /* офлайн — остаётся текущий каталог */
+  }
   await syncProjectNameFromApi();
   await refreshMetrazh();
   await flushQueue(false);
@@ -628,6 +634,8 @@ async function refreshAppData(showToast = false) {
   if (active === "screen-input" && selectedCamera) {
     await loadSessionPhotosFromDrive();
   }
+  const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
+  if (activeName) updateHeader(activeName);
   if (showToast) toast("Данные обновлены", "success");
 }
 
@@ -710,6 +718,8 @@ function initPullToRefresh() {
 async function refreshMetrazh() {
   if (!apiConfigured()) {
     metrazhMap = loadCachedMetrazh();
+    refreshCurrentView();
+    updateStats();
     return;
   }
   try {
@@ -721,6 +731,73 @@ async function refreshMetrazh() {
   } catch {
     metrazhMap = loadCachedMetrazh();
   }
+  refreshCurrentView();
+  updateStats();
+}
+
+const AUTO_REFRESH_MS = 45000;
+let swRegistration = null;
+let appReloadScheduled = false;
+
+/** Новая версия PWA: активировать service worker и один раз перезагрузить страницу. */
+function initServiceWorkerUpdates() {
+  if (!("serviceWorker" in navigator)) return;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (appReloadScheduled) return;
+    appReloadScheduled = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker
+    .register("./sw.js", { updateViaCache: "none", scope: "./" })
+    .then((reg) => {
+      swRegistration = reg;
+
+      const activateWaiting = (worker) => {
+        if (!worker) return;
+        worker.postMessage({ type: "SKIP_WAITING" });
+      };
+
+      reg.addEventListener("updatefound", () => {
+        const worker = reg.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state !== "installed") return;
+          if (navigator.serviceWorker.controller) activateWaiting(worker);
+        });
+      });
+
+      if (reg.waiting && navigator.serviceWorker.controller) activateWaiting(reg.waiting);
+
+      setInterval(() => reg.update().catch(() => {}), 5 * 60 * 1000);
+    })
+    .catch(() => {});
+}
+
+function initAutoRefresh() {
+  const runSilentRefresh = () => {
+    if (document.visibilityState !== "visible") return;
+    refreshAppData(false).catch(() => {});
+  };
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      swRegistration?.update().catch(() => {});
+      runSilentRefresh();
+    }
+  });
+
+  window.addEventListener("focus", runSilentRefresh);
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) runSilentRefresh();
+  });
+
+  setInterval(() => {
+    if (document.visibilityState !== "visible") return;
+    refreshMetrazh().catch(() => {});
+    flushQueue(false).catch(() => {});
+  }, AUTO_REFRESH_MS);
 }
 
 async function flushQueue(showResult) {
@@ -1112,12 +1189,12 @@ async function init() {
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
   }
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  }
+  initServiceWorkerUpdates();
+  initAutoRefresh();
 
-  setInterval(flushQueue, 30000);
-  setInterval(refreshMetrazh, 60000);
+  setInterval(() => {
+    if (document.visibilityState === "visible") flushQueue(false).catch(() => {});
+  }, 30000);
 }
 
 init();
