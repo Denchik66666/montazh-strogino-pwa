@@ -85,13 +85,56 @@ function rdApiErrorMessage(err, r) {
   return m || "Не удалось загрузить PDF";
 }
 
-/** URL превью через Apps Script (надёжнее, чем drive.google.com в img). */
+/** URL превью через Apps Script (запасной вариант). */
 function photoThumbSrc(fileId) {
   if (!fileId || !apiConfigured()) return "";
   const url = new URL(CONFIG.API_URL);
   url.searchParams.set("action", "photoThumb");
   url.searchParams.set("fileId", fileId);
   return url.toString();
+}
+
+function photoPreviewFromItem(p) {
+  if (p.thumbDataUrl) return p.thumbDataUrl;
+  if (p.previewUrl) return p.previewUrl;
+  if (p.fileId) return photoThumbSrc(p.fileId);
+  return "";
+}
+
+/** Загрузить превью через fetch → blob: (если data URL нет). */
+async function fetchPhotoPreviewBlob(fileId) {
+  if (!fileId || !apiConfigured()) return "";
+  try {
+    const res = await fetch(photoThumbSrc(fileId), { redirect: "follow" });
+    if (!res.ok) return "";
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.startsWith("image/")) return "";
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } catch {
+    return "";
+  }
+}
+
+async function hydrateSessionPhotoPreviews() {
+  let changed = false;
+  for (const p of sessionPhotos) {
+    if (p.previewUrl?.startsWith("blob:") || p.previewUrl?.startsWith("data:")) continue;
+    if (p.thumbDataUrl) {
+      p.previewUrl = p.thumbDataUrl;
+      changed = true;
+      continue;
+    }
+    if (p._hydrating || !p.fileId) continue;
+    p._hydrating = true;
+    const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
+    p._hydrating = false;
+    if (blobUrl) {
+      p.previewUrl = blobUrl;
+      changed = true;
+    }
+  }
+  if (changed) renderPhotoSession();
 }
 
 function photoApiErrorMessage(r) {
@@ -420,13 +463,15 @@ async function loadSessionPhotosFromDrive() {
     clearSessionPhotos();
     for (const p of r.photos) {
       sessionPhotos.push({
-        previewUrl: photoThumbSrc(p.fileId) || p.thumbUrlAlt || p.thumbUrl || p.url,
+        thumbDataUrl: p.thumbDataUrl || "",
+        previewUrl: p.thumbDataUrl || "",
         driveUrl: p.url,
         fileId: p.fileId,
         fromDrive: true,
       });
     }
     renderPhotoSession();
+    hydrateSessionPhotoPreviews();
   } catch {
     if (status) status.textContent = "Нет связи — фото на Диске, обновите позже";
     renderPhotoSession();
@@ -469,11 +514,20 @@ function renderPhotoSession() {
     img.alt = `фото ${i + 1}`;
     img.loading = "lazy";
     img.decoding = "async";
-    const src = p.previewUrl || photoThumbSrc(p.fileId);
+    const src = photoPreviewFromItem(p);
     if (src) img.src = src;
-    img.addEventListener("error", () => {
-      const alt = p.fileId ? photoThumbSrc(p.fileId) : "";
-      if (alt && img.src !== alt) img.src = alt;
+    img.addEventListener("error", async () => {
+      if (img.dataset.retry === "1") return;
+      img.dataset.retry = "1";
+      if (p.thumbDataUrl && img.src !== p.thumbDataUrl) {
+        img.src = p.thumbDataUrl;
+        return;
+      }
+      const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
+      if (blobUrl) {
+        p.previewUrl = blobUrl;
+        img.src = blobUrl;
+      }
     });
 
     btn.appendChild(img);
@@ -501,7 +555,7 @@ function updatePhotoLightboxView() {
   const next = $("photo-lightbox-next");
   if (!box || !img || !p) return;
 
-  img.src = p.previewUrl;
+  img.src = photoPreviewFromItem(p);
   if (counter) {
     counter.textContent = `${photoLightboxIndex + 1} / ${sessionPhotos.length}`;
   }
