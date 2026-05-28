@@ -1,4 +1,4 @@
-const CACHE = "montazh-v40";
+const CACHE = "montazh-v41";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,17 +25,43 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
+function isAppAsset(pathname) {
+  return (
+    pathname.endsWith(".css") ||
+    pathname.endsWith(".js") ||
+    pathname.endsWith(".html") ||
+    pathname.endsWith("/")
+  );
+}
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin.includes("script.google.com")) {
     return;
   }
+  if (e.request.method !== "GET") return;
+
+  if (isAppAsset(url.pathname)) {
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(
       (cached) =>
         cached ||
         fetch(e.request).then((res) => {
-          if (e.request.method === "GET" && url.pathname.endsWith(".json")) {
+          if (url.pathname.endsWith(".json")) {
             const clone = res.clone();
             caches.open(CACHE).then((c) => c.put(e.request, clone));
           }

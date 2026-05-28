@@ -258,14 +258,22 @@ async function loadSessionPhotosFromDrive() {
       projectName: projectFolderName(),
       camera: normalizeCameraCode(cam.camera),
     });
-    if (!r.ok || !Array.isArray(r.photos)) {
+    if (!r.ok) {
+      if (status) {
+        status.textContent = r.needDriveAuth
+          ? "Нужно разрешить Диск в таблице (меню Метраж)"
+          : "Не удалось загрузить список фото";
+      }
+      return;
+    }
+    if (!Array.isArray(r.photos) || !r.photos.length) {
       renderPhotoSession();
       return;
     }
     clearSessionPhotos();
     for (const p of r.photos) {
       sessionPhotos.push({
-        previewUrl: p.thumbUrl || p.url,
+        previewUrl: p.thumbUrlAlt || p.thumbUrl || p.url,
         driveUrl: p.url,
         fileId: p.fileId,
         fromDrive: true,
@@ -273,6 +281,7 @@ async function loadSessionPhotosFromDrive() {
     }
     renderPhotoSession();
   } catch {
+    if (status) status.textContent = "Нет связи — фото на Диске, обновите позже";
     renderPhotoSession();
   }
 }
@@ -304,7 +313,7 @@ function renderPhotoSession() {
       (p, i) => `
       <div class="photo-thumb-wrap">
         <a class="photo-thumb" href="${escapeHtml(p.driveUrl || "#")}" target="_blank" rel="noopener" title="Фото ${i + 1} на Диске">
-          <img src="${p.previewUrl}" alt="фото ${i + 1}" />
+          <img src="${p.previewUrl}" alt="фото ${i + 1}" loading="lazy" referrerpolicy="no-referrer" />
         </a>
         <button type="button" class="photo-delete" data-photo-idx="${i}" aria-label="Удалить фото ${i + 1}">×</button>
       </div>`
