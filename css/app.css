@@ -694,10 +694,46 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .input-head,
+.input-card > .metrazh-tabs,
+.input-card > .meters-kind-label,
 .input-card > .meters-display,
 .numpad-panel,
 .input-footer {
   width: 100%;
+}
+
+.metrazh-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.metrazh-tab {
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.metrazh-tab.active {
+  color: var(--text-strong);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--surface2));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.meters-kind-label {
+  margin: 4px 0 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 4px;
 }
 
 .input-head {
@@ -730,9 +766,10 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .meters-display {
-  height: 58px;
-  min-height: 58px;
-  max-height: 58px;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
