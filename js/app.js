@@ -239,9 +239,42 @@ function blobToBase64(blob) {
 
 function clearSessionPhotos() {
   for (const p of sessionPhotos) {
-    if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+    if (p.previewUrl && !p.fromDrive) URL.revokeObjectURL(p.previewUrl);
   }
   sessionPhotos = [];
+}
+
+async function loadSessionPhotosFromDrive() {
+  if (!photosEnabled() || !selectedCamera) return;
+  const status = $("photo-status");
+  if (status) status.textContent = "Загрузка фото с Диска…";
+
+  const { system, section, cam } = selectedCamera;
+  try {
+    const r = await apiGet("listPhotos", {
+      system: system.id,
+      systemCode: system.code,
+      sectionFolder: sectionFolderName(section),
+      projectName: projectFolderName(),
+      camera: normalizeCameraCode(cam.camera),
+    });
+    if (!r.ok || !Array.isArray(r.photos)) {
+      renderPhotoSession();
+      return;
+    }
+    clearSessionPhotos();
+    for (const p of r.photos) {
+      sessionPhotos.push({
+        previewUrl: p.thumbUrl || p.url,
+        driveUrl: p.url,
+        fileId: p.fileId,
+        fromDrive: true,
+      });
+    }
+    renderPhotoSession();
+  } catch {
+    renderPhotoSession();
+  }
 }
 
 function renderPhotoSession() {
@@ -312,7 +345,7 @@ async function deleteSessionPhoto(index) {
       }
     }
 
-    if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+    if (p.previewUrl && !p.fromDrive) URL.revokeObjectURL(p.previewUrl);
     sessionPhotos.splice(index, 1);
     renderPhotoSession();
     toast(
@@ -371,7 +404,7 @@ async function uploadPhotoFromFile(file) {
     });
     if (r.ok) {
       const previewUrl = URL.createObjectURL(blob);
-      sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId });
+      sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId, fromDrive: false });
       renderPhotoSession();
       toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");
     } else {
@@ -838,6 +871,7 @@ function openInput(system, section, cam) {
   updatePhotoBlockVisibility();
   updateMetersDisplay();
   showScreen("input");
+  loadSessionPhotosFromDrive();
 }
 
 function isMetersValid(n) {
