@@ -513,54 +513,39 @@ function rdUploadProgressText(done, total) {
   return `Загрузка PDF… ${pct}%`;
 }
 
-function closeRdMenu() {
-  const menu = $("header-rd-menu");
-  const more = $("btn-rd-more");
-  if (menu) menu.hidden = true;
-  if (more) more.setAttribute("aria-expanded", "false");
-}
-
-function toggleRdMenu() {
-  const menu = $("header-rd-menu");
-  const more = $("btn-rd-more");
-  if (!menu || !more) return;
-  if (!menu.hidden) {
-    closeRdMenu();
-    return;
-  }
-  menu.hidden = false;
-  more.setAttribute("aria-expanded", "true");
-}
-
 function setRdUploadUi(active, text = "") {
   rdUploadActive = active;
-  const more = $("btn-rd-more");
-  const hint = $("rd-menu-hint");
-  const btnUpload = $("btn-rd-upload");
+  const fileBtn = $("btn-rd-open");
+  const fileEmpty = $("rd-file-empty");
+  const replace = $("btn-rd-replace");
   if (active) {
-    closeRdMenu();
-    if (more) {
-      more.classList.add("header-rd-more--busy");
-      more.title = text || "Загрузка PDF";
+    if (fileBtn) {
+      fileBtn.hidden = false;
+      fileBtn.textContent = text || "Загрузка…";
+      fileBtn.disabled = true;
     }
-    if (hint) hint.textContent = text || "Загрузка PDF…";
-    if (btnUpload) btnUpload.disabled = true;
+    if (fileEmpty) fileEmpty.hidden = true;
+    if (replace) replace.disabled = true;
   } else {
-    if (more) {
-      more.classList.remove("header-rd-more--busy");
-      if (!more.title || /загрузк/i.test(more.title)) more.title = "РД — служебное меню";
-    }
-    if (btnUpload) btnUpload.disabled = false;
+    if (fileBtn) fileBtn.disabled = false;
+    if (replace) replace.disabled = false;
   }
 }
 
-function formatRdStatusShort(text) {
-  const s = String(text || "").trim();
-  if (!s) return "—";
-  const m = s.match(/^На Диске:\s*(.+)$/i);
-  const name = m ? m[1] : s;
-  if (name.length > 24) return `${name.slice(0, 22)}…`;
-  return m ? name : s.length > 28 ? `${s.slice(0, 26)}…` : s;
+function setRdFileDisplay(fileName, hasUrl) {
+  const fileBtn = $("btn-rd-open");
+  const fileEmpty = $("rd-file-empty");
+  if (!fileBtn || !fileEmpty) return;
+  if (hasUrl && fileName) {
+    fileBtn.hidden = false;
+    fileBtn.textContent = fileName;
+    fileBtn.title = `Открыть: ${fileName}`;
+    fileEmpty.hidden = true;
+  } else {
+    fileBtn.hidden = true;
+    fileEmpty.hidden = false;
+    fileEmpty.textContent = "нет PDF";
+  }
 }
 
 async function apiUploadRd(payload, opts = {}) {
@@ -699,8 +684,8 @@ async function runRdUploadJob(record, opts = {}) {
     if (nav.system?.ready) await refreshRdPanel(nav.system);
   } finally {
     setRdUploadUi(false);
-    const btn = $("btn-rd-upload");
-    if (btn) btn.disabled = false;
+    const replace = $("btn-rd-replace");
+    if (replace) replace.disabled = false;
   }
 }
 
@@ -1246,7 +1231,6 @@ function countSectionDone(system, section) {
 }
 
 function showScreen(name) {
-  closeRdMenu();
   if (name !== "cameras") closeCamSheet(false);
   document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
   const screen = document.getElementById(`screen-${name}`);
@@ -1445,12 +1429,10 @@ let rdViewUrl = "";
 
 async function refreshRdPanel(sys) {
   const btnOpen = $("btn-rd-open");
-  const btnUpload = $("btn-rd-upload");
-  const status = $("rd-status");
-  if (!btnUpload || !status) return;
+  const btnReplace = $("btn-rd-replace");
+  if (!btnOpen || !btnReplace) return;
 
   rdViewUrl = "";
-  btnOpen.hidden = true;
   btnOpen.onclick = null;
 
   if (!sys?.ready) return;
@@ -1459,16 +1441,13 @@ async function refreshRdPanel(sys) {
 
   if (rdUploadActive) return;
 
-  const hint = $("rd-menu-hint");
-  const more = $("btn-rd-more");
-
   if (!apiConfigured()) {
-    if (hint) hint.textContent = "Нет таблицы";
-    btnUpload.disabled = true;
+    setRdFileDisplay("", false);
+    btnReplace.hidden = true;
     return;
   }
-  btnUpload.disabled = false;
-  if (hint) hint.textContent = "";
+  btnReplace.hidden = false;
+  btnReplace.title = "Загрузить или заменить PDF";
 
   try {
     const r = await apiGet("rdLink", {
@@ -1478,29 +1457,18 @@ async function refreshRdPanel(sys) {
     });
     if (r.ok && (r.viewUrl || r.url)) {
       rdViewUrl = r.viewUrl || r.url;
-      btnOpen.hidden = false;
-      btnOpen.onclick = () => {
-        closeRdMenu();
-        window.open(rdViewUrl, "_blank", "noopener,noreferrer");
-      };
-      const full = r.name ? r.name : "PDF на Диске";
-      if (hint) hint.textContent = formatRdStatusShort(full);
-      if (more) {
-        more.classList.add("header-rd-more--ok");
-        more.title = full;
-      }
+      const name = r.name ? String(r.name) : "PDF";
+      setRdFileDisplay(name, true);
+      btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
+      btnReplace.title = `Заменить: ${name}`;
     } else {
-      if (hint) hint.textContent = "PDF не загружен";
-      if (more) {
-        more.classList.remove("header-rd-more--ok");
-        more.title = "РД — загрузить PDF";
-      }
-      btnOpen.hidden = true;
+      setRdFileDisplay("", false);
+      btnReplace.title = "Загрузить PDF";
     }
   } catch {
-    if (hint) hint.textContent = "Нет связи";
-    if (more) more.classList.remove("header-rd-more--ok");
-    btnOpen.hidden = true;
+    setRdFileDisplay("", false);
+    $("rd-file-empty").textContent = "нет связи";
+    btnReplace.title = "Загрузить PDF";
   }
 }
 
@@ -1533,10 +1501,8 @@ async function uploadRdFromFile(file) {
     return;
   }
 
-  const btnUpload = $("btn-rd-upload");
-  const btnOpen = $("btn-rd-open");
-  btnUpload.disabled = true;
-  btnOpen.hidden = true;
+  const btnReplace = $("btn-rd-replace");
+  if (btnReplace) btnReplace.disabled = true;
   setRdUploadUi(true, "Подготовка PDF… 0%");
 
   const uploadId = newRdUploadId();
@@ -1545,7 +1511,7 @@ async function uploadRdFromFile(file) {
     data = await blobToBase64(file);
   } catch {
     setRdUploadUi(false);
-    btnUpload.disabled = false;
+    if (btnReplace) btnReplace.disabled = false;
     toast("Не удалось прочитать файл", "error");
     $("rd-input").value = "";
     return;
@@ -2340,17 +2306,7 @@ async function init() {
     else refreshAppData(true);
   });
   initPullToRefresh();
-  $("btn-rd-more")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleRdMenu();
-  });
-  $("btn-rd-upload")?.addEventListener("click", () => {
-    closeRdMenu();
-    $("rd-input")?.click();
-  });
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".header-rd-wrap")) closeRdMenu();
-  });
+  $("btn-rd-replace")?.addEventListener("click", () => $("rd-input")?.click());
   $("rd-input")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);

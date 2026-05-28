@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=81" />
+    <link rel="stylesheet" href="css/app.css?v=82" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -34,29 +34,18 @@
         <div class="header-meta">
           <p class="breadcrumb" id="breadcrumb"></p>
           <div class="header-rd" id="header-rd" hidden>
-            <span class="header-rd__status" id="rd-status" hidden aria-hidden="true"></span>
             <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
-            <div class="header-rd-wrap">
-              <button
-                type="button"
-                class="header-rd-more"
-                id="btn-rd-more"
-                aria-label="РД — служебное меню"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                …<span class="header-rd-tag">рд</span>
-              </button>
-              <div class="header-rd-menu" id="header-rd-menu" hidden role="menu">
-                <p class="header-rd-menu__hint" id="rd-menu-hint"></p>
-                <button type="button" class="header-rd-menu__item" id="btn-rd-open" hidden role="menuitem">
-                  Открыть PDF
-                </button>
-                <button type="button" class="header-rd-menu__item" id="btn-rd-upload" role="menuitem">
-                  Загрузить PDF
-                </button>
-              </div>
-            </div>
+            <button type="button" class="header-rd-file" id="btn-rd-open" hidden>—</button>
+            <span class="header-rd-file header-rd-file--empty" id="rd-file-empty">нет PDF</span>
+            <button
+              type="button"
+              class="header-rd-replace"
+              id="btn-rd-replace"
+              aria-label="Заменить PDF"
+              title="Заменить PDF"
+            >
+              …
+            </button>
           </div>
         </div>
       </div>
@@ -224,7 +213,7 @@
 
     <select id="rd-system-pick" hidden aria-hidden="true" tabindex="-1"></select>
 
-    <script src="config.js?v=81"></script>
-    <script src="js/app.js?v=81" defer></script>
+    <script src="config.js?v=82"></script>
+    <script src="js/app.js?v=82" defer></script>
   </body>
 </html>
