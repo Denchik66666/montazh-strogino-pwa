@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=59" />
+    <link rel="stylesheet" href="css/app.css?v=61" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -101,16 +101,18 @@
           <h2 class="cam-code" id="input-code">ВК 2.1.1</h2>
           <p class="cam-info" id="input-info"></p>
         </div>
-        <div class="metrazh-tabs" role="tablist">
-          <button type="button" class="metrazh-tab active" data-kind="cable" role="tab" aria-selected="true">
-            Кабель
+        <div class="metrazh-dual">
+          <button type="button" class="meter-field meter-field--active" data-kind="cable">
+            <span class="meter-field__label">Кабель, м</span>
+            <span class="meter-field__value empty" id="meters-cable">—</span>
+            <span class="meter-field__hint" id="hint-cable"></span>
           </button>
-          <button type="button" class="metrazh-tab" data-kind="gofra" role="tab" aria-selected="false">
-            Гофра
+          <button type="button" class="meter-field" data-kind="gofra">
+            <span class="meter-field__label">Гофра, м</span>
+            <span class="meter-field__value empty" id="meters-gofra">—</span>
+            <span class="meter-field__hint" id="hint-gofra"></span>
           </button>
         </div>
-        <p class="meters-kind-label" id="meters-kind-label">Кабель, м</p>
-        <div class="meters-display empty" id="meters-display">—</div>
         <div class="numpad-panel">
           <div class="numpad" id="numpad">
             <button type="button" data-digit="1">1</button>
@@ -142,7 +144,7 @@
             <div class="photo-preview" id="photo-preview" hidden></div>
           </div>
           <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
-          <p class="input-footnote">Кабель и гофра отдельно · 0 + сохранить — стереть · макс. 500 м</p>
+          <p class="input-footnote">Пустое поле — не менять · 0 — стереть · макс. 500 м</p>
         </div>
       </div>
     </div>
@@ -151,7 +153,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=59"></script>
-    <script src="js/app.js?v=59" defer></script>
+    <script src="config.js?v=61"></script>
+    <script src="js/app.js?v=61" defer></script>
   </body>
 </html>

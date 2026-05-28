@@ -1,6 +1,7 @@
 const CONFIG = window.APP_CONFIG || {};
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
+const NAV_STATE_KEY = "montazh_nav_state";
 const THEME_KEY = "montazh_theme";
 const THEME_COLORS = { dark: "#0f172a", light: "#e3e4ea" };
 
@@ -14,10 +15,12 @@ const nav = {
 };
 
 let selectedCamera = null;
-let inputValue = "";
 /** @type {"cable"|"gofra"} */
-let inputKind = "cable";
-const INPUT_KIND_LABEL = { cable: "Кабель, м", gofra: "Гофра, м" };
+let inputActiveKind = "cable";
+/** @type {{ cable: string, gofra: string }} */
+let inputValues = { cable: "", gofra: "" };
+/** @type {{ cable: number|null, gofra: number|null }} */
+let inputInitial = { cable: null, gofra: null };
 const MAX_SESSION_PHOTOS = 3;
 /** @type {{ previewUrl: string, driveUrl?: string, fileId?: string }[]} */
 let sessionPhotos = [];
@@ -672,6 +675,106 @@ function showScreen(name) {
   back.hidden = name === "systems";
 
   updateHeader(name);
+  persistNavState(name);
+}
+
+function findSystemById(systemId) {
+  return catalog.systems.find((s) => s.id === systemId) || null;
+}
+
+function findSectionById(system, sectionId) {
+  return system?.sections?.find((s) => s.id === sectionId) || null;
+}
+
+function findCameraInSection(section, cameraCode) {
+  const norm = normalizeCameraCode(cameraCode);
+  return (
+    section?.cameras?.find(
+      (c) => c.camera === cameraCode || normalizeCameraCode(c.camera) === norm
+    ) || null
+  );
+}
+
+/** После loadCatalog — ссылки на system/section/camera из свежего каталога. */
+function rebindNavFromCatalog() {
+  if (!nav.system) return;
+  const sys = findSystemById(nav.system.id);
+  if (!sys?.ready) {
+    goSystems();
+    return;
+  }
+  nav.system = sys;
+  if (!nav.section) return;
+  const sec = findSectionById(sys, nav.section.id);
+  if (!sec) {
+    nav.section = null;
+    goSections(sys);
+    return;
+  }
+  nav.section = sec;
+  if (!selectedCamera) return;
+  const cam = findCameraInSection(sec, selectedCamera.cam.camera);
+  if (cam) selectedCamera = { system: sys, section: sec, cam };
+}
+
+function persistNavState(screenName) {
+  try {
+    const state = { screen: screenName };
+    if (nav.system) state.systemId = nav.system.id;
+    if (nav.section) state.sectionId = nav.section.id;
+    if (screenName === "input" && selectedCamera) {
+      state.camera = selectedCamera.cam.camera;
+    }
+    sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+/** Вернуть экран после перезагрузки PWA (обновление SW). */
+function restoreNavState() {
+  try {
+    const raw = sessionStorage.getItem(NAV_STATE_KEY);
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (!state?.screen || state.screen === "systems") {
+      goSystems();
+      return true;
+    }
+    const sys = state.systemId ? findSystemById(state.systemId) : null;
+    if (!sys?.ready) {
+      goSystems();
+      return true;
+    }
+    if (state.screen === "sections") {
+      goSections(sys);
+      return true;
+    }
+    const sec = state.sectionId ? findSectionById(sys, state.sectionId) : null;
+    if (!sec) {
+      goSections(sys);
+      return true;
+    }
+    if (state.screen === "cameras") {
+      goCameras(sec);
+      return true;
+    }
+    if (state.screen === "input" && state.camera) {
+      const cam = findCameraInSection(sec, state.camera);
+      if (!cam) {
+        goCameras(sec);
+        return true;
+      }
+      nav.system = sys;
+      nav.section = sec;
+      openInput(sys, sec, cam);
+      return true;
+    }
+    goSystems();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function appName() {
@@ -848,7 +951,8 @@ async function loadCatalog(bustCache = false) {
   const url = bustCache ? `catalog.json?t=${Date.now()}` : "catalog.json";
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("Нет catalog.json");
-  catalog = await res.json();
+    catalog = await res.json();
+  rebindNavFromCatalog();
 }
 
 /** Название объекта в шапке и на Диске = имя Google-таблицы. */
@@ -1100,6 +1204,7 @@ function refreshCurrentView() {
   if (active === "screen-systems") renderSystems();
   else if (active === "screen-sections") renderSections();
   else if (active === "screen-cameras") renderCameras();
+  else if (active === "screen-input" && nav.system && nav.section) renderCameras();
 }
 
 function updateStats() {
@@ -1236,48 +1341,48 @@ function renderCameras() {
   });
 }
 
-function setInputKind(kind) {
-  inputKind = kind === "gofra" ? "gofra" : "cable";
-  document.querySelectorAll(".metrazh-tab").forEach((tab) => {
-    const active = tab.dataset.kind === inputKind;
-    tab.classList.toggle("active", active);
-    tab.setAttribute("aria-selected", active ? "true" : "false");
-  });
-  const label = $("meters-kind-label");
-  if (label) label.textContent = INPUT_KIND_LABEL[inputKind];
+function mapMetersForKind(systemId, camera, kind) {
+  const key = mapKeyForKind(systemId, camera, kind);
+  const existing = metrazhMap[key];
+  if (existing == null || existing === "") return null;
+  const n = parseInt(String(existing).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) ? n : null;
 }
 
-function loadInputValueForKind() {
+function loadInputValues() {
   if (!selectedCamera) {
-    inputValue = "";
+    inputValues = { cable: "", gofra: "" };
+    inputInitial = { cable: null, gofra: null };
     return;
   }
   const { system, cam } = selectedCamera;
-  const key = mapKeyForKind(system.id, cam.camera, inputKind);
-  const existing = metrazhMap[key];
-  inputValue = existing != null && existing !== "" ? String(existing).replace(/[^\d]/g, "") : "";
+  for (const kind of ["cable", "gofra"]) {
+    const n = mapMetersForKind(system.id, cam.camera, kind);
+    inputInitial[kind] = n;
+    inputValues[kind] = n != null ? String(n) : "";
+  }
+}
+
+function setInputActiveKind(kind) {
+  inputActiveKind = kind === "gofra" ? "gofra" : "cable";
+  document.querySelectorAll(".meter-field").forEach((el) => {
+    const active = el.dataset.kind === inputActiveKind;
+    el.classList.toggle("meter-field--active", active);
+  });
 }
 
 function updateOverwriteHint() {
-  if (!selectedCamera) return;
-  const { system, cam } = selectedCamera;
-  const cable = metrazhMap[metrazhKey(system.id, cam.camera)];
-  const gofra = metrazhMap[gofraKey(system.id, cam.camera)];
   const hint = $("overwrite-hint");
-  const parts = [];
-  if (cable != null && cable !== "") parts.push(`кабель ${cable} м`);
-  if (gofra != null && gofra !== "") parts.push(`гофра ${gofra} м`);
-  if (parts.length) {
-    hint.textContent = `Было: ${parts.join(", ")}. Введите 0 — стерётся ${kindLabel(inputKind)}.`;
-    hint.classList.add("show");
-  } else hint.classList.remove("show");
+  if (!hint) return;
+  hint.classList.remove("show");
+  hint.textContent = "";
 }
 
 function openInput(system, section, cam) {
   selectedCamera = { system, section, cam };
-  inputKind = "cable";
-  setInputKind("cable");
-  loadInputValueForKind();
+  inputActiveKind = "cable";
+  loadInputValues();
+  setInputActiveKind("cable");
 
   $("input-system").textContent = `${catalog.site.name} · ${system.code} · ${section.name}`;
   $("input-code").textContent = cameraDisplayName(cam);
@@ -1298,27 +1403,75 @@ function isMetersValid(n) {
   return n >= 1 && n <= (CONFIG.MAX_METERS || 500);
 }
 
-function updateMetersDisplay() {
-  const el = $("meters-display");
-  const btn = $("btn-save");
-  const kindWord = inputKind === "gofra" ? "ГОФРУ" : "КАБЕЛЬ";
-  if (!inputValue) {
-    el.textContent = "—";
-    el.classList.add("empty");
-    el.classList.remove("meters-display--clear");
-    btn.disabled = true;
-    btn.textContent = `СОХРАНИТЬ ${kindWord}`;
-    btn.classList.remove("save-btn--clear");
-  } else {
-    el.textContent = inputValue;
-    el.classList.remove("empty");
-    const n = parseInt(inputValue, 10);
-    const isClear = n === 0;
-    el.classList.toggle("meters-display--clear", isClear);
-    btn.disabled = !isMetersValid(n);
-    btn.textContent = isClear ? `СТЕРЕТЬ ${kindWord}` : `СОХРАНИТЬ ${kindWord}`;
-    btn.classList.toggle("save-btn--clear", isClear);
+function getPendingMeterSaves() {
+  const pending = [];
+  for (const kind of ["cable", "gofra"]) {
+    const raw = inputValues[kind];
+    if (!raw) continue;
+    const n = parseInt(raw, 10);
+    if (!isMetersValid(n)) continue;
+    const init = inputInitial[kind];
+    if (n === 0) {
+      if (init == null) continue;
+      pending.push({ kind, meters: 0, clearing: true });
+      continue;
+    }
+    if (n === init) continue;
+    pending.push({ kind, meters: n, clearing: false });
   }
+  return pending;
+}
+
+function hasInvalidMeterInput() {
+  for (const kind of ["cable", "gofra"]) {
+    const raw = inputValues[kind];
+    if (!raw) continue;
+    const n = parseInt(raw, 10);
+    if (!isMetersValid(n)) return true;
+  }
+  return false;
+}
+
+function updateMetersDisplay() {
+  for (const kind of ["cable", "gofra"]) {
+    const el = $(`meters-${kind}`);
+    const hint = $(`hint-${kind}`);
+    const field = document.querySelector(`.meter-field[data-kind="${kind}"]`);
+    if (!el) continue;
+    const raw = inputValues[kind];
+    const init = inputInitial[kind];
+    if (!raw) {
+      el.textContent = "—";
+      el.classList.add("empty");
+      el.classList.remove("meter-field__value--clear", "meter-field__value--invalid");
+    } else {
+      el.textContent = raw;
+      el.classList.remove("empty");
+      const n = parseInt(raw, 10);
+      const isClear = n === 0;
+      const invalid = !isMetersValid(n);
+      el.classList.toggle("meter-field__value--clear", isClear);
+      el.classList.toggle("meter-field__value--invalid", invalid);
+    }
+    if (hint) {
+      hint.textContent =
+        init != null ? `В таблице: ${init} м` : "Пусто — введите или оставьте";
+    }
+    if (field) {
+      field.classList.toggle(
+        "meter-field--pending-clear",
+        Boolean(raw) && parseInt(raw, 10) === 0 && init != null
+      );
+    }
+  }
+
+  const pending = getPendingMeterSaves();
+  const btn = $("btn-save");
+  const invalid = hasInvalidMeterInput();
+  btn.disabled = !pending.length || invalid;
+  const onlyClear = pending.length > 0 && pending.every((p) => p.clearing);
+  btn.textContent = onlyClear ? "СТЕРЕТЬ" : "СОХРАНИТЬ";
+  btn.classList.toggle("save-btn--clear", onlyClear);
 }
 
 function numpadHandler(e) {
@@ -1326,94 +1479,136 @@ function numpadHandler(e) {
   if (!btn) return;
   const digit = btn.dataset.digit;
   const action = btn.dataset.action;
+  let val = inputValues[inputActiveKind];
   if (digit !== undefined) {
-    if (inputValue.length >= 3) return;
-    inputValue = inputValue === "0" ? digit : inputValue + digit;
-  } else if (action === "back") inputValue = inputValue.slice(0, -1);
-  else if (action === "clear") inputValue = "";
+    if (val.length >= 3) return;
+    val = val === "0" ? digit : val + digit;
+  } else if (action === "back") val = val.slice(0, -1);
+  else if (action === "clear") val = "";
+  inputValues[inputActiveKind] = val;
   updateMetersDisplay();
 }
 
-async function saveMeters() {
-  if (!selectedCamera || !inputValue) return;
-  const { system, cam } = {
-    system: selectedCamera.system,
-    cam: selectedCamera.cam,
-  };
-  const meters = parseInt(inputValue, 10);
-  if (!isMetersValid(meters)) {
-    toast(`Введите 0 (стереть) или от 1 до ${CONFIG.MAX_METERS || 500} м`, "error");
-    return;
-  }
-
-  const key = mapKeyForKind(system.id, cam.camera, inputKind);
-  const clearing = meters === 0;
-  const payload = {
+function buildMeterPayload(system, cam, item) {
+  return {
     system: system.id,
     sheet: system.sheet,
     camera: cam.camera,
     row: cam.row,
-    meters,
-    kind: inputKind,
-    clear: clearing,
+    meters: item.meters,
+    kind: item.kind,
+    clear: item.clearing,
     at: new Date().toISOString(),
   };
+}
+
+function applyMeterLocal(systemId, camera, item) {
+  const key = mapKeyForKind(systemId, camera, item.kind);
+  if (item.clearing) delete metrazhMap[key];
+  else metrazhMap[key] = item.meters;
+}
+
+function formatSavedMeterParts(items) {
+  return items
+    .map((p) =>
+      p.clearing ? `${kindLabel(p.kind)} стёрт` : `${kindLabel(p.kind)} ${p.meters} м`
+    )
+    .join(", ");
+}
+
+/** После сохранения — остаёмся на камере, поля = актуальные значения из таблицы. */
+function afterMetersSaved() {
+  loadInputValues();
+  updateOverwriteHint();
+  updateMetersDisplay();
+  if (nav.system && nav.section) renderCameras();
+  updateStats();
+  persistNavState("input");
+}
+
+async function saveMeters() {
+  if (!selectedCamera) return;
+  const { system, cam } = selectedCamera;
+  const pending = getPendingMeterSaves();
+  if (!pending.length) {
+    toast("Измените кабель или гофру для сохранения", "error");
+    return;
+  }
+  if (hasInvalidMeterInput()) {
+    toast(`Введите 0 (стереть) или от 1 до ${CONFIG.MAX_METERS || 500} м`, "error");
+    return;
+  }
+
+  const payloads = pending.map((item) => buildMeterPayload(system, cam, item));
+  const code = formatCameraCode(cam.camera);
 
   if (!apiConfigured()) {
-    if (clearing) delete metrazhMap[key];
-    else metrazhMap[key] = meters;
+    for (const item of pending) applyMeterLocal(system.id, cam.camera, item);
     cacheMetrazh(metrazhMap);
-    toast(
-      clearing
-        ? `Стерто (${kindLabel(inputKind)}): ${formatCameraCode(cam.camera)}`
-        : `✓ ${formatCameraCode(cam.camera)}: ${meters} м (${kindLabel(inputKind)})`,
-      clearing ? "queue" : "success"
-    );
-    showScreen("cameras");
-    renderCameras();
-    updateStats();
+    toast(`✓ ${code}: ${formatSavedMeterParts(pending)}`, "success");
+    afterMetersSaved();
     return;
   }
 
   $("btn-save").disabled = true;
   const offline = !navigator.onLine;
 
-  const afterLocal = () => {
-    if (clearing) delete metrazhMap[key];
-    else metrazhMap[key] = meters;
+  const afterAllLocal = (queued) => {
+    for (const item of pending) applyMeterLocal(system.id, cam.camera, item);
     cacheMetrazh(metrazhMap);
-    const msg = clearing
-      ? offline
-        ? "Стереть — отправится в сеть"
-        : `Стерто (${kindLabel(inputKind)}): ${formatCameraCode(cam.camera)}`
-      : offline
-        ? "Сохранено — отправится в сеть"
-        : `✓ ${formatCameraCode(cam.camera)}: ${meters} м (${kindLabel(inputKind)})`;
-    toast(msg, offline || clearing ? "queue" : "success");
-    showScreen("cameras");
-    renderCameras();
-    updateStats();
+    const detail = formatSavedMeterParts(pending);
+    const msg = queued
+      ? `Сохранено — отправится в сеть (${detail})`
+      : `✓ ${code}: ${detail}`;
+    toast(msg, queued ? "queue" : "success");
+    afterMetersSaved();
   };
 
   if (offline) {
-    setQueue([...getQueue(), payload]);
-    afterLocal();
+    setQueue([...getQueue(), ...payloads]);
+    afterAllLocal(true);
     $("btn-save").disabled = false;
     return;
   }
 
+  const queued = [];
+  let saved = 0;
+  let lastErr = "";
   try {
-    const r = await apiSave(payload);
-    if (r.ok) {
-      afterLocal();
+    for (const payload of payloads) {
+      try {
+        const r = await apiSave(payload);
+        if (r.ok) {
+          applyMeterLocal(system.id, cam.camera, {
+            kind: payload.kind,
+            meters: payload.meters,
+            clearing: payload.clear,
+          });
+          saved++;
+        } else {
+          lastErr = r.error || "Ошибка";
+          queued.push(payload);
+        }
+      } catch (e) {
+        lastErr = apiErrorMessage(e);
+        queued.push(payload);
+      }
+    }
+    cacheMetrazh(metrazhMap);
+    if (queued.length) setQueue([...getQueue(), ...queued]);
+    if (!saved) {
+      toast(lastErr || "Ошибка", "error");
+    } else if (queued.length) {
+      afterMetersSaved();
+      toast(`Часть сохранена, остальное в очереди`, "queue");
+    } else {
+      toast(`✓ ${code}: ${formatSavedMeterParts(pending)}`, "success");
+      afterMetersSaved();
       await refreshMetrazh();
-    } else toast(r.error || "Ошибка", "error");
-  } catch (e) {
-    setQueue([...getQueue(), payload]);
-    afterLocal();
-    toast(apiErrorMessage(e) || "В очередь — отправится позже", "queue");
+    }
   } finally {
     $("btn-save").disabled = false;
+    updateMetersDisplay();
   }
 }
 
@@ -1462,14 +1657,11 @@ async function init() {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
   });
-  document.querySelectorAll(".metrazh-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const kind = tab.dataset.kind;
-      if (!kind || kind === inputKind) return;
-      setInputKind(kind);
-      loadInputValueForKind();
-      updateOverwriteHint();
-      updateMetersDisplay();
+  document.querySelectorAll(".meter-field").forEach((field) => {
+    field.addEventListener("click", () => {
+      const kind = field.dataset.kind;
+      if (!kind || kind === inputActiveKind) return;
+      setInputActiveKind(kind);
     });
   });
   $("numpad").addEventListener("click", numpadHandler);
@@ -1505,7 +1697,7 @@ async function init() {
     metrazhMap = loadCachedMetrazh();
     await refreshMetrazh();
     await flushQueue();
-    goSystems();
+    if (!restoreNavState()) goSystems();
   } catch {
     $("systems-root").innerHTML =
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';

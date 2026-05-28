@@ -744,46 +744,85 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .input-head,
-.input-card > .metrazh-tabs,
-.input-card > .meters-kind-label,
-.input-card > .meters-display,
+.input-card > .metrazh-dual,
 .numpad-panel,
 .input-footer {
   width: 100%;
 }
 
-.metrazh-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.metrazh-dual {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 2px;
 }
 
-.metrazh-tab {
-  height: 40px;
+.meter-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 10px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 700;
+  text-align: left;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.metrazh-tab.active {
-  color: var(--text-strong);
+.meter-field--active {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--surface2));
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
-.meters-kind-label {
-  margin: 4px 0 0;
-  font-size: 0.68rem;
-  font-weight: 600;
+.meter-field__label {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--muted);
+}
+
+.meter-field--active .meter-field__label {
+  color: var(--text-strong);
+}
+
+.meter-field__value {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  min-width: 4.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   text-align: right;
-  padding-right: 4px;
+  letter-spacing: 0.04em;
+  color: var(--text-strong);
+}
+
+.meter-field__value.empty {
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+
+.meter-field__value.meter-field__value--clear {
+  color: var(--warn);
+}
+
+.meter-field__value.meter-field__value--invalid {
+  color: var(--danger, #ef4444);
+}
+
+.meter-field__hint {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 0.62rem;
+  color: var(--muted);
+  line-height: 1.2;
 }
 
 .input-head {
@@ -813,32 +852,6 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--muted);
   text-align: center;
   line-height: 1.25;
-}
-
-.meters-display {
-  height: 52px;
-  min-height: 52px;
-  max-height: 52px;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 16px;
-  font-size: 2rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface2));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.22);
-  letter-spacing: 0.06em;
-  color: var(--text-strong);
-}
-
-.meters-display.empty {
-  color: var(--muted);
-  font-size: 1.35rem;
-  justify-content: center;
 }
 
 .numpad-panel {
@@ -902,11 +915,8 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   --numpad-key-h: 42px;
 }
 
-#screen-input.active:has(.photo-preview:not([hidden])) .meters-display {
-  height: 50px;
-  min-height: 50px;
-  max-height: 50px;
-  font-size: 1.65rem;
+#screen-input.active:has(.photo-preview:not([hidden])) .meter-field__value {
+  font-size: 1.45rem;
 }
 
 .input-footnote {
@@ -1269,10 +1279,9 @@ html[data-theme="light"] .theme-icon--moon {
   display: block;
 }
 
-.meters-display.meters-display--clear {
+.meter-field--pending-clear {
   border-color: var(--warn);
-  color: var(--warn);
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .save-btn.save-btn--clear {
