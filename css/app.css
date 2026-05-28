@@ -657,34 +657,36 @@ html[data-theme="light"] .app-header {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   width: 100%;
 }
 
 .pick-card--system .pick-body {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   justify-content: center;
+  padding-right: 0.35em;
 }
 
 .pick-card--system .pick-side {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   align-self: center;
+  margin-left: 2px;
 }
 
 .pick-card--system .pick-label {
   font-size: clamp(0.82rem, 3.4vw, 1rem);
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.28;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 
 .pick-card--system .pick-sub {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .pick-bar--full {
