@@ -26,6 +26,7 @@
       Таблица не подключена. Бригадиру: <strong>config.js</strong> → API_URL.
     </div>
 
+    <div id="app-shell">
     <header class="app-header">
       <button type="button" class="nav-back" id="nav-back" hidden aria-label="Назад">←</button>
       <div class="header-text">
@@ -60,6 +61,7 @@
       </button>
     </header>
 
+    <div id="screens">
     <!-- 1. Системы (СОТ, РФ, …) -->
     <div id="screen-systems" class="screen active">
       <p class="screen-hint">Выберите систему</p>
@@ -123,13 +125,15 @@
                 Галерея
               </button>
             </div>
-            <p class="photo-status" id="photo-status">Можно снять 1–3 фото</p>
+            <p class="photo-status" id="photo-status">1–3 фото · × на превью — удалить</p>
             <div class="photo-preview" id="photo-preview" hidden></div>
           </div>
           <button type="button" class="save-btn" id="btn-save" disabled>СОХРАНИТЬ</button>
           <p class="input-footnote">0 + сохранить — стереть · макс. 500 м</p>
         </div>
       </div>
+    </div>
+    </div>
     </div>
 
     <div id="toast" class="toast" role="status"></div>

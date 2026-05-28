@@ -15,7 +15,8 @@ const nav = {
 
 let selectedCamera = null;
 let inputValue = "";
-/** @type {{ previewUrl: string, driveUrl?: string }[]} */
+const MAX_SESSION_PHOTOS = 3;
+/** @type {{ previewUrl: string, driveUrl?: string, fileId?: string }[]} */
 let sessionPhotos = [];
 
 const $ = (id) => document.getElementById(id);
@@ -163,7 +164,8 @@ async function apiUploadPhoto(payload) {
     /* GET по частям — как метраж */
   }
 
-  const { data, system, systemCode, sectionFolder, camera, row, mimeType } = payload;
+  const { data, system, systemCode, sectionFolder, projectName, camera, row, mimeType } =
+    payload;
   const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   const total = Math.max(1, Math.ceil(data.length / PHOTO_CHUNK_SIZE));
   let last = null;
@@ -180,6 +182,7 @@ async function apiUploadPhoto(payload) {
       params.system = system;
       params.systemCode = systemCode;
       params.sectionFolder = sectionFolder;
+      params.projectName = projectName;
       params.camera = camera;
       params.row = String(row);
       params.mimeType = mimeType;
@@ -191,6 +194,10 @@ async function apiUploadPhoto(payload) {
     }
   }
   return last;
+}
+
+async function apiDeletePhoto(fileId) {
+  return apiGet("deletePhoto", { fileId });
 }
 
 function photosEnabled() {
@@ -243,24 +250,31 @@ function renderPhotoSession() {
   if (!status || !preview) return;
 
   const n = sessionPhotos.length;
+  const atMax = n >= MAX_SESSION_PHOTOS;
+  setPhotoButtonsDisabled(atMax);
+
   if (!n) {
-    status.textContent = "Можно снять 1–3 фото · проверьте превью";
+    status.textContent = "Можно снять 1–3 фото · крестик на превью — удалить";
     preview.hidden = true;
     preview.innerHTML = "";
     return;
   }
 
   const last = sessionPhotos[n - 1];
-  status.innerHTML =
-    `На Диске: <strong>${n}</strong> фото. Смотрите превью — размазано? Снимите ещё.`;
+  status.innerHTML = atMax
+    ? `На Диске: <strong>${n}</strong> фото. Не то? <strong>×</strong> на превью — удалить.`
+    : `На Диске: <strong>${n}</strong> фото. Размазано — снимите ещё или <strong>×</strong> удалить.`;
 
   preview.hidden = false;
   preview.innerHTML = sessionPhotos
     .map(
       (p, i) => `
-      <a class="photo-thumb" href="${escapeHtml(p.driveUrl || "#")}" target="_blank" rel="noopener" title="Фото ${i + 1} на Диске">
-        <img src="${p.previewUrl}" alt="фото ${i + 1}" />
-      </a>`
+      <div class="photo-thumb-wrap">
+        <a class="photo-thumb" href="${escapeHtml(p.driveUrl || "#")}" target="_blank" rel="noopener" title="Фото ${i + 1} на Диске">
+          <img src="${p.previewUrl}" alt="фото ${i + 1}" />
+        </a>
+        <button type="button" class="photo-delete" data-photo-idx="${i}" aria-label="Удалить фото ${i + 1}">×</button>
+      </div>`
     )
     .join("");
 
@@ -270,8 +284,46 @@ function renderPhotoSession() {
     link.href = last.driveUrl;
     link.target = "_blank";
     link.rel = "noopener";
-    link.textContent = "Открыть последнее на Диске";
+    link.textContent = "На Диске ↗";
     preview.appendChild(link);
+  }
+}
+
+async function deleteSessionPhoto(index) {
+  const p = sessionPhotos[index];
+  if (!p) return;
+
+  const status = $("photo-status");
+  if (status) status.textContent = "Удаление с Диска…";
+  setPhotoButtonsDisabled(true);
+
+  try {
+    if (p.fileId) {
+      if (!navigator.onLine) {
+        toast("Нужен интернет, чтобы удалить с Диска", "error");
+        renderPhotoSession();
+        return;
+      }
+      const r = await apiDeletePhoto(p.fileId);
+      if (!r.ok) {
+        toast(photoApiErrorMessage(r) || "Не удалось удалить", "error");
+        renderPhotoSession();
+        return;
+      }
+    }
+
+    if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+    sessionPhotos.splice(index, 1);
+    renderPhotoSession();
+    toast(
+      p.fileId ? "Фото удалено с Диска" : "Убрано из списка · на Диске удалите вручную",
+      "success"
+    );
+  } catch (err) {
+    toast(apiErrorMessage(err) || "Не удалось удалить", "error");
+    renderPhotoSession();
+  } finally {
+    setPhotoButtonsDisabled(false);
   }
 }
 
@@ -284,6 +336,10 @@ async function uploadPhotoFromFile(file) {
   if (!selectedCamera) return;
   if (!photosEnabled()) {
     toast("Фотоотчёты после подключения таблицы", "queue");
+    return;
+  }
+  if (sessionPhotos.length >= MAX_SESSION_PHOTOS) {
+    toast(`Максимум ${MAX_SESSION_PHOTOS} фото — удалите лишнее (×)`, "error");
     return;
   }
   if (!navigator.onLine) {
@@ -306,6 +362,7 @@ async function uploadPhotoFromFile(file) {
     const r = await apiUploadPhoto({
       system: system.id,
       systemCode: system.code,
+      projectName: projectFolderName(),
       sectionFolder: sectionFolderName(section),
       camera: normalizeCameraCode(cam.camera),
       row: cam.row,
@@ -314,7 +371,7 @@ async function uploadPhotoFromFile(file) {
     });
     if (r.ok) {
       const previewUrl = URL.createObjectURL(blob);
-      sessionPhotos.push({ previewUrl, driveUrl: r.url });
+      sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId });
       renderPhotoSession();
       toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");
     } else {
@@ -369,6 +426,12 @@ function sectionFolderName(section) {
   const info = parseSectionName(section.name);
   if (info.num) return `${String(info.num).padStart(2, "0")} — ${info.short}`;
   return String(section.name || "Без секции").slice(0, 80);
+}
+
+/** Имя папки проекта на Диске (на сервере приоритет у имени таблицы). */
+function projectFolderName() {
+  if (CONFIG.PROJECT_FOLDER_NAME) return String(CONFIG.PROJECT_FOLDER_NAME);
+  return catalog.site?.name || CONFIG.PROJECT_NAME || "";
 }
 
 function pickTone(index) {
@@ -517,6 +580,20 @@ async function loadCatalog() {
   const res = await fetch("catalog.json", { cache: "no-cache" });
   if (!res.ok) throw new Error("Нет catalog.json");
   catalog = await res.json();
+}
+
+/** Название объекта в шапке и на Диске = имя Google-таблицы. */
+async function syncProjectNameFromApi() {
+  if (!apiConfigured()) return;
+  try {
+    const r = await apiGet("ping");
+    const name = r.ok && r.sheet ? String(r.sheet).trim() : "";
+    if (!name) return;
+    if (!catalog.site) catalog.site = { id: "default", name: "" };
+    catalog.site.name = name;
+  } catch {
+    /* офлайн — остаётся catalog.json / config */
+  }
 }
 
 async function refreshMetrazh() {
@@ -932,19 +1009,30 @@ async function init() {
   $("btn-photo-gallery")?.addEventListener("click", () => $("photo-input-gallery")?.click());
   $("photo-input-camera")?.addEventListener("change", onPhotoPick);
   $("photo-input-gallery")?.addEventListener("change", onPhotoPick);
+  $("photo-preview")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-photo-idx]");
+    if (!btn || !btn.classList.contains("photo-delete")) return;
+    e.preventDefault();
+    deleteSessionPhoto(parseInt(btn.getAttribute("data-photo-idx"), 10));
+  });
   updatePhotoBlockVisibility();
   $("global-search").addEventListener("input", (e) => renderGlobalSearch(e.target.value));
 
   window.addEventListener("online", () => {
     flushQueue();
-    refreshMetrazh().then(() => {
-      refreshCurrentView();
-      updateStats();
-    });
+    syncProjectNameFromApi()
+      .then(() => refreshMetrazh())
+      .then(() => {
+        refreshCurrentView();
+        updateStats();
+        const active = document.querySelector(".screen.active")?.id?.replace("screen-", "");
+        if (active) updateHeader(active);
+      });
   });
 
   try {
     await loadCatalog();
+    await syncProjectNameFromApi();
     metrazhMap = loadCachedMetrazh();
     await refreshMetrazh();
     await flushQueue();

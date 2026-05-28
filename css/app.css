@@ -98,6 +98,25 @@ body {
   line-height: 1.35;
   overflow: hidden;
   overscroll-behavior: none;
+  width: 100%;
+  max-width: 100vw;
+}
+
+#app-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+
+#screens {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
 }
 
 body:has(#screen-input.active) .setup-banner {
@@ -214,16 +233,18 @@ html[data-theme="light"] .app-header {
   font-size: 0.75rem;
 }
 
-.screen {
+#screens > .screen {
   display: none;
-  flex: 1;
   flex-direction: column;
   min-height: 0;
   padding: 0 16px 8px;
   overflow: hidden;
+  position: absolute;
+  inset: 0;
+  width: 100%;
 }
 
-.screen.active {
+#screens > .screen.active {
   display: flex;
 }
 
@@ -661,12 +682,24 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 #screen-input.active {
   display: flex;
   flex-direction: column;
-  flex: 1;
   min-height: 0;
   width: 100%;
   padding: 0 10px;
   padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
   overflow: hidden;
+}
+
+#screen-input.active:has(.photo-preview:not([hidden])) .meters-display {
+  min-height: 44px;
+  font-size: clamp(1.75rem, 9vw, 2.5rem);
+}
+
+#screen-input.active:has(.photo-preview:not([hidden])) .numpad {
+  max-height: min(36vh, 240px);
+}
+
+#screen-input.active:has(.photo-preview:not([hidden])) .photo-btn {
+  min-height: 40px;
 }
 
 .input-card {
@@ -849,26 +882,38 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-preview {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 6px;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 4px 6px;
   border-radius: 10px;
   background: var(--surface);
   max-width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.photo-preview::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
 }
 
 .photo-thumb {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid var(--ok);
-  flex-shrink: 0;
 }
 
 .photo-thumb img {
@@ -877,12 +922,36 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   object-fit: cover;
 }
 
+.photo-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.photo-delete:active {
+  transform: scale(0.92);
+}
+
 .photo-open-last {
-  flex: 1 1 100%;
-  font-size: 0.72rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
   color: var(--accent);
-  text-align: center;
-  padding: 4px 0;
+  white-space: nowrap;
+  padding: 0 4px;
 }
 
 .save-btn {
