@@ -38,7 +38,9 @@ html[data-theme="dark"] {
   --save-text: #052e16;
   --setup-text: #fecaca;
   --header-blur: none;
-  --input-col-max: 380px;
+  --input-col-max: 360px;
+  --numpad-key-h: 46px;
+  --numpad-gap: 6px;
 }
 
 html[data-theme="light"] {
@@ -685,157 +687,151 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  padding: 0 10px;
-  padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  padding: 0 12px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   overflow: hidden;
-}
-
-#screen-input.active:has(.photo-preview:not([hidden])) .meters-display {
-  min-height: 44px;
-  font-size: clamp(1.75rem, 9vw, 2.5rem);
-}
-
-#screen-input.active:has(.photo-preview:not([hidden])) .numpad {
-  height: 200px;
-  max-height: 200px;
-  min-height: 200px;
-  grid-template-rows: repeat(4, 46px);
-}
-
-#screen-input.active:has(.photo-preview:not([hidden])) .numpad button {
-  height: 46px;
-  max-height: 46px;
-}
-
-#screen-input.active:has(.photo-preview:not([hidden])) .photo-btn {
-  min-height: 42px;
-  max-height: 44px;
 }
 
 .input-card {
   width: 100%;
+  max-width: var(--input-col-max);
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(4px, 0.8vh, 8px);
-  max-width: 100%;
   margin: 0 auto;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 10px;
   overflow: hidden;
 }
 
 .input-head,
-.input-main,
+.input-card > .meters-display,
+.numpad-panel,
 .input-footer {
   width: 100%;
-  max-width: var(--input-col-max);
 }
 
 .input-head {
-  flex-shrink: 0;
   text-align: center;
-  padding-top: 0;
-}
-
-.input-main {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
+  padding: 0 4px;
 }
 
 .input-system {
   margin: 0;
-  font-size: 0.72rem;
-  line-height: 1.2;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: var(--muted);
 }
 
 .input-card .cam-code {
-  font-size: clamp(1.35rem, 5vw, 1.75rem);
-  font-weight: 900;
-  margin: 2px 0 0;
-  line-height: 1.1;
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 4px 0 0;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--text-strong);
 }
 
 .input-card .cam-info {
   margin: 2px 0 0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--muted);
   text-align: center;
   line-height: 1.25;
 }
 
 .meters-display {
-  width: 100%;
-  flex-shrink: 0;
-  min-height: 52px;
-  max-height: 72px;
-  margin: 0;
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: clamp(1.85rem, 10vw, 2.5rem);
-  font-weight: 800;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  background: var(--surface);
-  letter-spacing: 0.05em;
+  justify-content: flex-end;
+  padding: 0 16px;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface2));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.22);
+  letter-spacing: 0.06em;
+  color: var(--text-strong);
 }
 
 .meters-display.empty {
-  color: var(--surface2);
-  font-size: 1.5rem;
-  border-color: var(--surface2);
+  color: var(--muted);
+  font-size: 1.35rem;
+  justify-content: center;
+}
+
+.numpad-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+  padding-top: 2px;
 }
 
 .numpad {
-  flex: none;
   width: 100%;
-  height: 232px;
-  max-height: 232px;
-  min-height: 232px;
+  max-width: 300px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 56px);
-  gap: 8px;
+  grid-template-rows: repeat(4, var(--numpad-key-h));
+  gap: var(--numpad-gap);
+  height: auto;
 }
 
 .numpad button {
-  min-height: 0;
-  height: 56px;
-  max-height: 56px;
-  font-size: clamp(1.2rem, 4.5vw, 1.5rem);
-  font-weight: 700;
-  border: none;
-  border-radius: 10px;
-  background: var(--surface2);
-  color: var(--text);
+  height: var(--numpad-key-h);
+  min-height: var(--numpad-key-h);
+  max-height: var(--numpad-key-h);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
   cursor: pointer;
   touch-action: manipulation;
   padding: 0;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  transition: background 0.12s ease, transform 0.08s ease;
 }
 
 .numpad button:active {
-  background: var(--accent-dark);
+  background: color-mix(in srgb, var(--accent) 35%, var(--surface));
+  transform: scale(0.97);
 }
 
 .numpad .key-clear {
-  font-size: 0.8rem;
-  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 8%, var(--surface));
 }
 
 .numpad .key-back {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .input-footer {
-  flex-shrink: 0;
-  padding-top: clamp(4px, 0.8vh, 8px);
+  padding-top: 0;
+  border-top: 1px solid color-mix(in srgb, var(--surface2) 70%, transparent);
+  padding-top: 8px;
+}
+
+#screen-input.active:has(.photo-preview:not([hidden])) {
+  --numpad-key-h: 42px;
+}
+
+#screen-input.active:has(.photo-preview:not([hidden])) .meters-display {
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  font-size: 1.65rem;
 }
 
 .input-footnote {
@@ -864,9 +860,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-btn {
   flex: 1;
-  min-height: 44px;
-  max-height: 48px;
-  font-size: 0.88rem;
+  min-height: 40px;
+  max-height: 42px;
+  font-size: 0.82rem;
   font-weight: 700;
   border: 2px dashed var(--accent);
   border-radius: var(--radius);
@@ -979,10 +975,10 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .save-btn {
   width: 100%;
-  min-height: 48px;
-  max-height: 54px;
-  margin: 4px 0 0;
-  font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+  min-height: 46px;
+  max-height: 48px;
+  margin: 6px 0 0;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   border: none;
@@ -1217,36 +1213,15 @@ html[data-theme="light"] .theme-icon--moon {
 /* ????? ???? ?? ?? / ??????? ?????: ??????? ?? ??????, ??? ???????????? */
 @media (min-width: 480px) {
   #app-shell {
-    max-width: 420px;
+    max-width: 400px;
     margin-left: auto;
     margin-right: auto;
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface2) 55%, transparent);
   }
-
-  :root {
-    --input-col-max: 360px;
-  }
 }
 
-@media (min-height: 620px) {
-  #screen-input.active .input-card {
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .input-main {
-    flex: 0 0 auto;
-  }
-
-  .numpad {
-    height: 228px;
-    max-height: 228px;
-    min-height: 228px;
-    grid-template-rows: repeat(4, 52px);
-  }
-
-  .numpad button {
-    height: 52px;
-    max-height: 52px;
+@media (min-height: 640px) {
+  .numpad-panel {
+    align-items: center;
   }
 }
