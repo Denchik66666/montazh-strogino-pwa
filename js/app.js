@@ -41,6 +41,7 @@ let photoLbTapTimer = null;
 let photoLbLastTap = 0;
 /** @type {{ previewUrl: string, driveUrl?: string, fileId?: string }[]} */
 let sessionPhotos = [];
+let photoSessionLoading = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -322,15 +323,31 @@ function updatePhotoReportBadge() {
   const badge = $("photo-report-badge");
   if (!badge || !selectedCamera) return;
   const { system, cam } = selectedCamera;
-  const d = getPhotoReportDisplay(system, cam);
   const n = sessionPhotos.length;
+
   if (n > 0) {
-    badge.textContent = `${n} фото`;
+    badge.textContent = n === 1 ? "1 фото" : `${n} фото`;
     badge.className = "photo-report-badge photo-report-badge--done";
-  } else {
-    badge.textContent = d.text;
-    badge.className = `photo-report-badge photo-report-badge--${d.cls}`;
+    return;
   }
+
+  if (camSheetOpen) {
+    if (photoSessionLoading) {
+      badge.textContent = "…";
+      badge.className = "photo-report-badge photo-report-badge--loading";
+      return;
+    }
+    const count = getPhotoCount(system.id, cam.camera);
+    if (count > 0) {
+      badge.textContent = "на Диске";
+      badge.className = "photo-report-badge photo-report-badge--done";
+      return;
+    }
+  }
+
+  const d = getPhotoReportDisplay(system, cam);
+  badge.textContent = d.text;
+  badge.className = `photo-report-badge photo-report-badge--${d.cls}`;
 }
 
 async function probeSectionPhotos(sys, sec) {
@@ -850,9 +867,13 @@ function clearSessionPhotos() {
 }
 
 async function loadSessionPhotosFromDrive() {
-  if (!photosEnabled() || !selectedCamera) return;
-  const status = $("photo-status");
-  if (status) status.textContent = "Загрузка фото с Диска…";
+  if (!photosEnabled() || !selectedCamera) {
+    photoSessionLoading = false;
+    return;
+  }
+  photoSessionLoading = true;
+  renderPhotoSession();
+  updatePhotoReportBadge();
 
   const { system, section, cam } = selectedCamera;
   try {

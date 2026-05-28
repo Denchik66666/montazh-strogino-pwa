@@ -1124,6 +1124,11 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   color: var(--ok);
 }
 
+.photo-report-badge--loading {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  color: var(--accent);
+}
+
 .photo-report-badge--need {
   background: color-mix(in srgb, var(--warn) 22%, var(--surface));
   color: var(--warn);
