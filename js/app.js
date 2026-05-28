@@ -69,6 +69,18 @@ function apiErrorMessage(err) {
   return m || "Нет связи с таблицей";
 }
 
+function rdApiErrorMessage(err, r) {
+  if (r && r.needDriveAuth) {
+    return "Нужен Диск: в таблице Метраж → Разрешить фото на Диске";
+  }
+  if (r && r.error) return String(r.error);
+  const m = err && err.message ? String(err.message) : "";
+  if (/failed to fetch|networkerror|load failed|сеть/i.test(m)) {
+    return "Не удалось загрузить PDF. Проверьте интернет и повторите";
+  }
+  return m || "Не удалось загрузить PDF";
+}
+
 function photoApiErrorMessage(r) {
   const err = (r && r.error) || "";
   if ((r && r.needDriveAuth) || /DriveApp|auth\/drive|разрешени/i.test(err)) {
@@ -166,7 +178,7 @@ async function apiSave(payload) {
   return parseApiResponse(res);
 }
 
-const PHOTO_CHUNK_SIZE = 50000;
+const PHOTO_CHUNK_SIZE = 500;
 const RD_CHUNK_SIZE = 50000;
 
 async function apiUploadPhoto(payload) {
@@ -220,28 +232,56 @@ async function apiDeletePhoto(fileId) {
   return apiGet("deletePhoto", { fileId });
 }
 
+async function apiPostJson(body) {
+  const res = await fetch(CONFIG.API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error("Сеть");
+  return parseApiResponse(res);
+}
+
 async function apiUploadRd(payload) {
   const { data, system, systemCode, projectName, fileName } = payload;
+
+  if (data.length <= 6 * 1024 * 1024) {
+    try {
+      const one = await apiPostJson({
+        action: "rd",
+        system,
+        systemCode,
+        projectName,
+        fileName,
+        data,
+      });
+      if (one.ok || one.error) return one;
+    } catch {
+      /* по частям */
+    }
+  }
+
   const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   const total = Math.max(1, Math.ceil(data.length / RD_CHUNK_SIZE));
   let last = null;
 
   for (let part = 0; part < total; part++) {
     const chunk = data.slice(part * RD_CHUNK_SIZE, (part + 1) * RD_CHUNK_SIZE);
-    const params = {
+    const body = {
+      action: "rdChunk",
       uploadId,
-      part: String(part),
-      total: String(total),
+      part,
+      total,
       chunk,
     };
     if (part === 0) {
-      params.system = system;
-      params.systemCode = systemCode;
-      params.projectName = projectName;
-      params.fileName = fileName;
+      body.system = system;
+      body.systemCode = systemCode;
+      body.projectName = projectName;
+      body.fileName = fileName;
     }
-    last = await apiGet("rdChunk", params);
-    if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка");
+    last = await apiPostJson(body);
+    if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка PDF");
     if (typeof apiUploadRd.onProgress === "function") {
       apiUploadRd.onProgress(part + 1, total);
     }
@@ -748,12 +788,14 @@ async function uploadRdFromFile(file) {
       toast(`РД загружена: ${r.name || file.name}`, "success");
       await refreshRdPanel(sys);
     } else {
-      toast(r.error || "Не удалось загрузить", "error");
-      status.textContent = r.error || "Ошибка загрузки";
+      const msg = rdApiErrorMessage(null, r);
+      toast(msg, "error");
+      status.textContent = msg;
     }
   } catch (err) {
-    toast(apiErrorMessage(err) || "Не удалось загрузить PDF", "error");
-    status.textContent = "Ошибка загрузки";
+    const msg = rdApiErrorMessage(err, null);
+    toast(msg, "error");
+    status.textContent = msg;
   } finally {
     apiUploadRd.onProgress = null;
     btnUpload.disabled = false;
