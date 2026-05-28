@@ -24,6 +24,9 @@ const $ = (id) => document.getElementById(id);
 /** Совпадает с normalizeCameraCode_ в Apps Script (BK в таблице / ВК в приложении). */
 function normalizeCameraCode(code) {
   const s = String(code || "").trim();
+  // БР: "ВК ММС №5" / "ВК ПВН №23" / "ВК16" → BK5 / BK23 / BK16
+  const mBr = s.match(/^[\u0412\u0432Bb][\u041a\u043aKk]\s*(?:[^\d№]*?)№?\s*(\d+)\s*$/i);
+  if (mBr) return `BK${mBr[1]}`;
   const m = s.match(/^([\u0412\u0432Bb])([\u041a\u043aKk])(.*)$/);
   if (m) return `BK${m[3]}`;
   return s;
@@ -595,6 +598,8 @@ async function loadCatalog() {
 
 /** Название объекта в шапке и на Диске = имя Google-таблицы. */
 async function syncProjectNameFromApi() {
+  // Если название задано вручную (строительная площадка) — не перетираем названием Google-таблицы.
+  if (CONFIG.PROJECT_NAME) return;
   if (!apiConfigured()) return;
   try {
     const r = await apiGet("ping");
