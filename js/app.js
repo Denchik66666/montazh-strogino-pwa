@@ -441,6 +441,12 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function cameraDisplayName(cam) {
+  const raw = cam && typeof cam.label === "string" ? cam.label.trim() : "";
+  if (raw) return raw;
+  return formatCameraCode(cam?.camera || "");
+}
+
 /** На экране всегда кириллица ВК; в таблице и API — BK */
 function formatCameraCode(code) {
   const n = normalizeCameraCode(code);
@@ -873,7 +879,7 @@ function renderCameras() {
     btn.innerHTML = `
       <span class="cam-dot" aria-hidden="true"></span>
       <div class="cam-main">
-        <div class="code">${escapeHtml(formatCameraCode(cam.camera))}</div>
+        <div class="code">${escapeHtml(cameraDisplayName(cam))}</div>
         <div class="meta">${escapeHtml(cam.floor)} · ${escapeHtml(cam.place)}</div>
       </div>
       <div class="badge ${m ? "done" : "pending"}">${m ? escapeHtml(String(m)) + " м" : "ввод"}</div>
@@ -890,7 +896,7 @@ function openInput(system, section, cam) {
   inputValue = existing ? String(existing).replace(/[^\d]/g, "") : "";
 
   $("input-system").textContent = `${catalog.site.name} · ${system.code} · ${section.name}`;
-  $("input-code").textContent = formatCameraCode(cam.camera);
+  $("input-code").textContent = cameraDisplayName(cam);
   $("input-info").textContent = [cam.floor, cam.place, cam.cable].filter(Boolean).join(" · ");
 
   const hint = $("overwrite-hint");
