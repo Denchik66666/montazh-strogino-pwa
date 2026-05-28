@@ -259,6 +259,10 @@ function updatePhotoBlockVisibility() {
   block.hidden = !photosEnabled();
 }
 
+function photoMaxBytes() {
+  return (CONFIG.PHOTO_MAX_MB || 10) * 1024 * 1024;
+}
+
 function photoMimeType(file) {
   const t = String(file.type || "").toLowerCase();
   if (t.includes("png")) return "image/png";
@@ -266,6 +270,53 @@ function photoMimeType(file) {
   if (t.includes("heic") || t.includes("heif")) return "image/heic";
   if (t.startsWith("image/")) return t;
   return "image/jpeg";
+}
+
+async function compressImageToBlob(file, maxSide, quality) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Сжатие не удалось"))),
+      "image/jpeg",
+      quality
+    );
+  });
+}
+
+/** До PHOTO_MAX_MB — оригинал; больше — сжатие до лимита. */
+async function preparePhotoForUpload(file) {
+  const maxBytes = photoMaxBytes();
+  if (file.size <= maxBytes) {
+    return { blob: file, mimeType: photoMimeType(file), compressed: false };
+  }
+  const tries = [
+    [2560, 0.85],
+    [2048, 0.82],
+    [2048, 0.7],
+    [1600, 0.65],
+    [1280, 0.58],
+    [1280, 0.48],
+    [1024, 0.45],
+    [800, 0.4],
+  ];
+  let lastBlob = null;
+  for (const [side, q] of tries) {
+    lastBlob = await compressImageToBlob(file, side, q);
+    if (lastBlob.size <= maxBytes) {
+      return { blob: lastBlob, mimeType: "image/jpeg", compressed: true };
+    }
+  }
+  throw new Error(
+    `Не удалось уместить фото в ${CONFIG.PHOTO_MAX_MB || 10} МБ — попробуйте другой снимок`
+  );
 }
 
 function blobToBase64(blob) {
@@ -339,7 +390,7 @@ function renderPhotoSession() {
   setPhotoButtonsDisabled(atMax);
 
   if (!n) {
-    status.textContent = "Можно снять 1–3 фото · крестик на превью — удалить";
+    status.textContent = "1–3 фото · до 10 МБ как есть, больше — сожмём · × — удалить";
     preview.hidden = true;
     preview.innerHTML = "";
     return;
@@ -431,11 +482,6 @@ async function uploadPhotoFromFile(file) {
     toast("Нужен интернет для фото", "error");
     return;
   }
-  const maxMb = CONFIG.PHOTO_MAX_MB || 10;
-  if (file.size > maxMb * 1024 * 1024) {
-    toast(`Фото больше ${maxMb} МБ — выберите другое`, "error");
-    return;
-  }
   if (!String(file.type || "").toLowerCase().startsWith("image/")) {
     toast("Нужен файл изображения", "error");
     return;
@@ -443,15 +489,17 @@ async function uploadPhotoFromFile(file) {
 
   const status = $("photo-status");
   setPhotoButtonsDisabled(true);
-  status.textContent = "Отправка фото…";
+  const needsCompress = file.size > photoMaxBytes();
+  status.textContent = needsCompress ? "Сжатие фото…" : "Отправка фото…";
   apiUploadPhoto.onProgress = (n, total) => {
     status.textContent =
       total > 1 ? `Отправка фото… ${n}/${total}` : "Отправка фото…";
   };
 
   try {
-    const mimeType = photoMimeType(file);
-    const data = await blobToBase64(file);
+    const prepared = await preparePhotoForUpload(file);
+    if (prepared.compressed) status.textContent = "Отправка фото (сжато)…";
+    const data = await blobToBase64(prepared.blob);
     const { system, section, cam } = selectedCamera;
     const r = await apiUploadPhoto({
       system: system.id,
@@ -461,13 +509,16 @@ async function uploadPhotoFromFile(file) {
       camera: normalizeCameraCode(cam.camera),
       row: cam.row,
       data,
-      mimeType,
+      mimeType: prepared.mimeType,
     });
     if (r.ok) {
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl = URL.createObjectURL(prepared.blob);
       sessionPhotos.push({ previewUrl, driveUrl: r.url, fileId: r.fileId, fromDrive: false });
       renderPhotoSession();
-      toast(`Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`, "success");
+      const savedMsg = prepared.compressed
+        ? `Фото ${sessionPhotos.length} (сжато) · ${formatCameraCode(cam.camera)}`
+        : `Фото ${sessionPhotos.length} сохранено · ${formatCameraCode(cam.camera)}`;
+      toast(savedMsg, "success");
     } else {
       toast(photoApiErrorMessage(r), "error");
       renderPhotoSession();
