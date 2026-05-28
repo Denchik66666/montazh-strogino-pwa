@@ -1059,6 +1059,14 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   background: var(--surface2);
 }
 
+.cam-sheet__meter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  margin: 0;
+}
+
 .metrazh-dual {
   display: flex;
   flex-direction: column;

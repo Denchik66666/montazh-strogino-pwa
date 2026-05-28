@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=104" />
+    <link rel="stylesheet" href="css/app.css?v=105" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -118,6 +118,7 @@
             ×
           </button>
         </div>
+        <form id="meter-form" class="cam-sheet__meter-form" action="#" novalidate>
         <div class="metrazh-dual metrazh-dual--row">
           <div class="meter-field" data-kind="cable">
             <label class="meter-field__label" for="input-meter-cable">Кабель, м</label>
@@ -161,9 +162,10 @@
           </div>
         </div>
         <div class="cam-sheet__actions">
-          <button type="button" class="save-btn" id="btn-save" disabled>Сохранить</button>
+          <button type="submit" class="save-btn" id="btn-save" disabled>Сохранить</button>
           <button type="button" class="btn-next-cam" id="btn-next-cam">Следующая →</button>
         </div>
+        </form>
         <details class="cam-sheet__photos" id="photo-details">
           <summary class="cam-sheet__photos-summary">
             Фото / отчёт
@@ -244,7 +246,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=104"></script>
-    <script src="js/app.js?v=104" defer></script>
+    <script src="config.js?v=105"></script>
+    <script src="js/app.js?v=105" defer></script>
   </body>
 </html>

@@ -2603,8 +2603,59 @@ function mapMetersForKind(systemId, camera, kind) {
   return Number.isFinite(n) ? n : null;
 }
 
-function meterInputEl(kind) {
-  return $(`input-meter-${kind}`);
+let meterKeyboardLock = 0;
+
+function isMeterEnterKey(e) {
+  return e.key === "Enter" || e.key === "Go" || e.key === "Done" || e.keyCode === 13;
+}
+
+function triggerMeterKeyboardAction(kind) {
+  const now = Date.now();
+  if (now - meterKeyboardLock < 280) return;
+  meterKeyboardLock = now;
+  readMeterFields();
+  updateMetersDisplay();
+  if (kind === "cable") {
+    meterInputEl("gofra")?.focus();
+    return;
+  }
+  meterInputEl("cable")?.blur();
+  meterInputEl("gofra")?.blur();
+  if ($("btn-save")?.disabled) {
+    toast("Измените кабель или гофру для сохранения", "error");
+    return;
+  }
+  saveMeters();
+}
+
+function onMeterKeyboardAction(e, kind) {
+  if (!isMeterEnterKey(e)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  triggerMeterKeyboardAction(kind);
+}
+
+function initMeterForm() {
+  $("meter-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const ae = document.activeElement;
+    if (ae?.id === "input-meter-cable") triggerMeterKeyboardAction("cable");
+    else triggerMeterKeyboardAction("gofra");
+  });
+  for (const kind of ["cable", "gofra"]) {
+    const inp = meterInputEl(kind);
+    inp?.addEventListener("input", () => updateMetersDisplay());
+    inp?.addEventListener("keydown", (e) => onMeterKeyboardAction(e, kind));
+    inp?.addEventListener("keyup", (e) => onMeterKeyboardAction(e, kind));
+  }
+  document.querySelectorAll(".meter-field__clear").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.getAttribute("data-clear-kind");
+      if (kind === "cable" || kind === "gofra") clearMeterKind(kind);
+    });
+  });
 }
 
 function readMeterFields() {
@@ -2951,25 +3002,7 @@ async function init() {
     const file = e.target.files?.[0];
     if (file) uploadRdFromFile(file);
   });
-  for (const kind of ["cable", "gofra"]) {
-    const inp = meterInputEl(kind);
-    inp?.addEventListener("input", () => updateMetersDisplay());
-    inp?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (kind === "cable") meterInputEl("gofra")?.focus();
-        else saveMeters();
-      }
-    });
-  }
-  document.querySelectorAll(".meter-field__clear").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const kind = btn.getAttribute("data-clear-kind");
-      if (kind === "cable" || kind === "gofra") clearMeterKind(kind);
-    });
-  });
+  initMeterForm();
   $("cam-sheet-backdrop")?.addEventListener("click", () => closeCamSheet());
   $("cam-sheet-close")?.addEventListener("click", () => closeCamSheet());
   document.addEventListener("keydown", (e) => {
@@ -2980,7 +3013,6 @@ async function init() {
     }
     if (camSheetOpen) closeCamSheet();
   });
-  $("btn-save")?.addEventListener("click", saveMeters);
   $("btn-next-cam")?.addEventListener("click", goNextCamera);
   $("btn-photo-skip")?.addEventListener("click", markPhotoSkipped);
   const onPhotoPick = (e) => {
