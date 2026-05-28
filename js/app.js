@@ -167,6 +167,7 @@ async function apiSave(payload) {
 }
 
 const PHOTO_CHUNK_SIZE = 500;
+const RD_CHUNK_SIZE = 50000;
 
 async function apiUploadPhoto(payload) {
   try {
@@ -217,6 +218,35 @@ async function apiUploadPhoto(payload) {
 
 async function apiDeletePhoto(fileId) {
   return apiGet("deletePhoto", { fileId });
+}
+
+async function apiUploadRd(payload) {
+  const { data, system, systemCode, projectName, fileName } = payload;
+  const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const total = Math.max(1, Math.ceil(data.length / RD_CHUNK_SIZE));
+  let last = null;
+
+  for (let part = 0; part < total; part++) {
+    const chunk = data.slice(part * RD_CHUNK_SIZE, (part + 1) * RD_CHUNK_SIZE);
+    const params = {
+      uploadId,
+      part: String(part),
+      total: String(total),
+      chunk,
+    };
+    if (part === 0) {
+      params.system = system;
+      params.systemCode = systemCode;
+      params.projectName = projectName;
+      params.fileName = fileName;
+    }
+    last = await apiGet("rdChunk", params);
+    if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка");
+    if (typeof apiUploadRd.onProgress === "function") {
+      apiUploadRd.onProgress(part + 1, total);
+    }
+  }
+  return last;
 }
 
 function photosEnabled() {
@@ -575,12 +605,33 @@ function updateHeader(screenName) {
   $("breadcrumb").textContent = crumbs.join(" › ");
 }
 
-async function loadRdLinkForSystem(sys) {
-  const btn = $("btn-rd");
-  if (!btn) return;
-  btn.hidden = true;
-  btn.onclick = null;
-  if (!sys?.ready || !apiConfigured()) return;
+let rdViewUrl = "";
+
+async function refreshRdPanel(sys) {
+  const panel = $("rd-panel");
+  const btnOpen = $("btn-rd-open");
+  const btnUpload = $("btn-rd-upload");
+  const status = $("rd-status");
+  if (!panel || !btnUpload) return;
+
+  rdViewUrl = "";
+  btnOpen.hidden = true;
+  btnOpen.onclick = null;
+
+  if (!sys?.ready) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  if (!apiConfigured()) {
+    status.textContent = "РД: подключите таблицу в config.js";
+    btnUpload.disabled = true;
+    return;
+  }
+  btnUpload.disabled = false;
+  status.textContent = "Проверка РД…";
+
   try {
     const r = await apiGet("rdLink", {
       system: sys.id,
@@ -588,22 +639,80 @@ async function loadRdLinkForSystem(sys) {
       projectName: projectFolderName(),
     });
     if (r.ok && (r.viewUrl || r.url)) {
-      const url = r.viewUrl || r.url;
-      const label = r.name ? `📄 ${r.name}` : "📄 РД (PDF)";
-      btn.textContent = label.length > 42 ? "📄 РД (PDF)" : label;
-      btn.hidden = false;
-      btn.onclick = () => window.open(url, "_blank", "noopener,noreferrer");
+      rdViewUrl = r.viewUrl || r.url;
+      btnOpen.hidden = false;
+      btnOpen.onclick = () => window.open(rdViewUrl, "_blank", "noopener,noreferrer");
+      status.textContent = r.name ? `На Диске: ${r.name}` : "РД загружена";
+    } else {
+      status.textContent = "РД не загружена — выберите PDF";
     }
   } catch {
-    btn.hidden = true;
+    status.textContent = "РД не загружена — выберите PDF";
+  }
+}
+
+async function uploadRdFromFile(file) {
+  const sys = nav.system;
+  if (!sys?.ready) return;
+  if (!apiConfigured()) {
+    toast("Подключите таблицу в config.js", "error");
+    return;
+  }
+  if (!navigator.onLine) {
+    toast("Нужен интернет для загрузки РД", "error");
+    return;
+  }
+  const maxMb = CONFIG.RD_MAX_MB || 12;
+  if (file.size > maxMb * 1024 * 1024) {
+    toast(`PDF больше ${maxMb} МБ — сожмите или разбейте`, "error");
+    return;
+  }
+  if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
+    toast("Нужен файл PDF", "error");
+    return;
+  }
+
+  const status = $("rd-status");
+  const btnUpload = $("btn-rd-upload");
+  const btnOpen = $("btn-rd-open");
+  btnUpload.disabled = true;
+  btnOpen.hidden = true;
+  apiUploadRd.onProgress = (n, total) => {
+    status.textContent = total > 1 ? `Загрузка PDF… ${n}/${total}` : "Загрузка PDF…";
+  };
+
+  try {
+    const data = await blobToBase64(file);
+    const r = await apiUploadRd({
+      system: sys.id,
+      systemCode: sys.code,
+      projectName: projectFolderName(),
+      fileName: file.name,
+      data,
+    });
+    if (r.ok) {
+      toast(`РД загружена: ${r.name || file.name}`, "success");
+      await refreshRdPanel(sys);
+    } else {
+      toast(r.error || "Не удалось загрузить", "error");
+      status.textContent = r.error || "Ошибка загрузки";
+    }
+  } catch (err) {
+    toast(apiErrorMessage(err) || "Не удалось загрузить PDF", "error");
+    status.textContent = "Ошибка загрузки";
+  } finally {
+    apiUploadRd.onProgress = null;
+    btnUpload.disabled = false;
+    $("rd-input").value = "";
+    if (!rdViewUrl) await refreshRdPanel(sys);
   }
 }
 
 function goSystems() {
   nav.system = null;
   nav.section = null;
-  const rdBtn = $("btn-rd");
-  if (rdBtn) rdBtn.hidden = true;
+  const rdPanel = $("rd-panel");
+  if (rdPanel) rdPanel.hidden = true;
   showScreen("systems");
   renderSystems();
   updateStats();
@@ -615,7 +724,7 @@ function goSections(system) {
   showScreen("sections");
   renderSections();
   updateStats();
-  loadRdLinkForSystem(system);
+  refreshRdPanel(system);
 }
 
 function goCameras(section) {
@@ -1252,6 +1361,11 @@ async function init() {
     else refreshAppData(true);
   });
   initPullToRefresh();
+  $("btn-rd-upload")?.addEventListener("click", () => $("rd-input")?.click());
+  $("rd-input")?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (file) uploadRdFromFile(file);
+  });
   document.querySelectorAll(".metrazh-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       const kind = tab.dataset.kind;

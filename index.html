@@ -19,7 +19,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=54" />
+    <link rel="stylesheet" href="css/app.css?v=55" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -75,7 +75,14 @@
 
     <!-- 2. Секции -->
     <div id="screen-sections" class="screen">
-      <button type="button" class="rd-btn" id="btn-rd" hidden>📄 РД (PDF)</button>
+      <div class="rd-panel" id="rd-panel">
+        <input type="file" id="rd-input" accept="application/pdf,.pdf" hidden />
+        <div class="rd-actions">
+          <button type="button" class="rd-btn rd-btn--primary" id="btn-rd-open" hidden>📄 Открыть РД</button>
+          <button type="button" class="rd-btn rd-btn--upload" id="btn-rd-upload">Загрузить PDF</button>
+        </div>
+        <p class="rd-status" id="rd-status">РД не загружена</p>
+      </div>
       <p class="screen-hint screen-hint--sections">Нажмите на <strong>номер секции</strong> — цвет и счётчик справа</p>
       <main id="sections-root" class="tile-grid"></main>
     </div>
@@ -144,7 +151,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=54"></script>
-    <script src="js/app.js?v=54" defer></script>
+    <script src="config.js?v=55"></script>
+    <script src="js/app.js?v=55" defer></script>
   </body>
 </html>
