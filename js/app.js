@@ -1716,10 +1716,29 @@ async function refreshAppData(showToast = false) {
   }
 }
 
+function showRefreshOverlay(message = "Загрузка данных…") {
+  const el = $("refresh-overlay");
+  const sub = $("refresh-overlay-sub");
+  if (sub) sub.textContent = message;
+  if (el) {
+    el.hidden = false;
+    document.body.classList.add("refresh-overlay-open");
+  }
+}
+
+function hideRefreshOverlay() {
+  const el = $("refresh-overlay");
+  if (el) el.hidden = true;
+  document.body.classList.remove("refresh-overlay-open");
+}
+
 /** Полное обновление: данные, очистка кэша PWA, перезагрузка страницы (как Ctrl+Shift+R). */
 async function hardRefreshApp() {
+  showRefreshOverlay("Отправка очереди…");
   await flushQueue(true);
+  showRefreshOverlay("Загрузка с сервера…");
   await refreshAppData(false);
+  showRefreshOverlay("Обновление приложения…");
   if ("caches" in window) {
     const keys = await caches.keys();
     await Promise.all(keys.filter((k) => k.startsWith("montazh-")).map((k) => caches.delete(k)));
@@ -1834,15 +1853,18 @@ function initPullToRefresh() {
     }
 
     refreshing = true;
-    indicator.classList.add("pull-refresh--loading");
+    indicator.classList.add("pull-refresh--loading", "pull-refresh--visible");
+    indicator.setAttribute("aria-hidden", "false");
     const label = indicator.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
     screens.classList.remove("ptr-dragging");
     setPullVisual(Math.min(pullPx, 56), false);
+    showRefreshOverlay("Обновление…");
 
     try {
       await hardRefreshApp();
     } catch {
+      hideRefreshOverlay();
       toast("Не удалось обновить", "error");
       refreshing = false;
       resetPull(true);
@@ -2492,9 +2514,22 @@ async function init() {
   if (!apiConfigured()) $("setup-banner").classList.add("show");
 
   $("nav-back").addEventListener("click", goBack);
-  $("stat-net").addEventListener("click", () => {
-    if (getQueue().length > 0) flushQueue(true);
-    else refreshAppData(true);
+  $("stat-net").addEventListener("click", async () => {
+    if (getQueue().length > 0) {
+      showRefreshOverlay("Отправка очереди…");
+      try {
+        await flushQueue(true);
+      } finally {
+        hideRefreshOverlay();
+      }
+      return;
+    }
+    showRefreshOverlay("Загрузка данных…");
+    try {
+      await refreshAppData(true);
+    } finally {
+      hideRefreshOverlay();
+    }
   });
   initPullToRefresh();
   $("btn-rd-replace")?.addEventListener("click", () => $("rd-input")?.click());

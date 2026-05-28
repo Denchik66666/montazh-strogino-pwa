@@ -186,6 +186,107 @@ body {
   }
 }
 
+body.refresh-overlay-open {
+  overflow: hidden;
+}
+
+.refresh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: refresh-overlay-in 0.22s ease;
+}
+
+.refresh-overlay[hidden] {
+  display: none !important;
+}
+
+@keyframes refresh-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.refresh-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: min(88vw, 280px);
+  padding: 28px 32px 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.refresh-overlay__spinner {
+  width: 52px;
+  height: 52px;
+  animation: refresh-overlay-spin 0.9s linear infinite;
+}
+
+.refresh-overlay__track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 18%, var(--surface2));
+  stroke-width: 4;
+}
+
+.refresh-overlay__arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 48 88;
+  stroke-dashoffset: 0;
+}
+
+@keyframes refresh-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.refresh-overlay__title {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-strong);
+}
+
+.refresh-overlay__sub {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.pull-refresh--loading {
+  opacity: 1 !important;
+}
+
+.pull-refresh--loading .pull-refresh__spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  border-top-color: var(--accent);
+  border-right-color: color-mix(in srgb, var(--accent) 45%, var(--surface2));
+  animation: pull-spin 0.65s linear infinite;
+  transform: none !important;
+}
+
 body.cam-sheet-open {
   overflow: hidden;
 }
