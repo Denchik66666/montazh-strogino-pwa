@@ -87,7 +87,9 @@ html {
 body {
   margin: 0;
   height: 100dvh;
+  height: 100svh;
   max-height: 100dvh;
+  max-height: 100svh;
   display: flex;
   flex-direction: column;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -96,7 +98,28 @@ body {
   line-height: 1.35;
   overflow: hidden;
   overscroll-behavior: none;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+body:has(#screen-input.active) .setup-banner {
+  display: none;
+}
+
+body:has(#screen-input.active) .app-header {
+  padding: 6px 40px 4px 12px;
+  padding-top: max(6px, env(safe-area-inset-top, 0px));
+  gap: 4px;
+}
+
+body:has(#screen-input.active) .app-header h1 {
+  font-size: 1.05rem;
+}
+
+body:has(#screen-input.active) .breadcrumb {
+  display: none;
+}
+
+body:has(#screen-input.active) .status-bar {
+  font-size: 0.68rem;
 }
 
 .scroll-pane {
@@ -632,8 +655,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .screen-input {
-  padding: 0 12px;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding: 0;
 }
 
 #screen-input.active {
@@ -641,7 +663,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  padding: 0 8px 0;
+  width: 100%;
+  padding: 0 10px;
+  padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
   overflow: hidden;
 }
 
@@ -649,19 +673,27 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   width: 100%;
   flex: 1;
   min-height: 0;
-  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
-  max-width: 400px;
+  gap: clamp(4px, 0.8vh, 8px);
+  max-width: 100%;
   margin: 0 auto;
   overflow: hidden;
 }
 
 .input-head {
+  flex-shrink: 0;
   text-align: center;
-  padding-top: 2px;
+  padding-top: 0;
+}
+
+.input-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1vh, 10px);
 }
 
 .input-system {
@@ -687,13 +719,13 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .meters-display {
   width: 100%;
-  min-height: 52px;
-  max-height: 64px;
+  flex-shrink: 0;
+  min-height: clamp(48px, 10vh, 72px);
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(2rem, 9vw, 2.75rem);
+  font-size: clamp(2rem, 11vw, 3rem);
   font-weight: 800;
   border: 2px solid var(--accent);
   border-radius: 12px;
@@ -708,17 +740,19 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 }
 
 .numpad {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: clamp(6px, 1.2vh, 10px);
   width: 100%;
-  flex-shrink: 0;
 }
 
 .numpad button {
-  min-height: 46px;
-  height: 46px;
-  font-size: clamp(1.2rem, 4.5vw, 1.5rem);
+  min-height: 44px;
+  height: 100%;
+  font-size: clamp(1.25rem, 5vw, 1.65rem);
   font-weight: 700;
   border: none;
   border-radius: 10px;
@@ -746,8 +780,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 .input-footer {
   flex-shrink: 0;
   width: 100%;
-  margin-top: auto;
-  padding-bottom: max(6px, env(safe-area-inset-bottom, 0));
+  padding-top: clamp(4px, 0.8vh, 8px);
 }
 
 .input-footnote {
@@ -776,7 +809,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .photo-btn {
   flex: 1;
-  min-height: 42px;
+  min-height: clamp(40px, 6vh, 48px);
   font-size: 0.88rem;
   font-weight: 700;
   border: 2px dashed var(--accent);
@@ -854,9 +887,9 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
 
 .save-btn {
   width: 100%;
-  min-height: 50px;
-  margin: 6px 0 0;
-  font-size: 1.2rem;
+  min-height: clamp(48px, 7.5vh, 58px);
+  margin: 4px 0 0;
+  font-size: clamp(1.1rem, 4vw, 1.25rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   border: none;
