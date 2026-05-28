@@ -261,21 +261,6 @@ html[data-theme="light"] .app-header {
 }
 
 
-.search-wrap input {
-  width: 100%;
-  min-height: var(--tap);
-  padding: 0 16px;
-  font-size: 1.15rem;
-  border: 2px solid var(--surface2);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.search-wrap input::placeholder {
-  color: var(--muted);
-}
-
 .status-bar {
   display: flex;
   gap: 6px;
@@ -309,10 +294,6 @@ html[data-theme="light"] .app-header {
   background: var(--hint-bg);
   border-radius: 10px;
   border-left: 3px solid var(--accent);
-}
-
-.search-wrap {
-  flex-shrink: 0;
 }
 
 .screen-hint strong {
@@ -541,53 +522,6 @@ html[data-theme="light"] .app-header {
 html[data-theme="dark"] .pick-card--status-done .pick-status {
   background: rgba(34, 197, 94, 0.25);
   color: var(--badge-done-text);
-}
-
-.search-results {
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.search-results.hidden {
-  display: none;
-}
-
-.search-hit {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 2px 12px;
-  width: 100%;
-  padding: 12px 14px;
-  border: none;
-  border-radius: 12px;
-  background: var(--surface2);
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.search-hit strong {
-  font-size: 1.2rem;
-  grid-column: 1;
-}
-
-.search-hit span {
-  font-size: 0.8rem;
-  color: var(--muted);
-  grid-column: 1;
-}
-
-.search-hit em {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--ok);
 }
 
 .pill {
@@ -1060,11 +994,6 @@ html[data-theme="light"] .numpad button:active {
 html[data-theme="light"] .numpad .key-clear {
   background: var(--numpad-clear);
   color: var(--danger);
-}
-
-html[data-theme="light"] .search-wrap input {
-  border-color: transparent;
-  box-shadow: 0 0 0 0.5px rgba(54, 54, 60, 0.2);
 }
 
 html[data-theme="light"] .pick-card {

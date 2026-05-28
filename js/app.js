@@ -492,35 +492,6 @@ function statusLabel(done, total) {
   return "Не начато";
 }
 
-function allCamerasFlat() {
-  const list = [];
-  for (const sys of catalog.systems) {
-    if (!sys.ready) continue;
-    for (const sec of sys.sections) {
-      for (const cam of sec.cameras) {
-        list.push({ system: sys, section: sec, camera: cam });
-      }
-    }
-  }
-  return list;
-}
-
-function cameraSearchHaystack(item) {
-  const c = item.camera;
-  return [
-    c.camera,
-    formatCameraCode(c.camera),
-    c.floor,
-    c.place,
-    c.cable,
-    item.system.code,
-    item.section.name,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
-
 function countDone(system) {
   if (!system.ready) return { done: 0, total: 0 };
   let done = 0;
@@ -582,8 +553,6 @@ function updateHeader(screenName) {
 function goSystems() {
   nav.system = null;
   nav.section = null;
-  $("search-results").classList.add("hidden");
-  $("global-search").value = "";
   showScreen("systems");
   renderSystems();
   updateStats();
@@ -909,45 +878,6 @@ function renderCameras() {
   });
 }
 
-function renderGlobalSearch(q) {
-  const box = $("search-results");
-  const norm = q.trim().toLowerCase();
-  if (!norm) {
-    box.classList.add("hidden");
-    box.innerHTML = "";
-    return;
-  }
-
-  const hits = allCamerasFlat().filter((x) => cameraSearchHaystack(x).includes(norm));
-
-  box.classList.remove("hidden");
-  if (!hits.length) {
-    box.innerHTML = '<p class="empty-msg">Не найдено</p>';
-    return;
-  }
-
-  box.innerHTML = "";
-  for (const x of hits.slice(0, 12)) {
-    const m = metrazhMap[metrazhKey(x.system.id, x.camera.camera)];
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "search-hit";
-    btn.innerHTML = `
-      <strong>${escapeHtml(formatCameraCode(x.camera.camera))}</strong>
-      <span>${escapeHtml(x.system.code)} · ${escapeHtml(x.section.name)}</span>
-      <em>${m ? m + " м" : "—"}</em>
-    `;
-    btn.addEventListener("click", () => {
-      nav.system = x.system;
-      nav.section = x.section;
-      openInput(x.system, x.section, x.camera);
-      box.classList.add("hidden");
-      $("global-search").value = "";
-    });
-    box.appendChild(btn);
-  }
-}
-
 function openInput(system, section, cam) {
   selectedCamera = { system, section, cam };
   const key = metrazhKey(system.id, cam.camera);
@@ -1150,7 +1080,6 @@ async function init() {
     deleteSessionPhoto(parseInt(btn.getAttribute("data-photo-idx"), 10));
   });
   updatePhotoBlockVisibility();
-  $("global-search").addEventListener("input", (e) => renderGlobalSearch(e.target.value));
 
   window.addEventListener("online", () => {
     flushQueue();
