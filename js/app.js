@@ -16,6 +16,10 @@ const nav = {
   section: null,
 };
 
+/** История экранов для «назад / вперёд» (свайпы и кнопка ←). */
+const navHistory = { stack: [{ screen: "systems", systemId: null, sectionId: null, sheet: null }], index: 0 };
+let suppressHistoryPush = false;
+
 
 let selectedCamera = null;
 let camSheetOpen = false;
@@ -1353,6 +1357,106 @@ function countSectionDone(system, section) {
   return { done, total };
 }
 
+function currentNavSnap() {
+  const active = document.querySelector(".screen.active")?.id?.replace("screen-", "") || "systems";
+  return {
+    screen: active,
+    systemId: nav.system?.id ?? null,
+    sectionId: nav.section?.id ?? null,
+    sheet: camSheetOpen && selectedCamera ? selectedCamera.cam.camera : null,
+  };
+}
+
+function snapsEqual(a, b) {
+  return (
+    a.screen === b.screen &&
+    a.systemId === b.systemId &&
+    a.sectionId === b.sectionId &&
+    a.sheet === b.sheet
+  );
+}
+
+function pushNavHistory() {
+  if (suppressHistoryPush) return;
+  const snap = currentNavSnap();
+  const cur = navHistory.stack[navHistory.index];
+  if (cur && snapsEqual(cur, snap)) return;
+  navHistory.stack = navHistory.stack.slice(0, navHistory.index + 1);
+  navHistory.stack.push(snap);
+  navHistory.index = navHistory.stack.length - 1;
+  if (navHistory.stack.length > 40) {
+    navHistory.stack.shift();
+    navHistory.index = navHistory.stack.length - 1;
+  }
+}
+
+function resetNavHistoryFromCurrent() {
+  navHistory.stack = [currentNavSnap()];
+  navHistory.index = 0;
+}
+
+function applyNavSnap(snap) {
+  if (!snap) return;
+  suppressHistoryPush = true;
+  closeCamSheet(false);
+
+  if (snap.screen === "systems" || !snap.systemId) {
+    goSystems();
+    suppressHistoryPush = false;
+    return;
+  }
+
+  const sys = findSystemById(snap.systemId);
+  if (!sys?.ready) {
+    goSystems();
+    suppressHistoryPush = false;
+    return;
+  }
+
+  if (snap.screen === "sections") {
+    goSections(sys);
+    suppressHistoryPush = false;
+    return;
+  }
+
+  const sec = snap.sectionId ? findSectionById(sys, snap.sectionId) : null;
+  if (!sec) {
+    goSections(sys);
+    suppressHistoryPush = false;
+    return;
+  }
+
+  goCameras(sec);
+  if (snap.sheet) {
+    const cam = findCameraInSection(sec, snap.sheet);
+    if (cam) openCamSheet(sys, sec, cam);
+  }
+  suppressHistoryPush = false;
+}
+
+function navGoBack() {
+  if (camSheetOpen) {
+    closeCamSheet();
+    return true;
+  }
+  if (navHistory.index > 0) {
+    navHistory.index -= 1;
+    applyNavSnap(navHistory.stack[navHistory.index]);
+    return true;
+  }
+  return false;
+}
+
+function navGoForward() {
+  if (camSheetOpen || ptrGestureBlocked()) return false;
+  if (navHistory.index < navHistory.stack.length - 1) {
+    navHistory.index += 1;
+    applyNavSnap(navHistory.stack[navHistory.index]);
+    return true;
+  }
+  return false;
+}
+
 function showScreen(name) {
   if (name !== "cameras") closeCamSheet(false);
   document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
@@ -1365,6 +1469,7 @@ function showScreen(name) {
   updateHeader(name);
   persistNavState(name);
   syncRdPanelVisibility();
+  pushNavHistory();
 }
 
 function syncRdPanelVisibility() {
@@ -1432,6 +1537,7 @@ function persistNavState(screenName) {
 
 /** Вернуть экран после перезагрузки PWA (обновление SW). */
 function restoreNavState() {
+  suppressHistoryPush = true;
   try {
     const raw = sessionStorage.getItem(NAV_STATE_KEY);
     if (!raw) return false;
@@ -1478,6 +1584,8 @@ function restoreNavState() {
     return true;
   } catch {
     return false;
+  } finally {
+    suppressHistoryPush = false;
   }
 }
 
@@ -1645,17 +1753,10 @@ function goCameras(section) {
 }
 
 function goBack() {
-  if (camSheetOpen) {
-    closeCamSheet();
-    return;
-  }
-  const active = document.querySelector(".screen.active")?.id;
-  if (active === "screen-cameras") {
-    goSections(nav.system);
-    return;
-  }
-  if (active === "screen-sections") {
-    goSystems();
+  if (!navGoBack()) {
+    const active = document.querySelector(".screen.active")?.id;
+    if (active === "screen-cameras" && nav.system) goSections(nav.system);
+    else if (active === "screen-sections") goSystems();
   }
 }
 
@@ -1761,122 +1862,164 @@ function ptrGestureBlocked() {
   );
 }
 
-function initPullToRefresh() {
+function initScreenGestures() {
   const indicator = $("pull-refresh");
   const screens = $("screens");
-  if (!indicator || !screens) return;
+  if (!screens) return;
 
-  const SLOP_PX = 14;
-  const TRIGGER_PX = 34;
-  const MAX_VISUAL_PX = 72;
+  const PTR_SLOP = 14;
+  const PTR_TRIGGER = 34;
+  const PTR_MAX_VISUAL = 72;
+  const AXIS_LOCK = 12;
+  const SWIPE_TRIGGER = 52;
+  const SWIPE_MAX_VISUAL = 44;
 
+  let startX = 0;
   let startY = 0;
-  let watching = false;
-  let engaged = false;
-  let refreshing = false;
-  let lastRawDy = 0;
+  let axis = null;
   let activePointerId = null;
+  let ptrEngaged = false;
+  let ptrRefreshing = false;
+  let lastRawDy = 0;
+  let lastRawDx = 0;
 
   const atScrollTop = () => {
     const scrollEl = getActiveScrollEl();
     return scrollEl && scrollEl.scrollTop <= 4;
   };
 
-  const ptrTargetOk = (e) => {
+  const gestureTargetOk = (e) => {
     const t = e.target;
     if (!t?.closest) return false;
     if (t.closest(".app-header, .cam-sheet, .photo-lightbox, .refresh-overlay, #toast")) return false;
     return Boolean(t.closest("#screens"));
   };
 
+  const clearTransform = (animate) => {
+    if (animate) {
+      screens.classList.add("gesture-reset");
+      const onDone = () => {
+        screens.removeEventListener("transitionend", onDone);
+        screens.classList.remove("gesture-reset", "ptr-dragging", "ptr-pulling", "gesture-swipe");
+        screens.style.transform = "";
+      };
+      screens.addEventListener("transitionend", onDone);
+    } else {
+      screens.classList.remove("gesture-reset", "ptr-dragging", "ptr-pulling", "gesture-swipe");
+      screens.style.transform = "";
+    }
+  };
+
   const setPullVisual = (rawDy, dragging) => {
+    if (!indicator) return;
     lastRawDy = rawDy;
-    const beyond = Math.max(0, rawDy - SLOP_PX);
-    const pullPx = Math.min(beyond * 0.62, MAX_VISUAL_PX);
-    const ready = rawDy >= TRIGGER_PX;
-    screens.style.transform = pullPx > 0 ? `translateY(${pullPx}px)` : "";
+    const beyond = Math.max(0, rawDy - PTR_SLOP);
+    const pullPx = Math.min(beyond * 0.62, PTR_MAX_VISUAL);
+    const ready = rawDy >= PTR_TRIGGER;
+    screens.style.transform = `translateY(${pullPx}px)`;
     screens.classList.toggle("ptr-dragging", Boolean(dragging));
     screens.classList.toggle("ptr-pulling", pullPx > 6);
-    indicator.style.setProperty("--pull-rotate", `${Math.min(rawDy / TRIGGER_PX, 1) * 300}deg`);
+    indicator.style.setProperty("--pull-rotate", `${Math.min(rawDy / PTR_TRIGGER, 1) * 300}deg`);
     indicator.classList.toggle("pull-refresh--visible", pullPx > 8);
     indicator.classList.toggle("pull-refresh--ready", ready);
     indicator.setAttribute("aria-hidden", pullPx > 8 ? "false" : "true");
     const label = indicator.querySelector(".pull-refresh__label");
-    if (label && !refreshing) {
-      if (rawDy < SLOP_PX) label.textContent = "Потяните вниз";
+    if (label && !ptrRefreshing) {
+      if (rawDy < PTR_SLOP) label.textContent = "Потяните вниз";
       else if (!ready) label.textContent = "Ещё чуть-чуть…";
       else label.textContent = "Отпустите — обновить";
     }
   };
 
-  const resetPull = (animate = true) => {
-    watching = false;
-    engaged = false;
-    lastRawDy = 0;
-    activePointerId = null;
-    if (animate) {
-      screens.classList.add("ptr-resetting");
-      screens.classList.remove("ptr-dragging");
-      setPullVisual(0, false);
-      const onDone = () => {
-        screens.removeEventListener("transitionend", onDone);
-        screens.classList.remove("ptr-resetting", "ptr-pulling");
-        screens.style.transform = "";
-      };
-      screens.addEventListener("transitionend", onDone);
-    } else {
-      screens.classList.remove("ptr-resetting", "ptr-dragging", "ptr-pulling");
-      screens.style.transform = "";
-      setPullVisual(0, false);
-    }
-    indicator.classList.remove("pull-refresh--loading");
+  const setSwipeVisual = (rawDx, dragging) => {
+    lastRawDx = rawDx;
+    const canBack = navHistory.index > 0 || camSheetOpen;
+    const canFwd = navHistory.index < navHistory.stack.length - 1;
+    let dx = rawDx;
+    if (dx > 0 && !canBack) dx *= 0.25;
+    if (dx < 0 && !canFwd) dx *= 0.25;
+    const tx = Math.sign(dx) * Math.min(Math.abs(dx) * 0.45, SWIPE_MAX_VISUAL);
+    screens.style.transform = tx ? `translateX(${tx}px)` : "";
+    screens.classList.toggle("gesture-swipe", Boolean(dragging));
   };
 
-  const finishGesture = async () => {
-    if (activePointerId == null && !watching) return;
-    const wasEngaged = engaged;
-    const raw = lastRawDy;
+  const resetGesture = (animate = true) => {
+    axis = null;
+    ptrEngaged = false;
+    lastRawDy = 0;
+    lastRawDx = 0;
     activePointerId = null;
-    watching = false;
-    engaged = false;
+    if (indicator) indicator.classList.remove("pull-refresh--loading");
+    clearTransform(animate);
+  };
 
-    if (refreshing) return;
-
-    if (!wasEngaged || raw < TRIGGER_PX) {
-      resetPull(true);
+  const finishPtr = async () => {
+    if (ptrRefreshing) return;
+    if (!ptrEngaged || lastRawDy < PTR_TRIGGER) {
+      resetGesture(true);
       return;
     }
-
-    refreshing = true;
-    indicator.classList.add("pull-refresh--loading", "pull-refresh--visible");
-    indicator.setAttribute("aria-hidden", "false");
-    const label = indicator.querySelector(".pull-refresh__label");
+    ptrRefreshing = true;
+    indicator?.classList.add("pull-refresh--loading", "pull-refresh--visible");
+    const label = indicator?.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
     screens.classList.remove("ptr-dragging");
     showRefreshOverlay("Обновление…");
-
     try {
       await hardRefreshApp();
     } catch {
       hideRefreshOverlay();
       toast("Не удалось обновить", "error");
-      refreshing = false;
-      resetPull(true);
+      ptrRefreshing = false;
+      resetGesture(true);
     }
+  };
+
+  const finishSwipe = () => {
+    const dx = lastRawDx;
+    resetGesture(true);
+    if (Math.abs(dx) < SWIPE_TRIGGER) return;
+    if (dx > 0) {
+      if (navGoBack()) return;
+      suppressHistoryPush = true;
+      const active = document.querySelector(".screen.active")?.id;
+      if (active === "screen-cameras" && nav.system) goSections(nav.system);
+      else if (active === "screen-sections") goSystems();
+      suppressHistoryPush = false;
+      resetNavHistoryFromCurrent();
+    } else if (!navGoForward()) {
+      /* некуда вперёд — без сообщения */
+    }
+  };
+
+  const onPtrUp = (e) => {
+    if (e.pointerId !== activePointerId) return;
+    try {
+      screens.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+    if (axis === "y") finishPtr();
+    else if (axis === "x") finishSwipe();
+    else resetGesture(true);
+    activePointerId = null;
+    axis = null;
   };
 
   screens.addEventListener(
     "pointerdown",
     (e) => {
       if (e.pointerType === "mouse") return;
-      if (activePointerId != null || refreshing || ptrGestureBlocked()) return;
-      if (!ptrTargetOk(e) || !atScrollTop()) return;
+      if (activePointerId != null || ptrRefreshing || ptrGestureBlocked()) return;
+      if (!gestureTargetOk(e)) return;
 
       activePointerId = e.pointerId;
+      startX = e.clientX;
       startY = e.clientY;
-      watching = true;
-      engaged = false;
+      axis = null;
+      ptrEngaged = false;
       lastRawDy = 0;
+      lastRawDx = 0;
       try {
         screens.setPointerCapture(e.pointerId);
       } catch {
@@ -1889,43 +2032,48 @@ function initPullToRefresh() {
   screens.addEventListener(
     "pointermove",
     (e) => {
-      if (e.pointerId !== activePointerId || !watching || refreshing) return;
+      if (e.pointerId !== activePointerId || ptrRefreshing) return;
 
-      if (!engaged && !atScrollTop()) {
-        watching = false;
-        activePointerId = null;
-        return;
-      }
-
+      const dx = e.clientX - startX;
       const dy = e.clientY - startY;
-      if (dy <= 0) {
-        if (engaged) setPullVisual(0, true);
-        engaged = false;
+
+      if (!axis) {
+        if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
+        if (Math.abs(dx) > Math.abs(dy)) axis = "x";
+        else if (atScrollTop()) axis = "y";
+        else {
+          activePointerId = null;
+          return;
+        }
+      }
+
+      if (axis === "x") {
+        if (e.cancelable) e.preventDefault();
+        setSwipeVisual(dx, true);
         return;
       }
-      if (dy < SLOP_PX) return;
 
-      engaged = true;
+      if (!atScrollTop()) {
+        resetGesture(false);
+        return;
+      }
+      if (dy <= 0) {
+        if (ptrEngaged) setPullVisual(0, true);
+        ptrEngaged = false;
+        return;
+      }
+      if (dy < PTR_SLOP) return;
+      ptrEngaged = true;
       if (e.cancelable) e.preventDefault();
       setPullVisual(dy, true);
     },
     { passive: false }
   );
 
-  const onPtrUp = (e) => {
-    if (e.pointerId !== activePointerId) return;
-    try {
-      screens.releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
-    }
-    finishGesture();
-  };
-
   screens.addEventListener("pointerup", onPtrUp);
   screens.addEventListener("pointercancel", onPtrUp);
   screens.addEventListener("lostpointercapture", (e) => {
-    if (e.pointerId === activePointerId && watching) finishGesture();
+    if (e.pointerId === activePointerId && axis) onPtrUp(e);
   });
 }
 
@@ -2537,7 +2685,7 @@ async function init() {
       hideRefreshOverlay();
     }
   });
-  initPullToRefresh();
+  initScreenGestures();
   $("btn-rd-replace")?.addEventListener("click", () => $("rd-input")?.click());
   $("rd-input")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
