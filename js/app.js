@@ -276,6 +276,7 @@ async function fetchPhotoPreviewBlob(fileId) {
 
 async function hydrateSessionPhotoPreviews() {
   let changed = false;
+  const needFetch = [];
   for (const p of sessionPhotos) {
     if (p.previewUrl?.startsWith("blob:") || p.previewUrl?.startsWith("data:")) continue;
     if (p.thumbDataUrl) {
@@ -284,14 +285,19 @@ async function hydrateSessionPhotoPreviews() {
       continue;
     }
     if (p._hydrating || !p.fileId) continue;
-    p._hydrating = true;
-    const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
-    p._hydrating = false;
-    if (blobUrl) {
-      p.previewUrl = blobUrl;
-      changed = true;
-    }
+    needFetch.push(p);
   }
+  await Promise.all(
+    needFetch.map(async (p) => {
+      p._hydrating = true;
+      const blobUrl = await fetchPhotoPreviewBlob(p.fileId);
+      p._hydrating = false;
+      if (blobUrl) {
+        p.previewUrl = blobUrl;
+        changed = true;
+      }
+    })
+  );
   if (changed) renderPhotoSession();
 }
 
@@ -519,30 +525,45 @@ function updatePhotoReportBadge() {
   badge.className = `photo-report-badge photo-report-badge--${d.cls}`;
 }
 
+const PHOTO_PROBE_CONCURRENCY = 4;
+
+function cameraNeedsPhotoProbe(sys, cam) {
+  const st = getPhotoStatus(sys.id, cam.camera);
+  return st !== "skip" && st !== "done";
+}
+
+async function probeOneCameraPhotos(sys, sec, cam) {
+  const r = await apiGet("listPhotos", {
+    system: sys.id,
+    systemCode: sys.code,
+    camera: normalizeCameraCode(cam.camera),
+    sectionFolder: sectionFolderName(sec),
+    projectName: projectFolderName(),
+  });
+  if (r.ok && Array.isArray(r.photos) && r.photos.length) {
+    setPhotoStatus(sys.id, cam.camera, "done", r.photos.length);
+    return true;
+  }
+  return false;
+}
+
+/** Фоновая проверка фото на Диске — не блокирует открытие списка камер. */
 async function probeSectionPhotos(sys, sec) {
   if (!photosEnabled() || !apiConfigured() || !navigator.onLine) return;
   const token = ++sectionPhotoProbeToken;
-  for (const cam of sec.cameras) {
+  const pending = (sec.cameras || []).filter((cam) => cameraNeedsPhotoProbe(sys, cam));
+  if (!pending.length) return;
+
+  for (let i = 0; i < pending.length; i += PHOTO_PROBE_CONCURRENCY) {
     if (token !== sectionPhotoProbeToken) return;
-    if (getPhotoStatus(sys.id, cam.camera) === "skip") continue;
-    try {
-      const r = await apiGet("listPhotos", {
-        system: sys.id,
-        systemCode: sys.code,
-        camera: normalizeCameraCode(cam.camera),
-        sectionFolder: sectionFolderName(sec),
-        projectName: projectFolderName(),
-      });
-      if (token !== sectionPhotoProbeToken) return;
-      if (r.ok && Array.isArray(r.photos) && r.photos.length) {
-        setPhotoStatus(sys.id, cam.camera, "done", r.photos.length);
-      }
-    } catch {
-      /* офлайн */
-    }
-    await new Promise((r) => setTimeout(r, 120));
+    const chunk = pending.slice(i, i + PHOTO_PROBE_CONCURRENCY);
+    await Promise.all(
+      chunk.map((cam) =>
+        probeOneCameraPhotos(sys, sec, cam).catch(() => false)
+      )
+    );
   }
-  if (token === sectionPhotoProbeToken) renderCameras();
+  if (token === sectionPhotoProbeToken) scheduleViewRefresh();
 }
 
 async function apiGet(action, params = {}) {
@@ -2123,9 +2144,11 @@ function goCameras(section, system) {
   nav.section = sec;
   showScreen("cameras");
   renderCameras();
-  probeSectionPhotos(sys, sec);
-  if (sys.ready) refreshRdPanel(sys);
   pushNavHistory();
+  queueMicrotask(() => {
+    probeSectionPhotos(sys, sec).catch(() => {});
+  });
+  if (sys.ready) void refreshRdPanel(sys);
 }
 
 function goBack() {
@@ -2138,7 +2161,7 @@ function goBack() {
 
 async function loadCatalog(bustCache = false) {
   const url = bustCache ? `catalog.json?t=${Date.now()}` : "catalog.json";
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, bustCache ? { cache: "no-store" } : {});
   if (!res.ok) throw new Error("Нет catalog.json");
   catalog = await res.json();
   catalog.systems = mergeCatalogSystems(catalog.systems);
@@ -2169,7 +2192,7 @@ async function refreshAppData(showToast = false) {
   if (refreshAppDataInFlight) return refreshAppDataInFlight;
   refreshAppDataInFlight = (async () => {
     try {
-      await loadCatalog(true);
+      await loadCatalog(showToast);
     } catch {
       /* офлайн — остаётся текущий каталог */
     }
@@ -2177,14 +2200,19 @@ async function refreshAppData(showToast = false) {
     loadPhotoStatusMap();
     await refreshMetrazh();
     await flushQueue(false);
-    refreshCurrentView();
-    updateStats();
+    scheduleViewRefresh();
     if (camSheetOpen && selectedCamera) {
-      await loadSessionPhotosFromDrive();
+      void loadSessionPhotosFromDrive();
     }
     const activeName = document.querySelector(".screen.active")?.id?.replace("screen-", "");
     if (activeName) updateHeader(activeName);
-    if (nav.system?.ready) await refreshRdPanel(nav.system);
+    const activeScreen = document.querySelector(".screen.active")?.id;
+    if (
+      nav.system?.ready &&
+      (activeScreen === "screen-sections" || activeScreen === "screen-cameras")
+    ) {
+      void refreshRdPanel(nav.system);
+    }
     if (showToast) toast("Данные обновлены", "success");
   })();
   try {
@@ -2468,8 +2496,7 @@ async function refreshMetrazh() {
   const local = loadCachedMetrazh();
   if (!apiConfigured()) {
     metrazhMap = local;
-    refreshCurrentView();
-    updateStats();
+    scheduleViewRefresh();
     return;
   }
   try {
@@ -2489,8 +2516,7 @@ async function refreshMetrazh() {
   } catch {
     metrazhMap = local;
   }
-  refreshCurrentView();
-  updateStats();
+  scheduleViewRefresh();
 }
 
 const AUTO_REFRESH_MS = 90000;
@@ -2584,13 +2610,24 @@ async function flushQueue(showResult) {
   }
   setQueue(remain);
   cacheMetrazh(metrazhMap);
-  refreshCurrentView();
-  updateStats();
+  scheduleViewRefresh();
   if (showResult) {
     if (!remain.length) toast("Очередь отправлена в таблицу", "success");
     else toast(lastErr || "Не удалось отправить очередь", "error");
   }
   return remain.length === 0;
+}
+
+let viewRefreshScheduled = false;
+
+function scheduleViewRefresh() {
+  if (viewRefreshScheduled) return;
+  viewRefreshScheduled = true;
+  requestAnimationFrame(() => {
+    viewRefreshScheduled = false;
+    refreshCurrentView();
+    updateStats();
+  });
 }
 
 function refreshCurrentView() {
@@ -2756,7 +2793,7 @@ function renderCameras() {
     return;
   }
 
-  root.innerHTML = "";
+  const frag = document.createDocumentFragment();
   cameras.forEach((cam, i) => {
     const m = metrazhMap[metrazhKey(sys.id, cam.camera)];
     const g = metrazhMap[gofraKey(sys.id, cam.camera)];
@@ -2783,8 +2820,9 @@ function renderCameras() {
       </div>
     `;
     btn.addEventListener("click", () => openCamSheet(sys, sec, cam));
-    root.appendChild(btn);
+    frag.appendChild(btn);
   });
+  root.replaceChildren(frag);
 }
 
 function mapMetersForKind(systemId, camera, kind) {
@@ -2928,7 +2966,7 @@ async function openCamSheet(system, section, cam) {
       getPhotoCount(system.id, cam.camera) > 0;
   }
 
-  await loadSessionPhotosFromDrive();
+  void loadSessionPhotosFromDrive();
   requestAnimationFrame(() => meterInputEl("cable")?.focus());
   pushNavHistory();
 }
@@ -3248,13 +3286,19 @@ async function init() {
 
   try {
     await loadCatalog();
-    await syncProjectNameFromApi();
     loadPhotoStatusMap();
     metrazhMap = loadCachedMetrazh();
-    await refreshMetrazh();
-    await flushQueue();
     if (!restoreNavState()) goSystems();
+    else scheduleViewRefresh();
     resetNavHistoryFromCurrent();
+    updateStats();
+    void (async () => {
+      await syncProjectNameFromApi();
+      await refreshMetrazh();
+      await flushQueue();
+      scheduleViewRefresh();
+      updateStats();
+    })();
   } catch {
     $("systems-root").innerHTML =
       '<p class="empty-msg">Нет catalog.json — в папке montazh-pwa: npm run export</p>';
