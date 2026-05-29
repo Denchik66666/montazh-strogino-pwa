@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" id="meta-apple-status" />
-    <title>Монтажник · v117</title>
+    <title>Монтажник · v118</title>
     <script>
-      document.title = "Монтажник · v117";
+      document.title = "Монтажник · v118";
       (function () {
         var t = localStorage.getItem("montazh_theme");
         if (t !== "light" && t !== "dark") t = "light";
@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=116" />
+    <link rel="stylesheet" href="css/app.css?v=118" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -32,7 +32,7 @@
       <button type="button" class="nav-back" id="nav-back" hidden aria-label="Назад">←</button>
       <div class="header-text">
         <div class="header-title-row">
-          <span id="app-version" class="app-version" aria-label="Версия приложения">v117</span>
+          <span id="app-version" class="app-version" aria-label="Версия приложения">v118</span>
           <h1 id="screen-title" class="screen-title"></h1>
         </div>
         <div class="header-meta">
@@ -54,6 +54,7 @@
         </div>
       </div>
       <div class="status-bar">
+        <span class="pill pill--version" id="app-version-pill" title="Версия приложения">v118</span>
         <span class="pill ok" id="stat-done">—</span>
         <span class="pill" id="stat-net">—</span>
       </div>
@@ -280,7 +281,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=116"></script>
-    <script src="js/app.js?v=116" defer></script>
+    <script src="config.js?v=118"></script>
+    <script src="js/app.js?v=118" defer></script>
   </body>
 </html>
