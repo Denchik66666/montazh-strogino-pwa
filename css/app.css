@@ -346,13 +346,6 @@ html[data-theme="light"] .app-header {
   min-width: 0;
 }
 
-.header-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
 .app-header h1 {
   margin: 0;
   font-size: 1.2rem;
@@ -361,27 +354,6 @@ html[data-theme="light"] .app-header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.app-version {
-  flex-shrink: 0;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  color: var(--accent);
-  padding: 3px 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.pill--version {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .screen-title--hidden {

@@ -10,13 +10,8 @@ function appWindowTitle() {
   return v ? `Монтажник · ${v}` : "Монтажник";
 }
 
-function applyAppVersionBadge() {
-  const v = appVersionLabel() || "—";
+function applyAppVersionTitle() {
   document.title = appWindowTitle();
-  for (const id of ["app-version", "app-version-pill"]) {
-    const el = $(id);
-    if (el) el.textContent = v;
-  }
 }
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
@@ -3278,7 +3273,7 @@ function initTheme() {
 }
 
 async function init() {
-  applyAppVersionBadge();
+  applyAppVersionTitle();
   sessionStorage.removeItem("montazh_sw_reloading");
   if (sessionStorage.getItem("montazh_ptr_done")) {
     sessionStorage.removeItem("montazh_ptr_done");
