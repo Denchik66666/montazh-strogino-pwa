@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" id="meta-apple-status" />
-    <title>Монтажник · v116</title>
+    <title>Монтажник · v117</title>
     <script>
-      document.title = "Монтажник · v116";
+      document.title = "Монтажник · v117";
       (function () {
         var t = localStorage.getItem("montazh_theme");
         if (t !== "light" && t !== "dark") t = "light";
@@ -20,7 +20,7 @@
     </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="css/app.css?v=115" />
+    <link rel="stylesheet" href="css/app.css?v=116" />
   </head>
   <body>
     <div id="setup-banner" class="setup-banner">
@@ -31,7 +31,10 @@
     <header class="app-header">
       <button type="button" class="nav-back" id="nav-back" hidden aria-label="Назад">←</button>
       <div class="header-text">
-        <h1 id="screen-title" class="screen-title"></h1>
+        <div class="header-title-row">
+          <span id="app-version" class="app-version" aria-label="Версия приложения">v117</span>
+          <h1 id="screen-title" class="screen-title"></h1>
+        </div>
         <div class="header-meta">
           <p class="breadcrumb" id="breadcrumb"></p>
           <div class="header-rd" id="header-rd" hidden>
@@ -277,7 +280,7 @@
 
     <div id="toast" class="toast" role="status"></div>
 
-    <script src="config.js?v=115"></script>
-    <script src="js/app.js?v=115" defer></script>
+    <script src="config.js?v=116"></script>
+    <script src="js/app.js?v=116" defer></script>
   </body>
 </html>

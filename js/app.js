@@ -11,10 +11,12 @@ function appWindowTitle() {
 }
 
 function applyAppVersionBadge() {
-  const title = appWindowTitle();
-  document.title = title;
-  const badge = $("app-version");
-  if (badge) badge.textContent = appVersionLabel() || "—";
+  const v = appVersionLabel() || "—";
+  document.title = appWindowTitle();
+  for (const id of ["app-version", "app-version-pill"]) {
+    const el = $(id);
+    if (el) el.textContent = v;
+  }
 }
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
@@ -1996,8 +1998,6 @@ function updateHeader(screenName) {
     titleEl.textContent = screenName === "systems" ? site : sysTitle || "Монтажник";
     titleEl.classList.remove("screen-title--hidden");
   }
-  /* document.title не трогаем: в PWA Windows = «Монтажник — …» из этой строки */
-
   const crumbs = [];
   if (nav.section && screenName === "cameras") {
     const info = parseSectionName(nav.section.name);
@@ -3278,7 +3278,7 @@ function initTheme() {
 }
 
 async function init() {
-  document.title = "Монтажник";
+  applyAppVersionBadge();
   sessionStorage.removeItem("montazh_sw_reloading");
   if (sessionStorage.getItem("montazh_ptr_done")) {
     sessionStorage.removeItem("montazh_ptr_done");
