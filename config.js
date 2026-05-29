@@ -2,6 +2,8 @@
 window.APP_CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbz4cM7rc7QmZ6Bt85-2z92skYCmJlTJxOFG3xKiPjt-N-E6F4mrvQiwVwmHrPgpIw1IQw/exec",
   APP_NAME: "Den - Монтажник",
+  /** Версия сборки — показывается в заголовке окна и в шапке (обновлять вместе с sw.js CACHE). */
+  APP_VERSION: "v116",
   /** Название строительной площадки (фиксируем, не берём из имени таблицы). */
   PROJECT_NAME: "СИН, кор 2 (11 сек)",
   MIN_METERS: 0,

@@ -1,4 +1,21 @@
 const CONFIG = window.APP_CONFIG || {};
+
+function appVersionLabel() {
+  const v = String(CONFIG.APP_VERSION || "").trim();
+  return v || "";
+}
+
+function appWindowTitle() {
+  const v = appVersionLabel();
+  return v ? `Монтажник · ${v}` : "Монтажник";
+}
+
+function applyAppVersionBadge() {
+  const title = appWindowTitle();
+  document.title = title;
+  const badge = $("app-version");
+  if (badge) badge.textContent = appVersionLabel() || "—";
+}
 const QUEUE_KEY = "montazh_pending_queue";
 const METRAZH_CACHE_KEY = "montazh_metrazh_cache";
 /** Резерв метража на телефоне — если сервер вернул пусто/обрезано, не теряем СОТ/БР. */
