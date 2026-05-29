@@ -97,6 +97,9 @@ function mergeCatalogSystems(systems) {
 /** @type {Record<string, number|string>} */
 let metrazhMap = {};
 
+/** Последний успешно загруженный каталог — не сбрасываем навигацию при сбое сети. */
+let catalogBackup = null;
+
 const nav = {
   system: null,
   section: null,
@@ -1842,7 +1845,46 @@ function syncRdPanelVisibility() {
 }
 
 function findSystemById(systemId) {
-  return catalog.systems.find((s) => s.id === systemId) || null;
+  if (!systemId) return null;
+  const hit = catalog.systems.find((s) => s.id === systemId);
+  if (hit) return hit;
+  return catalogBackup?.systems?.find((s) => s.id === systemId) || null;
+}
+
+/** Кнопки карточек — жесты (свайп / pull) не должны перехватывать нажатие. */
+function isTapNavigationTarget(node) {
+  return Boolean(
+    node?.closest?.(
+      "button, a, input, textarea, select, label, .pick-card, .camera-btn, .nav-back, .theme-toggle, .header-rd button, .header-rd-replace, #stat-net"
+    )
+  );
+}
+
+function openSystem(systemId) {
+  const sys = findSystemById(systemId);
+  if (!sys) {
+    toast("Система не найдена — потяните вниз для обновления", "error");
+    return;
+  }
+  if (!sys.ready) {
+    toast(sys.note || "Таблица для этой системы ещё не подключена", "queue");
+    return;
+  }
+  if (!Array.isArray(sys.sections) || !sys.sections.length) {
+    toast(`Нет секций для «${sys.code || systemId}» — обновите каталог`, "error");
+    return;
+  }
+  goSections(sys);
+}
+
+function openSection(section) {
+  const sys = findSystemById(nav.system?.id) || nav.system;
+  if (!sys?.ready) {
+    toast("Сначала выберите систему", "error");
+    goSystems();
+    return;
+  }
+  goCameras(section, sys);
 }
 
 function findSectionById(system, sectionId) {
@@ -1895,23 +1937,33 @@ function rebindNavFromCatalog() {
     if (inferred) nav.system = inferred;
   }
   if (!nav.system) return;
+
   const sys = findSystemById(nav.system.id);
-  if (!sys?.ready) {
+  const localOk =
+    nav.system?.ready && Array.isArray(nav.system.sections) && nav.system.sections.length > 0;
+
+  if (!sys?.ready || !sys.sections?.length) {
+    if (localOk) return;
+    if (document.querySelector("#screen-systems.active")) return;
     suppressHistoryPush = true;
     goSystems();
     suppressHistoryPush = false;
     resetNavHistoryFromCurrent();
     return;
   }
+
   nav.system = sys;
   if (!nav.section) return;
   const sec = findSectionById(sys, nav.section.id);
   if (!sec) {
     nav.section = null;
-    suppressHistoryPush = true;
-    goSections(sys);
-    suppressHistoryPush = false;
-    resetNavHistoryFromCurrent();
+    const active = document.querySelector(".screen.active")?.id;
+    if (active === "screen-cameras") {
+      suppressHistoryPush = true;
+      goSections(sys);
+      suppressHistoryPush = false;
+      resetNavHistoryFromCurrent();
+    }
     return;
   }
   nav.section = sec;
@@ -2131,12 +2183,18 @@ function goSystems() {
 }
 
 function goSections(system) {
-  nav.system = system;
+  const sys = findSystemById(system?.id) || system;
+  if (!sys?.ready || !sys.sections?.length) {
+    toast("Система недоступна — обновите каталог", "error");
+    goSystems();
+    return;
+  }
+  nav.system = sys;
   nav.section = null;
   showScreen("sections");
   renderSections();
   updateStats();
-  refreshRdPanel(system);
+  void refreshRdPanel(sys);
   pushNavHistory();
 }
 
@@ -2175,8 +2233,13 @@ async function loadCatalog(bustCache = false) {
   const url = bustCache ? `catalog.json?t=${Date.now()}` : "catalog.json";
   const res = await fetch(url, bustCache ? { cache: "no-store" } : {});
   if (!res.ok) throw new Error("Нет catalog.json");
-  catalog = await res.json();
-  catalog.systems = mergeCatalogSystems(catalog.systems);
+  const next = await res.json();
+  next.systems = mergeCatalogSystems(next.systems);
+  catalog = next;
+  catalogBackup = {
+    site: catalog.site ? { ...catalog.site } : { id: "", name: "" },
+    systems: catalog.systems,
+  };
   rebindNavFromCatalog();
 }
 
@@ -2250,20 +2313,14 @@ function hideRefreshOverlay() {
   document.body.classList.remove("refresh-overlay-open");
 }
 
-/** Полное обновление: данные, очистка кэша PWA, перезагрузка страницы (как Ctrl+Shift+R). */
-async function hardRefreshApp() {
+/** Pull-to-refresh: данные и каталог без перезагрузки страницы (метраж не теряется). */
+async function pullRefreshApp() {
   showRefreshOverlay("Отправка очереди…");
   await flushQueue(true);
   showRefreshOverlay("Загрузка с сервера…");
-  await refreshAppData(false);
-  showRefreshOverlay("Обновление приложения…");
-  if ("caches" in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k.startsWith("montazh-")).map((k) => caches.delete(k)));
-  }
-  if (swRegistration) await swRegistration.update().catch(() => {});
-  sessionStorage.setItem("montazh_ptr_done", "1");
-  window.location.reload();
+  await refreshAppData(true);
+  hideRefreshOverlay();
+  toast("Данные обновлены", "success");
 }
 
 function getActiveScrollEl() {
@@ -2327,6 +2384,7 @@ function initScreenGestures() {
   let touchPullActive = false;
   let touchStartY = 0;
   let touchStartX = 0;
+  let pointerCaptured = false;
 
   const gestureOpts = { capture: true };
 
@@ -2335,6 +2393,7 @@ function initScreenGestures() {
   const gestureTargetOk = (e) => {
     const t = e.target;
     if (!t?.closest) return false;
+    if (isTapNavigationTarget(t)) return false;
     if (t.closest(".app-header, .cam-sheet, .photo-lightbox, .refresh-overlay, #toast")) return false;
     return Boolean(t.closest("#screens"));
   };
@@ -2394,6 +2453,7 @@ function initScreenGestures() {
     lastRawDx = 0;
     activePointerId = null;
     touchPullActive = false;
+    pointerCaptured = false;
     if (indicator) indicator.classList.remove("pull-refresh--loading");
     clearTransform(animate);
   };
@@ -2409,9 +2469,8 @@ function initScreenGestures() {
     const label = indicator?.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
     screens.classList.remove("ptr-dragging");
-    showRefreshOverlay("Обновление…");
     try {
-      await hardRefreshApp();
+      await pullRefreshApp();
     } catch (err) {
       console.error("pull refresh failed", err);
       hideRefreshOverlay();
@@ -2440,10 +2499,13 @@ function initScreenGestures() {
   const onPtrUp = (e) => {
     if (touchPullActive) return;
     if (e.pointerId !== activePointerId) return;
-    try {
-      screens.releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
+    if (pointerCaptured) {
+      try {
+        screens.releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      pointerCaptured = false;
     }
     if (axis === "y") finishPtr();
     else if (axis === "x") finishSwipe();
@@ -2456,6 +2518,10 @@ function initScreenGestures() {
     "touchstart",
     (e) => {
       if (ptrRefreshing || ptrGestureBlocked() || e.touches.length !== 1) return;
+      if (isTapNavigationTarget(e.target)) {
+        touchPullActive = false;
+        return;
+      }
       if (!gestureTargetOk(e)) return;
       touchStartY = e.touches[0].clientY;
       touchStartX = e.touches[0].clientX;
@@ -2502,6 +2568,8 @@ function initScreenGestures() {
     "pointerdown",
     (e) => {
       if (touchPullActive || activePointerId != null || ptrRefreshing || ptrGestureBlocked()) return;
+      if (e.button !== 0) return;
+      if (isTapNavigationTarget(e.target)) return;
       if (!gestureTargetOk(e)) return;
 
       activePointerId = e.pointerId;
@@ -2509,13 +2577,9 @@ function initScreenGestures() {
       startY = e.clientY;
       axis = null;
       ptrEngaged = false;
+      pointerCaptured = false;
       lastRawDy = 0;
       lastRawDx = 0;
-      try {
-        screens.setPointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
     },
     { passive: true, capture: true }
   );
@@ -2532,6 +2596,14 @@ function initScreenGestures() {
         const nextAxis = chooseGestureAxis(dx, dy);
         if (!nextAxis) return;
         axis = nextAxis;
+        if (!pointerCaptured) {
+          try {
+            screens.setPointerCapture(e.pointerId);
+            pointerCaptured = true;
+          } catch {
+            /* ignore */
+          }
+        }
       }
 
       if (axis === "x") {
@@ -2757,7 +2829,10 @@ function appendSystemPickCard(root, sys, toneIndex) {
       </span>
       <span class="pick-bar pick-bar--full"><span style="width:${pct}%"></span></span>
     `;
-    btn.addEventListener("click", () => goSections(sys));
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openSystem(sys.id);
+    });
   } else {
     btn.className = `pick-card pick-card--system pick-card--disabled ${pickTone(toneIndex)}`;
     const sub = sys.cameraCount
@@ -2812,9 +2887,15 @@ function renderSystems() {
 
 function renderSections() {
   const root = $("sections-root");
+  if (!root) return;
   root.innerHTML = "";
-  const sys = nav.system;
-  if (!sys?.ready) return;
+  const sys = findSystemById(nav.system?.id) || nav.system;
+  if (!sys?.ready) {
+    root.innerHTML =
+      '<p class="empty-msg">Система недоступна. Назад → выберите СОТ или БР снова.</p>';
+    return;
+  }
+  nav.system = sys;
 
   sys.sections.forEach((sec, i) => {
     const { done, total } = countSectionDone(sys, sec);
@@ -2837,7 +2918,10 @@ function renderSections() {
         <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
       </span>
     `;
-    btn.addEventListener("click", () => goCameras(sec, sys));
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openSection(sec);
+    });
     root.appendChild(btn);
   });
 }
