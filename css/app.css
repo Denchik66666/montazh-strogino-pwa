@@ -495,10 +495,15 @@ html[data-theme="light"] .app-header {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+#screens.ptr-pulling .tile-grid,
+#screens.ptr-pulling .camera-list {
+  overflow: hidden;
 }
 
 .tile-grid::-webkit-scrollbar,
@@ -835,7 +840,7 @@ html[data-theme="dark"] .pick-card--status-done .pick-status {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding-bottom: env(safe-area-inset-bottom, 8px);

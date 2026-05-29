@@ -2264,24 +2264,32 @@ function ptrGestureBlocked() {
   return (
     document.body.classList.contains("cam-sheet-open") ||
     document.body.classList.contains("photo-lightbox-open") ||
+    document.body.classList.contains("photo-delete-confirm-open") ||
     document.body.classList.contains("refresh-overlay-open") ||
     Boolean($("refresh-overlay") && !$("refresh-overlay").hidden)
   );
 }
 
 function atScrollTopForPtr() {
-  const scrollEl = getActiveScrollEl();
-  if (!scrollEl) return true;
-  return scrollEl.scrollTop <= 12;
+  const screen = document.querySelector(".screen.active");
+  if (!screen) return true;
+  const scrollEls = screen.querySelectorAll(".tile-grid, .camera-list");
+  if (!scrollEls.length) return screen.scrollTop <= 12;
+  for (const el of scrollEls) {
+    if (el.scrollTop > 12) return false;
+  }
+  return true;
 }
 
 function chooseGestureAxis(dx, dy) {
   const adx = Math.abs(dx);
   const ady = Math.abs(dy);
-  if (adx < 8 && ady < 8) return null;
-  if (atScrollTopForPtr() && dy > 0 && ady >= adx * 0.75) return "y";
+  if (adx < 6 && ady < 6) return null;
+  if (atScrollTopForPtr() && dy > 0) {
+    if (adx > ady * 1.45 && adx > 18) return "x";
+    return "y";
+  }
   if (adx > ady * 1.12) return "x";
-  if (atScrollTopForPtr() && dy > 0) return "y";
   return null;
 }
 
@@ -2304,6 +2312,9 @@ function initScreenGestures() {
   let ptrRefreshing = false;
   let lastRawDy = 0;
   let lastRawDx = 0;
+  let touchPullActive = false;
+  let touchStartY = 0;
+  let touchStartX = 0;
 
   const gestureOpts = { capture: true };
 
@@ -2370,6 +2381,7 @@ function initScreenGestures() {
     lastRawDy = 0;
     lastRawDx = 0;
     activePointerId = null;
+    touchPullActive = false;
     if (indicator) indicator.classList.remove("pull-refresh--loading");
     clearTransform(animate);
   };
@@ -2414,6 +2426,7 @@ function initScreenGestures() {
   };
 
   const onPtrUp = (e) => {
+    if (touchPullActive) return;
     if (e.pointerId !== activePointerId) return;
     try {
       screens.releasePointerCapture(e.pointerId);
@@ -2428,10 +2441,55 @@ function initScreenGestures() {
   };
 
   screens.addEventListener(
+    "touchstart",
+    (e) => {
+      if (ptrRefreshing || ptrGestureBlocked() || e.touches.length !== 1) return;
+      if (!gestureTargetOk(e)) return;
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      touchPullActive = atScrollTopForPtr();
+    },
+    { passive: true, capture: true }
+  );
+
+  screens.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!touchPullActive || ptrRefreshing || e.touches.length !== 1) return;
+      if (!atScrollTopForPtr()) {
+        touchPullActive = false;
+        if (axis === "y") resetGesture(false);
+        return;
+      }
+      const dy = e.touches[0].clientY - touchStartY;
+      const dx = e.touches[0].clientX - touchStartX;
+      if (dy <= 0) return;
+      if (Math.abs(dx) > dy * 1.35 && Math.abs(dx) > 22) {
+        touchPullActive = false;
+        return;
+      }
+      axis = "y";
+      ptrEngaged = dy >= PTR_SLOP;
+      if (e.cancelable) e.preventDefault();
+      setPullVisual(dy, true);
+    },
+    { passive: false, capture: true }
+  );
+
+  const onTouchEnd = () => {
+    if (!touchPullActive) return;
+    touchPullActive = false;
+    if (axis === "y") finishPtr();
+    else resetGesture(true);
+  };
+
+  screens.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
+  screens.addEventListener("touchcancel", onTouchEnd, { passive: true, capture: true });
+
+  screens.addEventListener(
     "pointerdown",
     (e) => {
-      if (e.pointerType === "mouse") return;
-      if (activePointerId != null || ptrRefreshing || ptrGestureBlocked()) return;
+      if (touchPullActive || activePointerId != null || ptrRefreshing || ptrGestureBlocked()) return;
       if (!gestureTargetOk(e)) return;
 
       activePointerId = e.pointerId;
@@ -2453,7 +2511,7 @@ function initScreenGestures() {
   screens.addEventListener(
     "pointermove",
     (e) => {
-      if (e.pointerId !== activePointerId || ptrRefreshing) return;
+      if (touchPullActive || e.pointerId !== activePointerId || ptrRefreshing) return;
 
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
@@ -2462,7 +2520,6 @@ function initScreenGestures() {
         const nextAxis = chooseGestureAxis(dx, dy);
         if (!nextAxis) return;
         axis = nextAxis;
-        if (axis === "y" && atScrollTop() && dy > 0 && e.cancelable) e.preventDefault();
       }
 
       if (axis === "x") {
@@ -2471,19 +2528,20 @@ function initScreenGestures() {
         return;
       }
 
-      if (!atScrollTop()) {
-        resetGesture(false);
-        return;
+      if (axis === "y") {
+        if (!ptrEngaged && !atScrollTop()) {
+          resetGesture(false);
+          return;
+        }
+        if (dy <= 0) {
+          if (ptrEngaged) setPullVisual(0, true);
+          ptrEngaged = false;
+          return;
+        }
+        ptrEngaged = dy >= PTR_SLOP;
+        if (e.cancelable) e.preventDefault();
+        setPullVisual(dy, true);
       }
-      if (dy <= 0) {
-        if (ptrEngaged) setPullVisual(0, true);
-        ptrEngaged = false;
-        return;
-      }
-      if (dy < PTR_SLOP) return;
-      ptrEngaged = true;
-      if (e.cancelable) e.preventDefault();
-      setPullVisual(dy, true);
     },
     { passive: false, capture: true }
   );
