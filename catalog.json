@@ -3,7 +3,7 @@
     "id": "sin-k2",
     "name": "СИН, кор 2 (11 сек)"
   },
-  "updated": "2026-05-28",
+  "updated": "2026-05-29",
   "systems": [
     {
       "id": "cot",
@@ -13,13 +13,13 @@
       "sheet": "Монтаж",
       "sections": [
         {
-          "id": "sec-1",
+          "id": "cot-sec-1",
           "name": "СЕКЦИЯ 1 (8 камер)",
           "cameras": [
             {
               "row": 3,
               "camera": "BK2.1.1",
-              "label": "ВК2.1.1",
+              "label": "ВК 2.1.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -28,7 +28,7 @@
             {
               "row": 4,
               "camera": "BK2.1.2",
-              "label": "ВК2.1.2",
+              "label": "ВК 2.1.2",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -37,7 +37,7 @@
             {
               "row": 5,
               "camera": "BK2.1.3",
-              "label": "ВК2.1.3",
+              "label": "ВК 2.1.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -46,7 +46,7 @@
             {
               "row": 6,
               "camera": "BK2.1.4",
-              "label": "ВК2.1.4",
+              "label": "ВК 2.1.4",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -55,7 +55,7 @@
             {
               "row": 7,
               "camera": "BK2.1.7",
-              "label": "ВК2.1.7",
+              "label": "ВК 2.1.7",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -64,7 +64,7 @@
             {
               "row": 8,
               "camera": "BK2.1.5",
-              "label": "ВК2.1.5",
+              "label": "ВК 2.1.5",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -73,7 +73,7 @@
             {
               "row": 9,
               "camera": "BK2.1.6",
-              "label": "ВК2.1.6",
+              "label": "ВК 2.1.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -82,7 +82,7 @@
             {
               "row": 10,
               "camera": "BK2.1.8",
-              "label": "ВК2.1.8",
+              "label": "ВК 2.1.8",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -91,13 +91,13 @@
           ]
         },
         {
-          "id": "sec-2",
+          "id": "cot-sec-2",
           "name": "СЕКЦИЯ 2 (11 камер)",
           "cameras": [
             {
               "row": 12,
               "camera": "BK2.2.1",
-              "label": "ВК2.2.1",
+              "label": "ВК 2.2.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -106,7 +106,7 @@
             {
               "row": 13,
               "camera": "BK2.2.2",
-              "label": "ВК2.2.2",
+              "label": "ВК 2.2.2",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -115,7 +115,7 @@
             {
               "row": 14,
               "camera": "BK2.2.3",
-              "label": "ВК2.2.3",
+              "label": "ВК 2.2.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -124,7 +124,7 @@
             {
               "row": 15,
               "camera": "BK2.2.4",
-              "label": "ВК2.2.4",
+              "label": "ВК 2.2.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -133,7 +133,7 @@
             {
               "row": 16,
               "camera": "BK2.2.5",
-              "label": "ВК2.2.5",
+              "label": "ВК 2.2.5",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -142,7 +142,7 @@
             {
               "row": 17,
               "camera": "BK2.2.8",
-              "label": "ВК2.2.8",
+              "label": "ВК 2.2.8",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -151,7 +151,7 @@
             {
               "row": 18,
               "camera": "BK2.2.9",
-              "label": "ВК2.2.9",
+              "label": "ВК 2.2.9",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -160,7 +160,7 @@
             {
               "row": 19,
               "camera": "BK2.2.10",
-              "label": "ВК2.2.10",
+              "label": "ВК 2.2.10",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -169,7 +169,7 @@
             {
               "row": 20,
               "camera": "BK2.2.6",
-              "label": "ВК2.2.6",
+              "label": "ВК 2.2.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -178,7 +178,7 @@
             {
               "row": 21,
               "camera": "BK2.2.7",
-              "label": "ВК2.2.7",
+              "label": "ВК 2.2.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -187,7 +187,7 @@
             {
               "row": 22,
               "camera": "BK2.2.12",
-              "label": "ВК2.2.12",
+              "label": "ВК 2.2.12",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -196,13 +196,13 @@
           ]
         },
         {
-          "id": "sec-3",
+          "id": "cot-sec-3",
           "name": "СЕКЦИЯ 3 (8 камер)",
           "cameras": [
             {
               "row": 24,
               "camera": "BK2.3.1",
-              "label": "ВК2.3.1",
+              "label": "ВК 2.3.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -211,7 +211,7 @@
             {
               "row": 25,
               "camera": "BK2.3.2",
-              "label": "ВК2.3.2",
+              "label": "ВК 2.3.2",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -220,7 +220,7 @@
             {
               "row": 26,
               "camera": "BK2.3.3",
-              "label": "ВК2.3.3",
+              "label": "ВК 2.3.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -229,7 +229,7 @@
             {
               "row": 27,
               "camera": "BK2.3.4",
-              "label": "ВК2.3.4",
+              "label": "ВК 2.3.4",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -238,7 +238,7 @@
             {
               "row": 28,
               "camera": "BK2.3.7",
-              "label": "ВК2.3.7",
+              "label": "ВК 2.3.7",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -247,7 +247,7 @@
             {
               "row": 29,
               "camera": "BK2.3.5",
-              "label": "ВК2.3.5",
+              "label": "ВК 2.3.5",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -256,7 +256,7 @@
             {
               "row": 30,
               "camera": "BK2.3.6",
-              "label": "ВК2.3.6",
+              "label": "ВК 2.3.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -265,7 +265,7 @@
             {
               "row": 31,
               "camera": "BK2.3.8",
-              "label": "ВК2.3.8",
+              "label": "ВК 2.3.8",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -274,13 +274,13 @@
           ]
         },
         {
-          "id": "sec-4",
+          "id": "cot-sec-4",
           "name": "СЕКЦИЯ 4 (12 камер)",
           "cameras": [
             {
               "row": 33,
               "camera": "BK2.4.1",
-              "label": "ВК2.4.1",
+              "label": "ВК 2.4.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -289,7 +289,7 @@
             {
               "row": 34,
               "camera": "BK2.4.2",
-              "label": "ВК2.4.2",
+              "label": "ВК 2.4.2",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -298,7 +298,7 @@
             {
               "row": 35,
               "camera": "BK2.4.3",
-              "label": "ВК2.4.3",
+              "label": "ВК 2.4.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -307,7 +307,7 @@
             {
               "row": 36,
               "camera": "BK2.4.4",
-              "label": "ВК2.4.4",
+              "label": "ВК 2.4.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -316,7 +316,7 @@
             {
               "row": 37,
               "camera": "BK2.4.5",
-              "label": "ВК2.4.5",
+              "label": "ВК 2.4.5",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -325,7 +325,7 @@
             {
               "row": 38,
               "camera": "BK2.4.9",
-              "label": "ВК2.4.9",
+              "label": "ВК 2.4.9",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -334,7 +334,7 @@
             {
               "row": 39,
               "camera": "BK2.4.10",
-              "label": "ВК2.4.10",
+              "label": "ВК 2.4.10",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -343,7 +343,7 @@
             {
               "row": 40,
               "camera": "BK2.4.11",
-              "label": "ВК2.4.11",
+              "label": "ВК 2.4.11",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -352,7 +352,7 @@
             {
               "row": 41,
               "camera": "BK2.4.6",
-              "label": "ВК2.4.6",
+              "label": "ВК 2.4.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -361,7 +361,7 @@
             {
               "row": 42,
               "camera": "BK2.4.7",
-              "label": "ВК2.4.7",
+              "label": "ВК 2.4.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -370,7 +370,7 @@
             {
               "row": 43,
               "camera": "BK2.4.8",
-              "label": "ВК2.4.8",
+              "label": "ВК 2.4.8",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -379,7 +379,7 @@
             {
               "row": 44,
               "camera": "BK2.4.12",
-              "label": "ВК2.4.12",
+              "label": "ВК 2.4.12",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -388,13 +388,13 @@
           ]
         },
         {
-          "id": "sec-5",
+          "id": "cot-sec-5",
           "name": "СЕКЦИЯ 5 (9 камер)",
           "cameras": [
             {
               "row": 46,
               "camera": "BK2.5.1",
-              "label": "ВК2.5.1",
+              "label": "ВК 2.5.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -403,7 +403,7 @@
             {
               "row": 47,
               "camera": "BK2.5.2",
-              "label": "ВК2.5.2",
+              "label": "ВК 2.5.2",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -412,7 +412,7 @@
             {
               "row": 48,
               "camera": "BK2.5.3",
-              "label": "ВК2.5.3",
+              "label": "ВК 2.5.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -421,7 +421,7 @@
             {
               "row": 49,
               "camera": "BK2.5.4",
-              "label": "ВК2.5.4",
+              "label": "ВК 2.5.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -430,7 +430,7 @@
             {
               "row": 50,
               "camera": "BK2.5.5",
-              "label": "ВК2.5.5",
+              "label": "ВК 2.5.5",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -439,7 +439,7 @@
             {
               "row": 51,
               "camera": "BK2.5.8",
-              "label": "ВК2.5.8",
+              "label": "ВК 2.5.8",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -448,7 +448,7 @@
             {
               "row": 52,
               "camera": "BK2.5.6",
-              "label": "ВК2.5.6",
+              "label": "ВК 2.5.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -457,7 +457,7 @@
             {
               "row": 53,
               "camera": "BK2.5.7",
-              "label": "ВК2.5.7",
+              "label": "ВК 2.5.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -466,7 +466,7 @@
             {
               "row": 54,
               "camera": "BK2.5.9",
-              "label": "ВК2.5.9",
+              "label": "ВК 2.5.9",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -475,13 +475,13 @@
           ]
         },
         {
-          "id": "sec-6",
+          "id": "cot-sec-6",
           "name": "СЕКЦИЯ 6 (22 камер)",
           "cameras": [
             {
               "row": 56,
               "camera": "BK2.6.1",
-              "label": "ВК2.6.1",
+              "label": "ВК 2.6.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -490,7 +490,7 @@
             {
               "row": 57,
               "camera": "BK2.6.2",
-              "label": "ВК2.6.2",
+              "label": "ВК 2.6.2",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -499,7 +499,7 @@
             {
               "row": 58,
               "camera": "BK2.6.3",
-              "label": "ВК2.6.3",
+              "label": "ВК 2.6.3",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -508,7 +508,7 @@
             {
               "row": 59,
               "camera": "BK2.П.1",
-              "label": "ВК2.П.1",
+              "label": "ВК 2.П.1",
               "floor": "Подвал",
               "place": "Въезд",
               "cable": "FTP cat5e",
@@ -517,7 +517,7 @@
             {
               "row": 60,
               "camera": "BK2.П.2",
-              "label": "ВК2.П.2",
+              "label": "ВК 2.П.2",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -526,7 +526,7 @@
             {
               "row": 61,
               "camera": "BK2.П.3",
-              "label": "ВК2.П.3",
+              "label": "ВК 2.П.3",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -535,7 +535,7 @@
             {
               "row": 62,
               "camera": "BK2.П.4",
-              "label": "ВК2.П.4",
+              "label": "ВК 2.П.4",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -544,7 +544,7 @@
             {
               "row": 63,
               "camera": "BK2.П.5",
-              "label": "ВК2.П.5",
+              "label": "ВК 2.П.5",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -553,7 +553,7 @@
             {
               "row": 64,
               "camera": "BK2.П.6",
-              "label": "ВК2.П.6",
+              "label": "ВК 2.П.6",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -562,7 +562,7 @@
             {
               "row": 65,
               "camera": "BK2.П.7",
-              "label": "ВК2.П.7",
+              "label": "ВК 2.П.7",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -571,7 +571,7 @@
             {
               "row": 66,
               "camera": "BK2.П.8",
-              "label": "ВК2.П.8",
+              "label": "ВК 2.П.8",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -580,7 +580,7 @@
             {
               "row": 67,
               "camera": "BK2.П.9",
-              "label": "ВК2.П.9",
+              "label": "ВК 2.П.9",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -589,7 +589,7 @@
             {
               "row": 68,
               "camera": "BK2.П.10",
-              "label": "ВК2.П.10",
+              "label": "ВК 2.П.10",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "UTP cat5e",
@@ -598,7 +598,7 @@
             {
               "row": 69,
               "camera": "BK2.П.11",
-              "label": "ВК2.П.11",
+              "label": "ВК 2.П.11",
               "floor": "Подвал",
               "place": "Выезд",
               "cable": "FTP cat5e",
@@ -607,7 +607,7 @@
             {
               "row": 70,
               "camera": "BK2.6.4",
-              "label": "ВК2.6.4",
+              "label": "ВК 2.6.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -616,7 +616,7 @@
             {
               "row": 71,
               "camera": "BK2.6.5",
-              "label": "ВК2.6.5",
+              "label": "ВК 2.6.5",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -625,7 +625,7 @@
             {
               "row": 72,
               "camera": "BK2.6.6",
-              "label": "ВК2.6.6",
+              "label": "ВК 2.6.6",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -634,7 +634,7 @@
             {
               "row": 73,
               "camera": "BK2.6.9",
-              "label": "ВК2.6.9",
+              "label": "ВК 2.6.9",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -643,7 +643,7 @@
             {
               "row": 74,
               "camera": "BK2.6.10",
-              "label": "ВК2.6.10",
+              "label": "ВК 2.6.10",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -652,7 +652,7 @@
             {
               "row": 75,
               "camera": "BK2.6.7",
-              "label": "ВК2.6.7",
+              "label": "ВК 2.6.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -661,7 +661,7 @@
             {
               "row": 76,
               "camera": "BK2.6.8",
-              "label": "ВК2.6.8",
+              "label": "ВК 2.6.8",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -670,7 +670,7 @@
             {
               "row": 77,
               "camera": "BK2.6.11",
-              "label": "ВК2.6.11",
+              "label": "ВК 2.6.11",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -679,13 +679,13 @@
           ]
         },
         {
-          "id": "sec-7",
+          "id": "cot-sec-7",
           "name": "СЕКЦИЯ 7 (12 камер)",
           "cameras": [
             {
               "row": 79,
               "camera": "BK2.7.1",
-              "label": "ВК2.7.1",
+              "label": "ВК 2.7.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -694,7 +694,7 @@
             {
               "row": 80,
               "camera": "BK2.7.2",
-              "label": "ВК2.7.2",
+              "label": "ВК 2.7.2",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -703,7 +703,7 @@
             {
               "row": 81,
               "camera": "BK2.7.3",
-              "label": "ВК2.7.3",
+              "label": "ВК 2.7.3",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -712,7 +712,7 @@
             {
               "row": 82,
               "camera": "BK2.7.4",
-              "label": "ВК2.7.4",
+              "label": "ВК 2.7.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -721,7 +721,7 @@
             {
               "row": 83,
               "camera": "BK2.7.5",
-              "label": "ВК2.7.5",
+              "label": "ВК 2.7.5",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -730,7 +730,7 @@
             {
               "row": 84,
               "camera": "BK2.7.6",
-              "label": "ВК2.7.6",
+              "label": "ВК 2.7.6",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -739,7 +739,7 @@
             {
               "row": 85,
               "camera": "BK2.7.9",
-              "label": "ВК2.7.9",
+              "label": "ВК 2.7.9",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -748,7 +748,7 @@
             {
               "row": 86,
               "camera": "BK2.7.10",
-              "label": "ВК2.7.10",
+              "label": "ВК 2.7.10",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -757,7 +757,7 @@
             {
               "row": 87,
               "camera": "BK2.7.11",
-              "label": "ВК2.7.11",
+              "label": "ВК 2.7.11",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -766,7 +766,7 @@
             {
               "row": 88,
               "camera": "BK2.7.7",
-              "label": "ВК2.7.7",
+              "label": "ВК 2.7.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -775,7 +775,7 @@
             {
               "row": 89,
               "camera": "BK2.7.8",
-              "label": "ВК2.7.8",
+              "label": "ВК 2.7.8",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -784,7 +784,7 @@
             {
               "row": 90,
               "camera": "BK2.7.12",
-              "label": "ВК2.7.12",
+              "label": "ВК 2.7.12",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -793,13 +793,13 @@
           ]
         },
         {
-          "id": "sec-8",
+          "id": "cot-sec-8",
           "name": "СЕКЦИЯ 8 (11 камер)",
           "cameras": [
             {
               "row": 92,
               "camera": "BK2.8.1",
-              "label": "ВК2.8.1",
+              "label": "ВК 2.8.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -808,7 +808,7 @@
             {
               "row": 93,
               "camera": "BK2.8.2",
-              "label": "ВК2.8.2",
+              "label": "ВК 2.8.2",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -817,7 +817,7 @@
             {
               "row": 94,
               "camera": "BK2.8.3",
-              "label": "ВК2.8.3",
+              "label": "ВК 2.8.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -826,7 +826,7 @@
             {
               "row": 95,
               "camera": "BK2.8.4",
-              "label": "ВК2.8.4",
+              "label": "ВК 2.8.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -835,7 +835,7 @@
             {
               "row": 96,
               "camera": "BK2.8.5",
-              "label": "ВК2.8.5",
+              "label": "ВК 2.8.5",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -844,7 +844,7 @@
             {
               "row": 97,
               "camera": "BK2.8.9",
-              "label": "ВК2.8.9",
+              "label": "ВК 2.8.9",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -853,7 +853,7 @@
             {
               "row": 98,
               "camera": "BK2.8.10",
-              "label": "ВК2.8.10",
+              "label": "ВК 2.8.10",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -862,7 +862,7 @@
             {
               "row": 99,
               "camera": "BK2.8.6",
-              "label": "ВК2.8.6",
+              "label": "ВК 2.8.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -871,7 +871,7 @@
             {
               "row": 100,
               "camera": "BK2.8.7",
-              "label": "ВК2.8.7",
+              "label": "ВК 2.8.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -880,7 +880,7 @@
             {
               "row": 101,
               "camera": "BK2.8.8",
-              "label": "ВК2.8.8",
+              "label": "ВК 2.8.8",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -889,7 +889,7 @@
             {
               "row": 102,
               "camera": "BK2.8.11",
-              "label": "ВК2.8.11",
+              "label": "ВК 2.8.11",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -898,13 +898,13 @@
           ]
         },
         {
-          "id": "sec-9",
+          "id": "cot-sec-9",
           "name": "СЕКЦИЯ 9 (15 камер)",
           "cameras": [
             {
               "row": 104,
               "camera": "BK2.9.1",
-              "label": "ВК2.9.1",
+              "label": "ВК 2.9.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -913,7 +913,7 @@
             {
               "row": 105,
               "camera": "BK2.9.2",
-              "label": "ВК2.9.2",
+              "label": "ВК 2.9.2",
               "floor": "Подвал",
               "place": "ИТП",
               "cable": "UTP cat5e",
@@ -922,7 +922,7 @@
             {
               "row": 106,
               "camera": "BK2.9.3",
-              "label": "ВК2.9.3",
+              "label": "ВК 2.9.3",
               "floor": "Подвал",
               "place": "ИТП",
               "cable": "UTP cat5e",
@@ -931,7 +931,7 @@
             {
               "row": 107,
               "camera": "BK2.9.4",
-              "label": "ВК2.9.4",
+              "label": "ВК 2.9.4",
               "floor": "Подвал",
               "place": "ИТП",
               "cable": "UTP cat5e",
@@ -940,7 +940,7 @@
             {
               "row": 108,
               "camera": "BK2.9.5",
-              "label": "ВК2.9.5",
+              "label": "ВК 2.9.5",
               "floor": "Подвал",
               "place": "ИТП",
               "cable": "UTP cat5e",
@@ -949,7 +949,7 @@
             {
               "row": 109,
               "camera": "BK2.9.6",
-              "label": "ВК2.9.6",
+              "label": "ВК 2.9.6",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -958,7 +958,7 @@
             {
               "row": 110,
               "camera": "BK2.9.7",
-              "label": "ВК2.9.7",
+              "label": "ВК 2.9.7",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -967,7 +967,7 @@
             {
               "row": 111,
               "camera": "BK2.9.8",
-              "label": "ВК2.9.8",
+              "label": "ВК 2.9.8",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -976,7 +976,7 @@
             {
               "row": 112,
               "camera": "BK2.9.12",
-              "label": "ВК2.9.12",
+              "label": "ВК 2.9.12",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -985,7 +985,7 @@
             {
               "row": 113,
               "camera": "BK2.9.13",
-              "label": "ВК2.9.13",
+              "label": "ВК 2.9.13",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -994,7 +994,7 @@
             {
               "row": 114,
               "camera": "BK2.9.14",
-              "label": "ВК2.9.14",
+              "label": "ВК 2.9.14",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -1003,7 +1003,7 @@
             {
               "row": 115,
               "camera": "BK2.9.9",
-              "label": "ВК2.9.9",
+              "label": "ВК 2.9.9",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1012,7 +1012,7 @@
             {
               "row": 116,
               "camera": "BK2.9.10",
-              "label": "ВК2.9.10",
+              "label": "ВК 2.9.10",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1021,7 +1021,7 @@
             {
               "row": 117,
               "camera": "BK2.9.11",
-              "label": "ВК2.9.11",
+              "label": "ВК 2.9.11",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1030,7 +1030,7 @@
             {
               "row": 118,
               "camera": "BK2.9.15",
-              "label": "ВК2.9.15",
+              "label": "ВК 2.9.15",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -1039,13 +1039,13 @@
           ]
         },
         {
-          "id": "sec-10",
+          "id": "cot-sec-10",
           "name": "СЕКЦИЯ 10 (9 камер)",
           "cameras": [
             {
               "row": 120,
               "camera": "BK2.10.1",
-              "label": "ВК2.10.1",
+              "label": "ВК 2.10.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1054,7 +1054,7 @@
             {
               "row": 121,
               "camera": "BK2.10.2",
-              "label": "ВК2.10.2",
+              "label": "ВК 2.10.2",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -1063,7 +1063,7 @@
             {
               "row": 122,
               "camera": "BK2.10.3",
-              "label": "ВК2.10.3",
+              "label": "ВК 2.10.3",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1072,7 +1072,7 @@
             {
               "row": 123,
               "camera": "BK2.10.4",
-              "label": "ВК2.10.4",
+              "label": "ВК 2.10.4",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1081,7 +1081,7 @@
             {
               "row": 124,
               "camera": "BK2.10.5",
-              "label": "ВК2.10.5",
+              "label": "ВК 2.10.5",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -1090,7 +1090,7 @@
             {
               "row": 125,
               "camera": "BK2.10.8",
-              "label": "ВК2.10.8",
+              "label": "ВК 2.10.8",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -1099,7 +1099,7 @@
             {
               "row": 126,
               "camera": "BK2.10.6",
-              "label": "ВК2.10.6",
+              "label": "ВК 2.10.6",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1108,7 +1108,7 @@
             {
               "row": 127,
               "camera": "BK2.10.7",
-              "label": "ВК2.10.7",
+              "label": "ВК 2.10.7",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1117,7 +1117,7 @@
             {
               "row": 128,
               "camera": "BK2.10.9",
-              "label": "ВК2.10.9",
+              "label": "ВК 2.10.9",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -1126,13 +1126,13 @@
           ]
         },
         {
-          "id": "sec-11",
+          "id": "cot-sec-11",
           "name": "СЕКЦИЯ 11 (15 камер)",
           "cameras": [
             {
               "row": 130,
               "camera": "BK2.11.1",
-              "label": "ВК2.11.1",
+              "label": "ВК 2.11.1",
               "floor": "Подвал",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1141,7 +1141,7 @@
             {
               "row": 131,
               "camera": "BK2.11.2",
-              "label": "ВК2.11.2",
+              "label": "ВК 2.11.2",
               "floor": "Подвал",
               "place": "Насосная",
               "cable": "UTP cat5e",
@@ -1150,7 +1150,7 @@
             {
               "row": 132,
               "camera": "BK2.11.3",
-              "label": "ВК2.11.3",
+              "label": "ВК 2.11.3",
               "floor": "Подвал",
               "place": "Насосная",
               "cable": "UTP cat5e",
@@ -1159,7 +1159,7 @@
             {
               "row": 133,
               "camera": "BK2.11.4",
-              "label": "ВК2.11.4",
+              "label": "ВК 2.11.4",
               "floor": "Подвал",
               "place": "Насосная",
               "cable": "UTP cat5e",
@@ -1168,7 +1168,7 @@
             {
               "row": 134,
               "camera": "BK2.11.5",
-              "label": "ВК2.11.5",
+              "label": "ВК 2.11.5",
               "floor": "Подвал",
               "place": "СС",
               "cable": "UTP cat5e",
@@ -1177,7 +1177,7 @@
             {
               "row": 135,
               "camera": "BK2.11.6",
-              "label": "ВК2.11.6",
+              "label": "ВК 2.11.6",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1186,7 +1186,7 @@
             {
               "row": 136,
               "camera": "BK2.11.7",
-              "label": "ВК2.11.7",
+              "label": "ВК 2.11.7",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "UTP cat5e",
@@ -1195,7 +1195,7 @@
             {
               "row": 137,
               "camera": "BK2.11.8",
-              "label": "ВК2.11.8",
+              "label": "ВК 2.11.8",
               "floor": "1 этаж",
               "place": "Холл",
               "cable": "UTP cat5e",
@@ -1204,7 +1204,7 @@
             {
               "row": 138,
               "camera": "BK2.11.12",
-              "label": "ВК2.11.12",
+              "label": "ВК 2.11.12",
               "floor": "1 этаж",
               "place": "Колясочная",
               "cable": "UTP cat5e",
@@ -1213,7 +1213,7 @@
             {
               "row": 139,
               "camera": "BK2.11.13",
-              "label": "ВК2.11.13",
+              "label": "ВК 2.11.13",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -1222,7 +1222,7 @@
             {
               "row": 140,
               "camera": "BK2.11.14",
-              "label": "ВК2.11.14",
+              "label": "ВК 2.11.14",
               "floor": "1 этаж",
               "place": "Территория",
               "cable": "FTP cat5e",
@@ -1231,7 +1231,7 @@
             {
               "row": 141,
               "camera": "BK2.11.9",
-              "label": "ВК2.11.9",
+              "label": "ВК 2.11.9",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1240,7 +1240,7 @@
             {
               "row": 142,
               "camera": "BK2.11.10",
-              "label": "ВК2.11.10",
+              "label": "ВК 2.11.10",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1249,7 +1249,7 @@
             {
               "row": 143,
               "camera": "BK2.11.11",
-              "label": "ВК2.11.11",
+              "label": "ВК 2.11.11",
               "floor": "24 этаж",
               "place": "Лифт",
               "cable": "UTP cat5e",
@@ -1258,7 +1258,7 @@
             {
               "row": 144,
               "camera": "BK2.11.15",
-              "label": "ВК2.11.15",
+              "label": "ВК 2.11.15",
               "floor": "24 этаж",
               "place": "Кровля",
               "cable": "FTP cat5e",
@@ -1277,13 +1277,13 @@
       "sheet": "Камеры",
       "sections": [
         {
-          "id": "sec-1",
+          "id": "br-sec-1",
           "name": "СЕКЦИЯ 1 (6 камер)",
           "cameras": [
             {
               "row": 3,
               "camera": "BK5",
-              "label": "ВК ММС №5",
+              "label": "ВК ММС № 5",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1292,7 +1292,7 @@
             {
               "row": 4,
               "camera": "BK14",
-              "label": "ВК ММС №14",
+              "label": "ВК ММС № 14",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1301,7 +1301,7 @@
             {
               "row": 5,
               "camera": "BK15",
-              "label": "ВК ММС №15",
+              "label": "ВК ММС № 15",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1310,7 +1310,7 @@
             {
               "row": 6,
               "camera": "BK23",
-              "label": "ВК ПВН №23",
+              "label": "ВК ПВН № 23",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1319,7 +1319,7 @@
             {
               "row": 7,
               "camera": "BK24",
-              "label": "ВК ПВН №24",
+              "label": "ВК ПВН № 24",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1328,7 +1328,7 @@
             {
               "row": 8,
               "camera": "BK45",
-              "label": "ВК ПВН №45",
+              "label": "ВК ПВН № 45",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1337,13 +1337,13 @@
           ]
         },
         {
-          "id": "sec-2",
+          "id": "br-sec-2",
           "name": "СЕКЦИЯ 2 (5 камер)",
           "cameras": [
             {
               "row": 11,
               "camera": "BK4",
-              "label": "ВК ММС №4",
+              "label": "ВК ММС № 4",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1352,7 +1352,7 @@
             {
               "row": 12,
               "camera": "BK25",
-              "label": "ВК ПВН №25",
+              "label": "ВК ПВН № 25",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1361,7 +1361,7 @@
             {
               "row": 13,
               "camera": "BK26",
-              "label": "ВК ПВН №26",
+              "label": "ВК ПВН № 26",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1370,7 +1370,7 @@
             {
               "row": 14,
               "camera": "BK22",
-              "label": "ВК ГРЗ №22",
+              "label": "ВК ГРЗ № 22",
               "floor": "1 этаж",
               "place": "Въезд",
               "cable": "FTP Cat5e",
@@ -1379,7 +1379,7 @@
             {
               "row": 15,
               "camera": "BK46",
-              "label": "ВК ПВН №46",
+              "label": "ВК ПВН № 46",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1388,13 +1388,13 @@
           ]
         },
         {
-          "id": "sec-3",
+          "id": "br-sec-3",
           "name": "СЕКЦИЯ 3 (4 камер)",
           "cameras": [
             {
               "row": 18,
               "camera": "BK3",
-              "label": "ВК ММС №3",
+              "label": "ВК ММС № 3",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1403,7 +1403,7 @@
             {
               "row": 19,
               "camera": "BK27",
-              "label": "ВК ПВН №27",
+              "label": "ВК ПВН № 27",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1412,7 +1412,7 @@
             {
               "row": 20,
               "camera": "BK28",
-              "label": "ВК ПВН №28",
+              "label": "ВК ПВН № 28",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1421,7 +1421,7 @@
             {
               "row": 21,
               "camera": "BK47",
-              "label": "ВК ПВН №47",
+              "label": "ВК ПВН № 47",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1430,13 +1430,13 @@
           ]
         },
         {
-          "id": "sec-4",
+          "id": "br-sec-4",
           "name": "СЕКЦИЯ 4 (6 камер)",
           "cameras": [
             {
               "row": 24,
               "camera": "BK1",
-              "label": "ВК ММС №1",
+              "label": "ВК ММС № 1",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1445,7 +1445,7 @@
             {
               "row": 25,
               "camera": "BK2",
-              "label": "ВК ММС №2",
+              "label": "ВК ММС № 2",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1454,7 +1454,7 @@
             {
               "row": 26,
               "camera": "BK13",
-              "label": "ВК ММС №13",
+              "label": "ВК ММС № 13",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1463,7 +1463,7 @@
             {
               "row": 27,
               "camera": "BK29",
-              "label": "ВК ПВН №29",
+              "label": "ВК ПВН № 29",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1472,7 +1472,7 @@
             {
               "row": 28,
               "camera": "BK30",
-              "label": "ВК ПВН №30",
+              "label": "ВК ПВН № 30",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1481,7 +1481,7 @@
             {
               "row": 29,
               "camera": "BK48",
-              "label": "ВК ПВН №48",
+              "label": "ВК ПВН № 48",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1490,13 +1490,13 @@
           ]
         },
         {
-          "id": "sec-5",
+          "id": "br-sec-5",
           "name": "СЕКЦИЯ 5 (3 камер)",
           "cameras": [
             {
               "row": 32,
               "camera": "BK31",
-              "label": "ВК ПВН №31",
+              "label": "ВК ПВН № 31",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1505,7 +1505,7 @@
             {
               "row": 33,
               "camera": "BK32",
-              "label": "ВК ПВН №32",
+              "label": "ВК ПВН № 32",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1514,7 +1514,7 @@
             {
               "row": 34,
               "camera": "BK49",
-              "label": "ВК ПВН №49",
+              "label": "ВК ПВН № 49",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1523,13 +1523,13 @@
           ]
         },
         {
-          "id": "sec-6",
+          "id": "br-sec-6",
           "name": "СЕКЦИЯ 6 (4 камер)",
           "cameras": [
             {
               "row": 37,
               "camera": "BK21",
-              "label": "ВК ММС №21",
+              "label": "ВК ММС № 21",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1538,7 +1538,7 @@
             {
               "row": 38,
               "camera": "BK33",
-              "label": "ВК ПВН №33",
+              "label": "ВК ПВН № 33",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1547,7 +1547,7 @@
             {
               "row": 39,
               "camera": "BK34",
-              "label": "ВК ПВН №34",
+              "label": "ВК ПВН № 34",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1556,7 +1556,7 @@
             {
               "row": 40,
               "camera": "BK50",
-              "label": "ВК ПВН №50",
+              "label": "ВК ПВН № 50",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1565,13 +1565,13 @@
           ]
         },
         {
-          "id": "sec-7",
+          "id": "br-sec-7",
           "name": "СЕКЦИЯ 7 (6 камер)",
           "cameras": [
             {
               "row": 43,
               "camera": "BK16",
-              "label": "ВК ММС №16",
+              "label": "ВК ММС № 16",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1580,7 +1580,7 @@
             {
               "row": 44,
               "camera": "BK17",
-              "label": "ВК ММС №17",
+              "label": "ВК ММС № 17",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1589,7 +1589,7 @@
             {
               "row": 45,
               "camera": "BK35",
-              "label": "ВК ПВН №35",
+              "label": "ВК ПВН № 35",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1598,7 +1598,7 @@
             {
               "row": 46,
               "camera": "BK36",
-              "label": "ВК ПВН №36",
+              "label": "ВК ПВН № 36",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1607,7 +1607,7 @@
             {
               "row": 47,
               "camera": "BK51",
-              "label": "ВК ПВН №51",
+              "label": "ВК ПВН № 51",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1616,7 +1616,7 @@
             {
               "row": 48,
               "camera": "BK52",
-              "label": "ВК ПВН №52",
+              "label": "ВК ПВН № 52",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1625,13 +1625,13 @@
           ]
         },
         {
-          "id": "sec-8",
+          "id": "br-sec-8",
           "name": "СЕКЦИЯ 8 (6 камер)",
           "cameras": [
             {
               "row": 51,
               "camera": "BK6",
-              "label": "ВК ММС №6",
+              "label": "ВК ММС № 6",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1640,7 +1640,7 @@
             {
               "row": 52,
               "camera": "BK7",
-              "label": "ВК ММС №7",
+              "label": "ВК ММС № 7",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1649,7 +1649,7 @@
             {
               "row": 53,
               "camera": "BK18",
-              "label": "ВК ММС №18",
+              "label": "ВК ММС № 18",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1658,7 +1658,7 @@
             {
               "row": 54,
               "camera": "BK37",
-              "label": "ВК ПВН №37",
+              "label": "ВК ПВН № 37",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1667,7 +1667,7 @@
             {
               "row": 55,
               "camera": "BK38",
-              "label": "ВК ПВН №38",
+              "label": "ВК ПВН № 38",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1676,7 +1676,7 @@
             {
               "row": 56,
               "camera": "BK53",
-              "label": "ВК ПВН №53",
+              "label": "ВК ПВН № 53",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1685,13 +1685,13 @@
           ]
         },
         {
-          "id": "sec-9",
+          "id": "br-sec-9",
           "name": "СЕКЦИЯ 9 (5 камер)",
           "cameras": [
             {
               "row": 59,
               "camera": "BK20",
-              "label": "ВК ММС №20",
+              "label": "ВК ММС № 20",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1700,7 +1700,7 @@
             {
               "row": 60,
               "camera": "BK12",
-              "label": "ВК ММС №12",
+              "label": "ВК ММС № 12",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1709,7 +1709,7 @@
             {
               "row": 61,
               "camera": "BK39",
-              "label": "ВК ПВН №39",
+              "label": "ВК ПВН № 39",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1718,7 +1718,7 @@
             {
               "row": 62,
               "camera": "BK40",
-              "label": "ВК ПВН №40",
+              "label": "ВК ПВН № 40",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1727,7 +1727,7 @@
             {
               "row": 63,
               "camera": "BK54",
-              "label": "ВК ПВН №54",
+              "label": "ВК ПВН № 54",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1736,13 +1736,13 @@
           ]
         },
         {
-          "id": "sec-10",
+          "id": "br-sec-10",
           "name": "СЕКЦИЯ 10 (4 камер)",
           "cameras": [
             {
               "row": 66,
               "camera": "BK11",
-              "label": "ВК ММС №11",
+              "label": "ВК ММС № 11",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1751,7 +1751,7 @@
             {
               "row": 67,
               "camera": "BK41",
-              "label": "ВК ПВН №41",
+              "label": "ВК ПВН № 41",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1760,7 +1760,7 @@
             {
               "row": 68,
               "camera": "BK42",
-              "label": "ВК ПВН №42",
+              "label": "ВК ПВН № 42",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1769,7 +1769,7 @@
             {
               "row": 69,
               "camera": "BK55",
-              "label": "ВК ПВН №55",
+              "label": "ВК ПВН № 55",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",
@@ -1778,13 +1778,13 @@
           ]
         },
         {
-          "id": "sec-11",
+          "id": "br-sec-11",
           "name": "СЕКЦИЯ 11 (7 камер)",
           "cameras": [
             {
               "row": 72,
               "camera": "BK8",
-              "label": "ВК ММС №8",
+              "label": "ВК ММС № 8",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1793,7 +1793,7 @@
             {
               "row": 73,
               "camera": "BK9",
-              "label": "ВК ММС №9",
+              "label": "ВК ММС № 9",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1802,7 +1802,7 @@
             {
               "row": 74,
               "camera": "BK10",
-              "label": "ВК ММС №10",
+              "label": "ВК ММС № 10",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1811,7 +1811,7 @@
             {
               "row": 75,
               "camera": "BK19",
-              "label": "ВК ММС №19",
+              "label": "ВК ММС № 19",
               "floor": "1 этаж",
               "place": "Фасад",
               "cable": "FTP Cat5e",
@@ -1820,7 +1820,7 @@
             {
               "row": 76,
               "camera": "BK43",
-              "label": "ВК ПВН №43",
+              "label": "ВК ПВН № 43",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1829,7 +1829,7 @@
             {
               "row": 77,
               "camera": "BK44",
-              "label": "ВК ПВН №44",
+              "label": "ВК ПВН № 44",
               "floor": "1 этаж",
               "place": "Вход",
               "cable": "FTP Cat5e",
@@ -1838,7 +1838,7 @@
             {
               "row": 78,
               "camera": "BK56",
-              "label": "ВК ПВН №56",
+              "label": "ВК ПВН № 56",
               "floor": "Подвал",
               "place": "Паркинг",
               "cable": "FTP Cat5e",

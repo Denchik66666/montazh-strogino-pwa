@@ -1811,21 +1811,37 @@ function findSystemById(systemId) {
 }
 
 function findSectionById(system, sectionId) {
-  return system?.sections?.find((s) => s.id === sectionId) || null;
-}
-
-function findSystemForSection(section) {
-  if (!section?.id) return null;
-  for (const sys of catalog.systems || []) {
-    if (sys.sections?.some((s) => s.id === section.id)) return sys;
+  if (!system?.sections || !sectionId) return null;
+  const direct = system.sections.find((s) => s.id === sectionId);
+  if (direct) return direct;
+  const legacy = String(sectionId).match(/^sec-(\d+)$/);
+  if (legacy && system.id) {
+    return system.sections.find((s) => s.id === `${system.id}-sec-${legacy[1]}`) || null;
   }
   return null;
 }
 
+function findSystemForSection(section) {
+  if (!section?.id) return nav.system || null;
+  if (nav.system && findSectionById(nav.system, section.id)) return nav.system;
+  let found = null;
+  for (const sys of catalog.systems || []) {
+    if (!findSectionById(sys, section.id)) continue;
+    if (found) return nav.system && findSectionById(nav.system, section.id) ? nav.system : null;
+    found = sys;
+  }
+  return found;
+}
+
 function ensureNavSystem(system) {
-  const sys = system || nav.system || (nav.section ? findSystemForSection(nav.section) : null);
+  const sys = system || nav.system;
   if (sys) nav.system = sys;
-  return sys;
+  return sys || null;
+}
+
+function bindSectionToSystem(system, section) {
+  if (!system?.ready || !section) return null;
+  return findSectionById(system, section.id);
 }
 
 function findCameraInSection(section, cameraCode) {
@@ -1921,7 +1937,7 @@ function restoreNavState() {
       const cam = findCameraInSection(sec, state.camera);
       nav.system = sys;
       nav.section = sec;
-      goCameras(sec);
+      goCameras(sec, sys);
       if (cam) openCamSheet(sys, sec, cam);
       return true;
     }
@@ -2092,15 +2108,22 @@ function goSections(system) {
 }
 
 function goCameras(section, system) {
-  const sys = ensureNavSystem(system || findSystemForSection(section));
-  if (!sys) {
+  const sys = system || nav.system;
+  if (!sys?.ready) {
     goSystems();
     return;
   }
-  nav.section = section;
+  const sec = bindSectionToSystem(sys, section);
+  if (!sec) {
+    toast("Секция не найдена — обновите список", "error");
+    goSections(sys);
+    return;
+  }
+  nav.system = sys;
+  nav.section = sec;
   showScreen("cameras");
   renderCameras();
-  probeSectionPhotos(sys, section);
+  probeSectionPhotos(sys, sec);
   if (sys.ready) refreshRdPanel(sys);
   pushNavHistory();
 }
@@ -2707,7 +2730,7 @@ function renderSections() {
         <span class="pick-status">${escapeHtml(statusLabel(done, total))}</span>
       </span>
     `;
-    btn.addEventListener("click", () => goCameras(sec));
+    btn.addEventListener("click", () => goCameras(sec, sys));
     root.appendChild(btn);
   });
 }
@@ -2715,12 +2738,18 @@ function renderSections() {
 function renderCameras() {
   const root = $("cameras-root");
   if (!root) return;
-  const sys = ensureNavSystem();
-  const sec = nav.section;
-  if (!sys || !sec) {
+  const sys = nav.system;
+  if (!sys?.ready) {
     root.innerHTML = "";
     return;
   }
+  const sec = nav.section ? bindSectionToSystem(sys, nav.section) : null;
+  if (!sec) {
+    root.innerHTML =
+      '<p class="empty-msg">Секция не найдена. Назад → выберите секцию снова.</p>';
+    return;
+  }
+  if (sec !== nav.section) nav.section = sec;
   const cameras = Array.isArray(sec.cameras) ? sec.cameras : [];
   if (!cameras.length) {
     root.innerHTML = '<p class="empty-msg">Список камер пуст. Назад → секция → снова, или потяните вниз для обновления.</p>';
