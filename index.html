@@ -59,9 +59,12 @@
         </div>
       </div>
       <div class="status-bar">
-        <button type="button" class="pill pill--push" id="btn-push" title="Push-уведомления">🔕</button>
-        <span class="pill ok" id="stat-done">—</span>
-        <span class="pill" id="stat-net">—</span>
+        <div class="status-bar__left">
+          <button type="button" class="pill pill--push" id="btn-push" title="Push-уведомления">🔕</button>
+          <span class="pill ok" id="stat-done">—</span>
+          <span class="pill" id="stat-net">—</span>
+        </div>
+        <span class="stat-readiness" id="stat-readiness" title="Доля камер с введённым метражом по всем системам">Готовность объекта —</span>
       </div>
       <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Светлая тема">
         <span class="theme-glyphs" aria-hidden="true">

@@ -384,10 +384,41 @@ html[data-theme="light"] .app-header {
 
 .status-bar {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   font-size: 0.75rem;
+}
+
+.status-bar__left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.stat-readiness {
+  flex-shrink: 0;
+  max-width: 46%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-readiness--done {
+  color: var(--ok);
+}
+
+.stat-readiness--progress {
+  color: color-mix(in srgb, var(--accent) 75%, var(--text));
 }
 
 .pill--push {

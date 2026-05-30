@@ -2825,6 +2825,17 @@ function refreshCurrentView() {
   else if (active === "screen-cameras") renderCameras();
 }
 
+function countAllSystemsDone() {
+  let done = 0;
+  let total = 0;
+  for (const s of catalog.systems.filter((x) => x.ready)) {
+    const c = countDone(s);
+    done += c.done;
+    total += c.total;
+  }
+  return { done, total };
+}
+
 function updateStats() {
   let allDone = 0;
   let allTotal = 0;
@@ -2836,6 +2847,25 @@ function updateStats() {
     allTotal += c.total;
   }
   $("stat-done").textContent = `Готово ${allDone}/${allTotal}`;
+
+  const project = countAllSystemsDone();
+  const readiness = $("stat-readiness");
+  if (readiness) {
+    if (!project.total) {
+      readiness.textContent = "Готовность объекта —";
+      readiness.className = "stat-readiness";
+    } else {
+      const pct = Math.round((project.done / project.total) * 100);
+      readiness.textContent = `Готовность объекта ${pct}%`;
+      readiness.className = "stat-readiness";
+      if (pct >= 100) readiness.classList.add("stat-readiness--done");
+      else if (pct > 0) readiness.classList.add("stat-readiness--progress");
+    }
+    readiness.title = project.total
+      ? `Камер с метражом: ${project.done} из ${project.total} по всем системам`
+      : "Доля камер с введённым метражом по всем системам";
+  }
+
   const q = getQueue().length;
   const net = $("stat-net");
   if (!apiConfigured()) {
