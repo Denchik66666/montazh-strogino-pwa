@@ -1860,11 +1860,12 @@ function findSystemById(systemId) {
   return catalogBackup?.systems?.find((s) => s.id === systemId) || null;
 }
 
-/** Кнопки карточек — жесты (свайп / pull) не должны перехватывать нажатие. */
-function isTapNavigationTarget(node) {
+/** Элементы вне списка — свайп/pull не перехватываем. Карточки (.pick-card) — можно тянуть вниз. */
+function isOutsideScreensGesture(node) {
+  if (!node?.closest) return true;
   return Boolean(
-    node?.closest?.(
-      "button, a, input, textarea, select, label, .pick-card, .camera-btn, .nav-back, .theme-toggle, .header-rd button, .header-rd-replace, #stat-net, #btn-push"
+    node.closest(
+      ".app-header, .cam-sheet, .photo-lightbox, .refresh-overlay, #toast, #notify-banner, #setup-banner"
     )
   );
 }
@@ -2325,11 +2326,14 @@ function hideRefreshOverlay() {
 /** Pull-to-refresh: данные и каталог без перезагрузки страницы (метраж не теряется). */
 async function pullRefreshApp() {
   showRefreshOverlay("Отправка очереди…");
-  await flushQueue(true);
-  showRefreshOverlay("Загрузка с сервера…");
-  await refreshAppData(true);
-  hideRefreshOverlay();
-  toast("Данные обновлены", "success");
+  try {
+    await flushQueue(true);
+    showRefreshOverlay("Загрузка с сервера…");
+    await refreshAppData(true);
+    toast("Данные обновлены", "success");
+  } finally {
+    hideRefreshOverlay();
+  }
 }
 
 function getActiveScrollEl() {
@@ -2394,6 +2398,7 @@ function initScreenGestures() {
   let touchStartY = 0;
   let touchStartX = 0;
   let pointerCaptured = false;
+  let blockClicksUntil = 0;
 
   const gestureOpts = { capture: true };
 
@@ -2402,8 +2407,7 @@ function initScreenGestures() {
   const gestureTargetOk = (e) => {
     const t = e.target;
     if (!t?.closest) return false;
-    if (isTapNavigationTarget(t)) return false;
-    if (t.closest(".app-header, .cam-sheet, .photo-lightbox, .refresh-overlay, #toast")) return false;
+    if (isOutsideScreensGesture(t)) return false;
     return Boolean(t.closest("#screens"));
   };
 
@@ -2474,6 +2478,7 @@ function initScreenGestures() {
       return;
     }
     ptrRefreshing = true;
+    blockClicksUntil = Date.now() + 500;
     indicator?.classList.add("pull-refresh--loading", "pull-refresh--visible");
     const label = indicator?.querySelector(".pull-refresh__label");
     if (label) label.textContent = "Обновление…";
@@ -2506,7 +2511,13 @@ function initScreenGestures() {
   };
 
   const onPtrUp = (e) => {
-    if (touchPullActive) return;
+    if (touchPullActive) {
+      if (e.pointerId === activePointerId) {
+        activePointerId = null;
+        pointerCaptured = false;
+      }
+      return;
+    }
     if (e.pointerId !== activePointerId) return;
     if (pointerCaptured) {
       try {
@@ -2527,10 +2538,6 @@ function initScreenGestures() {
     "touchstart",
     (e) => {
       if (ptrRefreshing || ptrGestureBlocked() || e.touches.length !== 1) return;
-      if (isTapNavigationTarget(e.target)) {
-        touchPullActive = false;
-        return;
-      }
       if (!gestureTargetOk(e)) return;
       touchStartY = e.touches[0].clientY;
       touchStartX = e.touches[0].clientX;
@@ -2565,8 +2572,11 @@ function initScreenGestures() {
 
   const onTouchEnd = () => {
     if (!touchPullActive) return;
+    const wasPull = axis === "y" && ptrEngaged;
     touchPullActive = false;
-    if (axis === "y") finishPtr();
+    activePointerId = null;
+    pointerCaptured = false;
+    if (wasPull) finishPtr();
     else resetGesture(true);
   };
 
@@ -2578,7 +2588,6 @@ function initScreenGestures() {
     (e) => {
       if (touchPullActive || activePointerId != null || ptrRefreshing || ptrGestureBlocked()) return;
       if (e.button !== 0) return;
-      if (isTapNavigationTarget(e.target)) return;
       if (!gestureTargetOk(e)) return;
 
       activePointerId = e.pointerId;
@@ -2622,9 +2631,11 @@ function initScreenGestures() {
       }
 
       if (axis === "y") {
-        if (!ptrEngaged && !atScrollTop()) {
-          resetGesture(false);
-          return;
+        if (!atScrollTop()) {
+          if (!ptrEngaged) {
+            resetGesture(false);
+            return;
+          }
         }
         if (dy <= 0) {
           if (ptrEngaged) setPullVisual(0, true);
