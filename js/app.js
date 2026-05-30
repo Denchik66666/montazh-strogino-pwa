@@ -134,6 +134,10 @@ let photoSessionLoading = false;
 
 const $ = (id) => document.getElementById(id);
 
+function pushActor() {
+  return window.MontazhPush?.getInstallerName?.() || "Монтажник";
+}
+
 /** Совпадает с normalizeCameraCode_ в Apps Script (BK в таблице / ВК в приложении). */
 function normalizeCameraCode(code) {
   const s = String(code || "").trim();
@@ -595,11 +599,12 @@ async function apiGet(action, params = {}) {
 }
 
 async function apiSave(payload) {
+  const body = { ...payload, actor: pushActor() };
   try {
     const res = await fetch(CONFIG.API_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     if (res.ok) return parseApiResponse(res);
   } catch {
@@ -612,6 +617,7 @@ async function apiSave(payload) {
   url.searchParams.set("row", String(payload.row));
   url.searchParams.set("meters", String(payload.meters));
   url.searchParams.set("kind", payload.kind || "cable");
+  url.searchParams.set("actor", pushActor());
   const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) throw new Error("Сеть");
   return parseApiResponse(res);
@@ -634,7 +640,7 @@ async function apiUploadPhoto(payload) {
     const res = await fetch(CONFIG.API_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "photo", ...payload }),
+      body: JSON.stringify({ action: "photo", actor: pushActor(), ...payload }),
     });
     if (res.ok) {
       const j = await parseApiResponse(res);
@@ -666,6 +672,7 @@ async function apiUploadPhoto(payload) {
       params.camera = camera;
       params.row = String(row);
       params.mimeType = mimeType;
+      params.actor = pushActor();
     }
     last = await apiGet("photoChunk", params);
     if (!last.ok && !last.pending) throw new Error(last.error || "Загрузка");
@@ -677,7 +684,7 @@ async function apiUploadPhoto(payload) {
 }
 
 async function apiDeletePhoto(fileId) {
-  return apiGet("deletePhoto", { fileId });
+  return apiGet("deletePhoto", { fileId, actor: pushActor() });
 }
 
 async function apiPostJson(body) {
@@ -831,6 +838,7 @@ async function apiUploadRd(payload, opts = {}) {
         projectName,
         fileName,
         data,
+        actor: pushActor(),
       });
       if (one.ok) {
         report(1, 1, "Загрузка PDF… 100%");
@@ -873,6 +881,7 @@ async function apiUploadRd(payload, opts = {}) {
       body.systemCode = systemCode;
       body.projectName = projectName;
       body.fileName = fileName;
+      body.actor = pushActor();
     }
     report(part + 1, total);
     last = await apiPostJson(body);
@@ -1855,7 +1864,7 @@ function findSystemById(systemId) {
 function isTapNavigationTarget(node) {
   return Boolean(
     node?.closest?.(
-      "button, a, input, textarea, select, label, .pick-card, .camera-btn, .nav-back, .theme-toggle, .header-rd button, .header-rd-replace, #stat-net"
+      "button, a, input, textarea, select, label, .pick-card, .camera-btn, .nav-back, .theme-toggle, .header-rd button, .header-rd-replace, #stat-net, #btn-push"
     )
   );
 }
@@ -3460,6 +3469,18 @@ async function init() {
 
   initServiceWorkerUpdates();
   initAutoRefresh();
+  if (window.MontazhPush && CONFIG.PUSH_ENABLED !== false) {
+    MontazhPush.init({
+      apiUrl: CONFIG.API_URL,
+      enabled: true,
+      toast,
+      onDataChange: () => {
+        refreshMetrazh().catch(() => {});
+        scheduleViewRefresh();
+        updateStats();
+      },
+    });
+  }
   setRdUploadUi(false);
   tryResumeRdUpload();
 

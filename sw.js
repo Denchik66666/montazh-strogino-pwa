@@ -1,4 +1,4 @@
-const CACHE = "montazh-v120";
+const CACHE = "montazh-v121";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,8 @@ const ASSETS = [
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./icons/notify-badge.png",
+  "./js/push-client.js",
 ];
 
 self.addEventListener("install", (e) => {
@@ -27,6 +29,53 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("message", (e) => {
   if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("push", (event) => {
+  let data = { title: "Монтажник", body: "", url: "./index.html", tag: "montazh", urgent: true };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    try {
+      if (event.data) data.body = event.data.text();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const origin = self.location.origin;
+  const urgent = data.urgent !== false;
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Монтажник", {
+      body: data.body || "",
+      icon: origin + "/icons/icon-192.png",
+      badge: origin + "/icons/notify-badge.png",
+      tag: data.tag || data.url || "montazh",
+      data: { url: data.url || "./index.html" },
+      vibrate: urgent ? [180, 80, 180, 80, 180] : [100, 50, 100],
+      renotify: true,
+      silent: false,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "./index.html";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if ("focus" in client) {
+          if ("navigate" in client) {
+            return client.navigate(url).then(() => client.focus());
+          }
+          client.postMessage({ type: "notify-navigate", url });
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(new URL(url, self.location.origin).href);
+    })
+  );
 });
 
 function isAppAsset(pathname) {

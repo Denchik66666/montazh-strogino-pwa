@@ -390,6 +390,67 @@ html[data-theme="light"] .app-header {
   font-size: 0.75rem;
 }
 
+.pill--push {
+  min-width: 36px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid var(--surface2);
+  background: var(--surface);
+}
+
+.pill--push-on {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--surface2));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.notify-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, var(--surface2));
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.notify-banner[hidden] {
+  display: none !important;
+}
+
+.notify-banner__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notify-banner__title {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.notify-banner__body {
+  display: block;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.notify-banner__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
 #screens > .screen {
   display: none;
   flex-direction: column;
