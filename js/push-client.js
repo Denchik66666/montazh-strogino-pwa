@@ -61,9 +61,15 @@
   }
 
   async function fetchVapidPublicKey() {
-    const r = await apiGet("pushVapid");
-    if (!r.ok || !r.publicKey) throw new Error(r.error || "Нет VAPID");
-    return r.publicKey;
+    const fromConfig = String(window.APP_CONFIG?.PUSH_VAPID_PUBLIC || "").trim();
+    if (fromConfig) return fromConfig;
+    try {
+      const r = await apiGet("pushVapid");
+      if (r.ok && r.publicKey) return r.publicKey;
+    } catch {
+      /* Apps Script ещё без Notify.gs */
+    }
+    throw new Error("Нет VAPID — обновите приложение или см. PUSH.md");
   }
 
   async function getSwRegistration() {
@@ -216,11 +222,15 @@
       subscription: sub.toJSON(),
       label: name,
     });
-    if (!r.ok) throw new Error(r.error || "Подписка не сохранена");
+    if (!r.ok) throw new Error(r.error || "Подписка не сохранена — обновите Apps Script (Notify.gs)");
 
     localStorage.setItem(PUSH_OK_KEY, "1");
     updatePushUi(true);
-    toast("Push включён — все увидят изменения", "success");
+    if (r.count != null) {
+      toast(`Push включён · подписчиков: ${r.count}`, "success");
+    } else {
+      toast("Push включён — все увидят изменения", "success");
+    }
     return true;
   }
 
