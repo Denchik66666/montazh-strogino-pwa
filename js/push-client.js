@@ -65,7 +65,7 @@
     if (fromConfig) return fromConfig;
     try {
       const r = await apiGet("pushVapid");
-      if (r.ok && r.publicKey) return r.publicKey;
+      if (r.ok && r.publicKey) return String(r.publicKey).trim();
     } catch {
       /* Apps Script ещё без Notify.gs */
     }
