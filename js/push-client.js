@@ -185,6 +185,14 @@
     }
   }
 
+  function pushErrorMessage(err) {
+    const msg = String(err?.message || err || "");
+    if (/push service error|Registration failed/i.test(msg)) {
+      return "Push не подключился. Закройте PWA полностью → откройте снова → 🔔. На Android: установите с «Главного экрана».";
+    }
+    return msg || "Ошибка push";
+  }
+
   async function registerWebPush(force) {
     if (!deps.enabled || !apiConfigured()) {
       toast("Подключите таблицу в config.js", "error");
@@ -204,16 +212,26 @@
       return false;
     }
 
-    const publicKey = await fetchVapidPublicKey();
-    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
-    await navigator.serviceWorker.ready;
+    const publicKey = (await fetchVapidPublicKey()).trim();
+    const reg = await navigator.serviceWorker.ready;
 
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
+    const oldSub = await reg.pushManager.getSubscription();
+    if (oldSub) {
+      try {
+        await oldSub.unsubscribe();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    let sub;
+    try {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
+    } catch (err) {
+      throw new Error(pushErrorMessage(err));
     }
 
     const name = getInstallerName();
@@ -235,8 +253,16 @@
   }
 
   async function sendTestPush() {
-    const r = await apiPost({ action: "pushTest", label: getInstallerName() });
+    const name = getInstallerName();
+    const r = await apiPost({ action: "pushTest", label: name });
     if (!r.ok) throw new Error(r.error || "Ошибка");
+    await showSystemNotification(
+      "Монтажник",
+      `${name} · тестовое уведомление`,
+      "./index.html",
+      "test-local",
+      true
+    );
     toast("Тест отправлен всем подписчикам", "success");
   }
 
@@ -266,7 +292,7 @@
             await registerWebPush(true);
           }
         } catch (e) {
-          toast(String(e.message || e), "error");
+          toast(pushErrorMessage(e), "error");
         }
       });
     }

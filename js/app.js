@@ -1136,24 +1136,41 @@ function clearSessionPhotos() {
   sessionPhotos = [];
 }
 
+let photoLoadToken = 0;
+
 async function loadSessionPhotosFromDrive() {
   if (!photosEnabled() || !selectedCamera) {
     photoSessionLoading = false;
     return;
   }
+  const token = ++photoLoadToken;
   photoSessionLoading = true;
   renderPhotoSession();
   updatePhotoReportBadge();
 
   const { system, section, cam } = selectedCamera;
+  const finish = () => {
+    if (token !== photoLoadToken) return;
+    photoSessionLoading = false;
+    renderPhotoSession();
+    updatePhotoReportBadge();
+    if (selectedCamera) renderCameras();
+  };
+
   try {
-    const r = await apiGet("listPhotos", {
-      system: system.id,
-      systemCode: system.code,
-      sectionFolder: sectionFolderName(section),
-      projectName: projectFolderName(),
-      camera: normalizeCameraCode(cam.camera),
-    });
+    const r = await Promise.race([
+      apiGet("listPhotos", {
+        system: system.id,
+        systemCode: system.code,
+        sectionFolder: sectionFolderName(section),
+        projectName: projectFolderName(),
+        camera: normalizeCameraCode(cam.camera),
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 12000)
+      ),
+    ]);
+    if (token !== photoLoadToken) return;
     if (!r.ok) {
       const status = $("photo-status");
       if (status) {
@@ -1183,13 +1200,11 @@ async function loadSessionPhotosFromDrive() {
     renderCameras();
     hydrateSessionPhotoPreviews();
   } catch {
+    if (token !== photoLoadToken) return;
     const status = $("photo-status");
     if (status) status.textContent = "Нет связи — фото на Диске, обновите позже";
   } finally {
-    photoSessionLoading = false;
-    renderPhotoSession();
-    updatePhotoReportBadge();
-    if (selectedCamera) renderCameras();
+    finish();
   }
 }
 
@@ -2652,6 +2667,17 @@ function initScreenGestures() {
 
   screens.addEventListener("pointerup", onPtrUp, gestureOpts);
   screens.addEventListener("pointercancel", onPtrUp, gestureOpts);
+
+  screens.addEventListener(
+    "click",
+    (e) => {
+      if (Date.now() < blockClicksUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true
+  );
 }
 
 async function refreshMetrazh() {
@@ -3146,6 +3172,8 @@ async function openCamSheet(system, section, cam) {
 }
 
 function closeCamSheet(rerender = true) {
+  photoLoadToken++;
+  photoSessionLoading = false;
   const sheet = $("cam-sheet");
   if (sheet) {
     sheet.hidden = true;
@@ -3248,7 +3276,7 @@ function formatSavedMeterParts(items) {
     .join(", ");
 }
 
-/** После сохранения — остаёмся на камере, поля = актуальные значения из таблицы. */
+/** После сохранения — закрываем окно, список камер обновлён. */
 function afterMetersSaved() {
   loadInputValues();
   writeMeterFields();
@@ -3257,6 +3285,7 @@ function afterMetersSaved() {
   if (nav.system && nav.section) renderCameras();
   updateStats();
   persistNavState("cameras");
+  closeCamSheet();
 }
 
 async function saveMeters() {
@@ -3338,7 +3367,7 @@ async function saveMeters() {
     } else {
       toast(`✓ ${code}: ${formatSavedMeterParts(pending)}`, "success");
       afterMetersSaved();
-      await refreshMetrazh();
+      void refreshMetrazh();
     }
   } finally {
     $("btn-save").disabled = false;
